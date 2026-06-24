@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary><para>
 /// Linux 原生辅助类: 提供在 Linux 平台上确保 libgcc_s.so.1 全局加载的功能

@@ -1,4 +1,4 @@
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary>
 /// Modded 模式枚举

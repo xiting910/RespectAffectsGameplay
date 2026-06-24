@@ -1,4 +1,4 @@
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary>
 /// Mod 设置数据类

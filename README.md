@@ -64,10 +64,6 @@ flowchart TD
 | `PatchSetIsRunningModded` | `UserDataPathProvider.IsRunningModded` setter | Prefix | 写入时替换为 `IsEffectivelyModded()` 的修正值  |
 | `PatchGetProfileDir`      | `UserDataPathProvider.GetProfileDir`          | Prefix | 无 gamepaly mod 时返回 vanilla 路径 `profileX` |
 
-> **设计决策**: 不拦截 `ModManager.IsRunningModded()` 方法。该方法被游戏 UI（主界面右下角 mod 数量）、
-> 错误上报（Sentry）、联机 mod 列表等多处调用，统一替换会导致 UI 显示异常。存档隔离已由上述 3 个补丁完全覆盖，
-> 联机匹配由 `GetGameplayRelevantModNameList()` 中的 `affects_gameplay` 过滤原生支持。
-
 ---
 
 ## 模式说明
@@ -99,15 +95,22 @@ flowchart TD
    git clone https://github.com/xiting910/RespectAffectsGameplay.git
    ```
 
-2. 创建 `Directory.Build.props`，添加 `Sts2Dir` 标签并修改为你的 STS2 游戏安装路径：
+2. 在 `Scripts/` 目录下创建 `Directory.Build.props`（**本地开发必需**，CI 不需要）：
    ```xml
-   <Sts2Dir>你的 STS2 游戏安装路径</Sts2Dir>
+   <Project>
+     <PropertyGroup>
+       <Sts2Dir>你的 STS2 游戏安装路径</Sts2Dir>
+     </PropertyGroup>
+   </Project>
    ```
+   > 该文件已在 `.gitignore` 中排除，不会提交到仓库。若无此文件，项目将使用根目录 `stubs/` 下的桩程序集进行编译。
 
 3. 构建项目：
    ```bash
    dotnet build
    ```
+
+> **CI 说明：** GitHub Actions 工作流会先编译 `stubs/` 下的桩项目，再将生成的 DLL 复制到 `stubs/data_sts2_linuxbsd_x86_64/`，最后编译主项目。本地开发无需关心此流程。
 
 ---
 
@@ -116,10 +119,17 @@ flowchart TD
 ```
 RespectAffectsGameplay/
 ├── .github/
-│   ├── workflows/                      # CI/CD 工作流
-│   ├── ISSUE_TEMPLATE/                 # Issue 模板
-│   └── PULL_REQUEST_TEMPLATE.md        # PR 模板
+│   └── workflows/                      # CI / CodeQL 工作流
+├── stubs/                              # 桩项目（仅 CI 使用，本地开发不需要）
+│   ├── sts2/
+│   │   ├── sts2.csproj                 # 模拟 STS2 游戏程序集
+│   │   └── Stubs.cs                    # 桩类型: ModManager, UserDataPathProvider 等
+│   └── 0Harmony/
+│       ├── 0Harmony.csproj             # 模拟 HarmonyLib 程序集
+│       └── Stubs.cs                    # 桩类型: Harmony, HarmonyPatch 等
 ├── Scripts/
+│   ├── RespectAffectsGameplay.csproj   # 主项目文件 (.NET 9.0)
+│   ├── RespectAffectsGameplay.json     # Mod 元数据清单
 │   ├── RespectAffectsGameplayMod.cs    # Mod 入口: 初始化设置 / 补丁 / 核心判断 IsEffectivelyModded()
 │   ├── ModdedMode.cs                   # Modded 模式枚举 (Auto / AlwaysVanilla / AlwaysModded)
 │   ├── ModInfo.cs                      # Mod 元数据信息 (ID / 名称 / 作者 / HarmonyId)
@@ -129,11 +139,9 @@ RespectAffectsGameplay/
 │   ├── PatchGetIsRunningModded.cs      # 拦截 UserDataPathProvider.IsRunningModded getter
 │   ├── PatchSetIsRunningModded.cs      # 拦截 UserDataPathProvider.IsRunningModded setter
 │   └── PatchGetProfileDir.cs           # 拦截存档目录生成方法
-├── RespectAffectsGameplay.csproj       # 项目文件 (.NET 9.0)
-├── RespectAffectsGameplay.json         # Mod 元数据清单
 ├── RespectAffectsGameplay.slnx         # 解决方案文件
-├── Directory.Build.props               # MSBuild 配置（STS2 路径）
 ├── LICENSE                             # MIT 许可证
+├── CHANGELOG.md                        # 变更日志
 └── README.md
 ```
 

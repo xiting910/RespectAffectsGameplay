@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS8785</NoWarn>
-    <Sts2Dir Condition="'$(Sts2Dir)' == ''">$(MSBuildThisFileDirectory)stubs</Sts2Dir>
+    <Sts2Dir Condition="'$(Sts2Dir)' == ''">$(MSBuildThisFileDirectory)..\stubs</Sts2Dir>
     <Sts2DataDirSuffix Condition="'$(Sts2DataDirSuffix)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">windows_x86_64</Sts2DataDirSuffix>
     <Sts2DataDirSuffix Condition="'$(Sts2DataDirSuffix)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">macos_arm64</Sts2DataDirSuffix>
     <Sts2DataDirSuffix Condition="'$(Sts2DataDirSuffix)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">linuxbsd_x86_64</Sts2DataDirSuffix>

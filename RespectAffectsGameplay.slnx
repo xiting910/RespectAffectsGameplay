@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="RespectAffectsGameplay.csproj" />
+  <Project Path="stubs/0Harmony/0Harmony.csproj" />
+  <Project Path="stubs/sts2/sts2.csproj" />
+  <Project Path="Scripts/RespectAffectsGameplay.csproj" />
 </Solution>

@@ -45,12 +45,19 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      # 创建游戏引用的 DLL 以便 CodeQL autobuild 能编译
-      - name: Create stub game references
+      # 编译桩项目以生成游戏引用的 DLL
+      - name: Build sts2 stub
+        run: dotnet build stubs/sts2/sts2.csproj --configuration Release
+
+      - name: Build 0Harmony stub
+        run: dotnet build stubs/0Harmony/0Harmony.csproj --configuration Release
+
+      # 将桩 DLL 复制到游戏引用期望的路径
+      - name: Copy stub DLLs to expected location
         run: |
-          mkdir -p ./stubs/data_sts2_linuxbsd_x86_64
-          touch ./stubs/data_sts2_linuxbsd_x86_64/sts2.dll
-          touch ./stubs/data_sts2_linuxbsd_x86_64/0Harmony.dll
+          mkdir -p stubs/data_sts2_linuxbsd_x86_64
+          cp stubs/sts2/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
+          cp stubs/0Harmony/bin/Release/net9.0/0Harmony.dll stubs/data_sts2_linuxbsd_x86_64/
 
       # 使用 CodeQL autobuild 功能自动编译项目
       - name: Autobuild

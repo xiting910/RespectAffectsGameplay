@@ -2,7 +2,7 @@ using STS2RitsuLib;
 using STS2RitsuLib.Data;
 using STS2RitsuLib.Utils.Persistence;
 
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary><para>
 /// 辅助类: 初始化并提供对 mod 持久化设置的访问

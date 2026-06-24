@@ -1,6 +1,6 @@
 using STS2RitsuLib.Compat;
 
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary>
 /// Mod 信息工具类

@@ -1,7 +1,7 @@
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Saves;
 
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary>
 /// 补丁: 拦截 <see cref="UserDataPathProvider.IsRunningModded"/> 的 getter

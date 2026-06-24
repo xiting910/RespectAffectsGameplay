@@ -4,7 +4,7 @@ using STS2RitsuLib;
 using STS2RitsuLib.Compat;
 using STS2RitsuLib.Settings;
 
-namespace RespectAffectsGameplay.Scripts;
+namespace RespectAffectsGameplay;
 
 /// <summary>
 /// mod 入口类: 负责初始化设置、注册设置页面并应用所有 Harmony 补丁
