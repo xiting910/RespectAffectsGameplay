@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![CI](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml)
+[![Release](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml)
 [![STS2](https://img.shields.io/badge/STS2-0.107.1+-blue.svg)](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)
 
 **Respect Affects Gameplay** 是一个 [Slay the Spire 2](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)（STS2）的 Mod，它让游戏真正尊重每个 Mod 的 `affects_gameplay` 元数据标记。
@@ -23,6 +24,9 @@
   - [构建](#构建)
     - [环境要求](#环境要求)
     - [构建步骤](#构建步骤)
+  - [发布](#发布)
+    - [发布流程](#发布流程)
+    - [如何发布新版本](#如何发布新版本)
   - [许可证](#许可证)
   - [致谢](#致谢)
 
@@ -33,7 +37,9 @@
 ```
 RespectAffectsGameplay/
 ├── .github/
-│   ├── workflows/                        # CI / CodeQL 工作流
+│   ├── workflows/                        # CI / Release / CodeQL 工作流
+│   │   ├── ci.yml                        #   → push/PR 自动编译验证
+│   │   └── release.yml                   #   → 推送 v* 标签自动发布 GitHub Release
 │   ├── ISSUE_TEMPLATE/                   # Issue 模板
 │   ├── PULL_REQUEST_TEMPLATE.md          # PR 模板
 │   └── dependabot.yml                    # 依赖自动更新配置
@@ -172,7 +178,34 @@ flowchart TD
    dotnet build
    ```
 
-> **CI 说明：** GitHub Actions 工作流会先编译 `stubs/` 下的桩项目，再将生成的 DLL 复制到 `stubs/data_sts2_linuxbsd_x86_64/`，最后编译主项目。本地开发无需关心此流程。
+> **CI 说明：** `ci.yml` 在每次 push/PR 时自动编译验证。本地开发无需关心此流程。
+
+---
+
+## 发布
+
+本项目使用 GitHub Actions 自动化发布流程：**推送 `v*` 标签即可触发**。
+
+### 发布流程
+
+| 步骤              | 触发条件           | 说明                                                  |
+| ----------------- | ------------------ | ----------------------------------------------------- |
+| 1. 编译打包       | 推送 `v*` 标签     | 自动更新 JSON 版本号 → 编译 → 打包 zip                |
+| 2. GitHub Release | 自动（依赖步骤 1） | 从 CHANGELOG.md 提取变更日志，创建 Release 并附带 zip |
+
+### 如何发布新版本
+
+```bash
+# 1. 更新 CHANGELOG.md（将 [Unreleased] 改为新版本号）
+# 2. 更新 Scripts/RespectAffectsGameplay.json 中的 version 字段
+# 3. 提交并打标签
+git add .
+git commit -m "Release v0.2.0"
+git tag v0.2.0
+git push --follow-tags
+```
+
+推送标签后，GitHub Actions 会自动完成编译、打包、创建 Release。
 
 ---
 

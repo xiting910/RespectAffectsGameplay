@@ -3,10 +3,11 @@
 # =============================================================================
 name: CI
 
-# 触发条件: 当向 main 分支 push 或发起 PR 时执行
+# 触发条件: 当向 main 分支 push 或发起 PR 时执行 (标签推送由 release.yml 单独处理)
 on:
   push:
     branches: [main]
+    tags-ignore: ["v*"]
   pull_request:
     branches: [main]
 

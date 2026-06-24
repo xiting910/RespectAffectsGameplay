@@ -1,0 +1,238 @@
+# =============================================================================
+# Release 工作流: 推送 v* 标签时自动构建、创建 GitHub Release、更新 Steam 创意工坊
+# =============================================================================
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  MOD_ID: "RespectAffectsGameplay"
+  STS2_APP_ID: "2868840"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION="${TAG_NAME#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION (tag: $TAG_NAME)"
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Build stubs
+        run: |
+          dotnet build stubs/sts2/sts2.csproj --configuration Release
+          dotnet build stubs/0Harmony/0Harmony.csproj --configuration Release
+          mkdir -p stubs/data_sts2_linuxbsd_x86_64
+          cp stubs/sts2/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
+          cp stubs/0Harmony/bin/Release/net9.0/0Harmony.dll stubs/data_sts2_linuxbsd_x86_64/
+
+      - name: Update version in mod JSON
+        run: |
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v' \
+          Scripts/${{ env.MOD_ID }}.json > Scripts/${{ env.MOD_ID }}.json.tmp
+          mv Scripts/${{ env.MOD_ID }}.json.tmp Scripts/${{ env.MOD_ID }}.json
+          echo "✅ JSON updated:"
+          cat Scripts/${{ env.MOD_ID }}.json
+
+      - name: Restore & Build
+        run: |
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+
+      - name: Package mod
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PKG="pkg/${{ env.MOD_ID }}"
+          mkdir -p "$PKG"
+          cp Scripts/bin/Release/net9.0/${{ env.MOD_ID }}.dll "$PKG/"
+          cp Scripts/${{ env.MOD_ID }}.json "$PKG/"
+          cd pkg
+          zip -r "../${{ env.MOD_ID }}_v${VERSION}.zip" "${{ env.MOD_ID }}"
+          cd ..
+          echo "📦 ${{ env.MOD_ID }}_v${VERSION}.zip ($(du -h ${{ env.MOD_ID }}_v${VERSION}.zip | cut -f1))"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod-package
+          path: |
+            ${{ env.MOD_ID }}_v*.zip
+            pkg/${{ env.MOD_ID }}/
+          retention-days: 1
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mod-package
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          # 从 CHANGELOG.md 提取 ## [VERSION] 到下一个 ## [ 之间的内容
+          CHANGELOG=$(awk -v ver="$VERSION" '
+          BEGIN { found=0; output="" }
+          $0 ~ "^## \\[" ver "\\]" { found=1; next }
+          found && $0 ~ "^## \\[" { exit }
+          found { output = output $0 "\n" }
+          END { print output }
+          ' CHANGELOG.md)
+
+          # 未找到对应版本时回退到 [Unreleased]
+          if [ -z "$(echo "$CHANGELOG" | tr -d '[:space:]')" ]; then
+          echo "⚠️  No changelog for v$VERSION, using [Unreleased]"
+          CHANGELOG=$(awk '
+            BEGIN { found=0; output="" }
+            $0 ~ "^## \\[Unreleased\\]" { found=1; next }
+            found && $0 ~ "^## \\[" { exit }
+            found { output = output $0 "\n" }
+            END { print output }
+          ' CHANGELOG.md)
+          fi
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ needs.build.outputs.version }} — Respect Affects Gameplay"
+          tag_name: ${{ needs.build.outputs.tag }}
+          body: |
+            ## 🔧 Respect Affects Gameplay v${{ needs.build.outputs.version }}
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
+            ### 📦 安装方法
+
+            1. 下载下方的 `RespectAffectsGameplay_v${{ needs.build.outputs.version }}.zip`
+            2. 解压到 Slay the Spire 2 的 `mods/` 文件夹
+            3. 启动游戏，在 Mod 设置中配置模式
+
+            ### 📋 依赖
+
+            - [STS2-RitsuLib](https://steamcommunity.com/app/${{ env.STS2_APP_ID }}/workshop/)（Steam 创意工坊自动安装）
+
+            ### 🔗 链接
+
+            - [源代码](https://github.com/${{ github.repository }})
+            - [问题反馈](https://github.com/${{ github.repository }}/issues)
+            - [完整更新日志](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          files: |
+            ${{ env.MOD_ID }}_v${{ needs.build.outputs.version }}.zip
+          draft: false
+          prerelease: false
+          make_latest: true
+
+  workshop:
+    needs: build
+    runs-on: ubuntu-latest
+    # 只有仓库级 Variable STEAM_WORKSHOP_ITEM_ID 非空时才执行
+    if: ${{ vars.STEAM_WORKSHOP_ITEM_ID != '' }}
+    environment: steam-workshop
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mod-package
+
+      - name: Prepare Workshop content directory
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          WS="${{ github.workspace }}/workshop_content"
+          mkdir -p "$WS/${{ env.MOD_ID }}"
+
+          cp pkg/${{ env.MOD_ID }}/${{ env.MOD_ID }}.dll "$WS/${{ env.MOD_ID }}/"
+          cp pkg/${{ env.MOD_ID }}/${{ env.MOD_ID }}.json "$WS/${{ env.MOD_ID }}/"
+
+          if [ -f "preview.png" ]; then
+          cp preview.png "$WS/preview.png"
+          echo "✅ Workshop preview image found"
+          else
+          echo "⚠️  No preview.png in repo root — Workshop item will lack a preview"
+          fi
+
+          echo "📂 Workshop content:"
+          find "$WS" -type f
+
+      - name: Generate workshop VDF
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          PREVIEW_FILE="${{ github.workspace }}/workshop_content/preview.png"
+          PREVIEW_PATH=""
+          [ -f "$PREVIEW_FILE" ] && PREVIEW_PATH="$PREVIEW_FILE"
+
+          cat > "${{ github.workspace }}/workshop.vdf" << 'VDFEOF'
+          "workshopitem"
+          {
+          "appid"             "2868840"
+          "publishedfileid"   "PUBLISHEDFILEID_PLACEHOLDER"
+          "contentfolder"     "CONTENTFOLDER_PLACEHOLDER"
+          "previewfile"       "PREVIEWFILE_PLACEHOLDER"
+          "visibility"        "0"
+          "title"             "Respect Affects Gameplay vVERSION_PLACEHOLDER"
+          "description"       "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer. | 只在实际影响游戏玩法的 Mod 加载时才标记游戏为 modded 状态。affects_gameplay: false 的 Mod 不再隔离存档或阻止原版联机。"
+          "changenote"        "vVERSION_PLACEHOLDER: See GitHub Release for details."
+          }
+          VDFEOF
+
+          # 替换占位符为实际值
+          sed -i "s|PUBLISHEDFILEID_PLACEHOLDER|${{ vars.STEAM_WORKSHOP_ITEM_ID }}|" workshop.vdf
+          sed -i "s|CONTENTFOLDER_PLACEHOLDER|${{ github.workspace }}/workshop_content|" workshop.vdf
+          sed -i "s|PREVIEWFILE_PLACEHOLDER|$PREVIEW_PATH|" workshop.vdf
+          sed -i "s|VERSION_PLACEHOLDER|$VERSION|g" workshop.vdf
+
+          echo "📝 Generated workshop.vdf:"
+          cat workshop.vdf
+
+      - name: Upload to Steam Workshop via SteamCmd
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+        run: |
+          mkdir -p steamcmd && cd steamcmd
+          curl -sSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -xz
+
+          # 登录并提交 Workshop 更新
+          # 注意: 首次运行需要 Steam Guard 验证码, 请先用本地终端登录一次
+          ./steamcmd.sh \
+          +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
+          +workshop_build_commit "${{ github.workspace }}/workshop.vdf" \
+          +quit

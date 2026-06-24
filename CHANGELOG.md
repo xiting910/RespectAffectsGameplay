@@ -7,7 +7,7 @@
 
 ---
 
-## [Unreleased]
+## [0.1.0] - 2025-06-25
 
 ### Added
 
@@ -35,7 +35,7 @@
   - 0Harmony 桩新增 `Harmony.GetPatchedMethods()`
 
 - **`.editorconfig` 代码风格配置**: 统一项目代码风格（空格缩进、LF 换行、UTF-8 编码），
-  并启用一系列 .NET 代码质量分析规则（CA1000~CA1853）
+  为 `[*.{yml,yaml}]` 单独设置 2 空格缩进，不影响 C# 代码的 4 空格缩进
 
 - **核心功能: 尊重 `affects_gameplay` 标记**
   不再将所有已加载的 mod 都标记为 `modded`, 而是根据每个 mod 的 `affects_gameplay` 元数据判断.
@@ -73,9 +73,9 @@
   CI 环境通过 `stubs/` 桩项目提供编译所需的空游戏程序集引用 (sts2.dll, 0Harmony.dll)
 
 - **CI/CD (GitHub Actions)**:
-  - 每次 push/PR 自动编译 (ubuntu-latest + .NET 9.0)
-  - CodeQL 安全分析
-  - 依赖审查 (Dependency Review + Dependabot)
+  - `ci.yml`: 每次 push/PR 自动编译验证 (ubuntu-latest + .NET 9.0)
+  - `release.yml`: 推送 `v*` 标签自动创建 GitHub Release，附带自动打包和 CHANGELOG 提取；支持可选 Steam 创意工坊自动更新
+  - CodeQL 安全分析 / 依赖审查 (Dependency Review + Dependabot)
 
 - **完整的中文 XML 文档注释**: 所有类、字段、属性、方法均有 `<summary>` / `<param>` / `<returns>` 注释
 
@@ -90,14 +90,15 @@
 ### Known Issues
 
 - Steam Workshop 的 `ItemInstalled` 回调触发时, `RitsuModManager.GetKnownMods()` 可能尚未更新新安装的 mod 列表
-- Android 平台上 JIT 编译受限时, Harmony 补丁可能无法生效 (取决于 Godot .NET Android 运行时的 Mono 版本)
 
 ### Planned
 
-- **Steam 创意工坊描述资源**: 准备 Workshop 页面所需的截图、描述、标签
-- **Steam 创意工坊兼容性验证**: 确保 mod 通过 Steam Workshop 分发时正确加载
+- **Steam 创意工坊素材**: 准备 Workshop 页面截图、预览图（CI 自动化流程已就绪）
 - **多语言支持**: 为设置页面中的 UI 文本添加本地化支持
 
 ---
 
+## [Unreleased]
+
+[0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
 [Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.0...HEAD
