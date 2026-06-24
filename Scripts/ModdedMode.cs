@@ -11,12 +11,12 @@ public enum ModdedMode
     Auto = 0,
 
     /// <summary>
-    /// 始终在 vanilla 模式下运行
+    /// 强制视为 vanilla 状态，无论加载了什么 mod
     /// </summary>
     AlwaysVanilla = 1,
 
     /// <summary>
-    /// 始终在 modded 模式下运行
+    /// 使用游戏原版逻辑判断 modded 状态
     /// </summary>
-    AlwaysModded = 2,
+    Default = 2,
 }

@@ -9,7 +9,7 @@ namespace RespectAffectsGameplay;
 /// <summary>
 /// mod 入口类: 负责初始化设置、注册设置页面并应用所有 Harmony 补丁
 /// </summary>
-[ModInitializer("Initialize")]
+[ModInitializer(nameof(Initialize))]
 public static class RespectAffectsGameplayMod
 {
     /// <summary>
@@ -29,6 +29,13 @@ public static class RespectAffectsGameplayMod
         // 4. 应用 Harmony 补丁
         var harmony = new Harmony(ModInfo.HarmonyId);
         harmony.PatchAll(typeof(RespectAffectsGameplayMod).Assembly);
+
+        // 5. 条件补丁: 根据用户设置决定是否启用 PatchModManagerIsRunningModded
+        if (!ModSettingsHelper.GetSettings().PatchModManagerIsRunningModded)
+        {
+            harmony.Unpatch(typeof(ModManager).GetMethod(nameof(ModManager.IsRunningModded)),
+                typeof(PatchModManagerIsRunningModded).GetMethod(nameof(PatchModManagerIsRunningModded.Prefix)));
+        }
     }
 
     /// <summary>
@@ -49,7 +56,7 @@ public static class RespectAffectsGameplayMod
             {
                 ModdedMode.Auto => RitsuModManager.GetKnownMods().Any(m => m.IsLoaded && m.AffectsGameplay),
                 ModdedMode.AlwaysVanilla => false,
-                ModdedMode.AlwaysModded => ModManager.Mods.Any(m => m.state is ModLoadState.Loaded or ModLoadState.Failed),
+                ModdedMode.Default => ModManager.Mods.Any(m => m.state is ModLoadState.Loaded or ModLoadState.Failed),
                 _ => throw new InvalidOperationException($"Unknown ModdedMode value: {settings.Mode}"),
             };
         }
@@ -78,18 +85,42 @@ public static class RespectAffectsGameplayMod
                         ModSettingsHelper.DataKey,
                         ModSettingsHelper.DataScope,
                         s => s.Mode,
-                        (s, v) => s.Mode = v),
+                        (s, v) => { s.Mode = v; ModSettingsHelper.SaveSettings(); }),
                     value => value switch
                     {
                         ModdedMode.Auto => ModSettingsText.Literal("自动"),
-                        ModdedMode.AlwaysVanilla => ModSettingsText.Literal("始终原版"),
-                        ModdedMode.AlwaysModded => ModSettingsText.Literal("始终 Modded"),
+                        ModdedMode.AlwaysVanilla => ModSettingsText.Literal("强制原版"),
+                        ModdedMode.Default => ModSettingsText.Literal("游戏默认"),
                         _ => ModSettingsText.Literal(value.ToString()),
                     },
                     ModSettingsText.Literal(
                         "自动：仅当加载了 affects_gameplay: true 的 mod 时才标记游戏为 modded 状态。\n" +
-                        "始终原版：即使加载了 gameplay mod 也永不标记为 modded（可能会导致存档损坏和游戏异常等问题）。\n" +
-                        "始终 Modded：只要加载了任意 mod 就始终标记为 modded 状态。"),
-                    ModSettingsChoicePresentation.Dropdown)));
+                        "强制原版：即使加载了 gameplay mod 也永不标记为 modded（⚠ 可能导致存档损坏）。\n" +
+                        "游戏默认：使用游戏默认逻辑，只要加载了任意 mod 即标记为 modded 状态。\n\n" +
+                        "⚠ 修改此选项后需重启游戏才能生效。"),
+                    ModSettingsChoicePresentation.Dropdown)
+                .AddToggle(
+                    "patchModManager",
+                    ModSettingsText.Literal("拦截 IsRunningModded()"),
+                    new ModSettingsValueBinding<ModSettingsData, bool>(
+                        ModInfo.Id,
+                        ModSettingsHelper.DataKey,
+                        ModSettingsHelper.DataScope,
+                        s => s.PatchModManagerIsRunningModded,
+                        (s, v) => { s.PatchModManagerIsRunningModded = v; ModSettingsHelper.SaveSettings(); }),
+                    ModSettingsText.Literal(
+                        "开启：Mod 管理器、联机 Mod 列表、Sentry 上报等所有调用 IsRunningModded() 的位置\n" +
+                        "      均受当前 Modded Mode 控制。副作用：主界面 mod 数量和哈希值可能不显示。\n" +
+                        "关闭：仅存档路径受当前 Modded Mode 控制，UI 和联机列表恢复原始行为。\n\n" +
+                        "⚠ 修改此选项后需重启游戏才能生效。"),
+                    null)
+                .AddButton(
+                    "resetDefaults",
+                    ModSettingsText.Literal("重置为默认设置"),
+                    ModSettingsText.Literal("恢复默认"),
+                    ModSettingsHelper.ResetToDefaults,
+                    description: ModSettingsText.Literal(
+                        "将所有设置恢复为默认值（Modded Mode → 自动，拦截 IsRunningModded() → 关闭）。\n" +
+                        "⚠ 修改后需重启游戏才能生效。"))));
     }
 }

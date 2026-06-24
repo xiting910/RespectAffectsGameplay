@@ -14,6 +14,8 @@
 - [Respect Affects Gameplay](#respect-affects-gameplay)
   - [目录](#目录)
   - [解决的问题](#解决的问题)
+    - [问题一：存档路径被强行分离](#问题一存档路径被强行分离)
+    - [问题二：联机哈希被非 gameplay Mod 污染](#问题二联机哈希被非-gameplay-mod-污染)
   - [工作原理](#工作原理)
     - [Harmony 补丁](#harmony-补丁)
   - [模式说明](#模式说明)
@@ -28,14 +30,17 @@
 
 ## 解决的问题
 
-默认情况下，STS2 只要检测到**任意** Mod 被加载，就会将整个游戏标记为 "modded（已修改）" 状态，导致：
+默认情况下，STS2 只要检测到**任意** Mod 被加载，就会将整个游戏标记为 "modded（已修改）" 状态。具体表现为两个独立问题：
 
-- 🗂️ **存档分离** — Modded 和 Vanilla（原版）存档被存放在不同的目录中
-- 🚫 **无法联机** — 标记为 modded 后无法参与原版多人游戏
+### 问题一：存档路径被强行分离
 
-这意味着即使你只安装了纯外观类或界面优化的 Mod（这些 Mod 的 `affects_gameplay` 标记为 `false`），你的存档仍然会被隔离，多人游戏仍然会被阻止。
+`UserDataPathProvider.GetProfileDir()` 根据 `IsRunningModded` 属性决定存档目录是否带有 `modded/` 前缀。任何 Mod（包括外观、基础库、辅助类等 `affects_gameplay: false` 的 Mod）加载后，`IsRunningModded` 被设为 `true`，存档即被隔离到 `modded/profileX/`。卸载这些 Mod 后存档看似"丢失"，因为它还在 `modded/` 子目录中。
 
-**RespectAffectsGameplay** 解决了这个问题：它通过 Harmony 补丁拦截游戏内部的 `IsRunningModded` 判断逻辑，改为根据**实际加载的 Mod 是否包含 `affects_gameplay: true`** 来决定游戏是否处于 modded 状态。
+### 问题二：联机哈希被非 gameplay Mod 污染
+
+`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。BASELIB/RitsuLib 等模组框架（通常标记 `affects_gameplay: false`）也会注册 `AbstractModel` 子类型，导致 Host 与 Vanilla Client 之间哈希不一致，触发 "版本不匹配" 错误。
+
+**RespectAffectsGameplay** 同时解决这两个问题：通过 Harmony 补丁让存档路径只对 gameplay Mod 敏感，同时从联机哈希计算中排除非 gameplay Mod。
 
 ---
 
@@ -43,26 +48,35 @@
 
 ```mermaid
 flowchart TD
-    A[游戏启动 / 加载 Mod] --> B{RespectAffectsGameplay}
-    B --> C[读取 Modded Mode 设置]
-    C --> D{当前模式?}
-    D -->|Auto| E[遍历已加载 Mod]
-    E --> F{存在 affects_gameplay<br/>为 true 的 Mod?}
-    F -->|是| G[标记为 Modded]
-    F -->|否| H[标记为 Vanilla]
-    D -->|Always Vanilla| H
-    D -->|Always Modded| G
+    A[游戏启动 / 加载 Mod] --> B[读取 Modded Mode 设置]
+    B --> C{当前模式?}
+    C -->|Auto| D{存在 affects_gameplay: true<br/>的已加载 Mod?}
+    D -->|是| E[视为 Modded]
+    D -->|否| F[视为 Vanilla]
+    C -->|Always Vanilla| F
+    C -->|Default| G{ModManager.Mods<br/>中存在已加载 Mod?}
+    G -->|是| E
+    G -->|否| F
 ```
 
 ### Harmony 补丁
 
-本 Mod 通过 3 个 Harmony 补丁精确控制存档路径，而不影响 UI 显示：
+本 Mod 使用 5 个 Harmony 补丁，其中 4 个始终启用，1 个由用户可选开关控制：
 
-| 补丁                      | 目标方法                                      | 类型   | 作用                                           |
-| ------------------------- | --------------------------------------------- | ------ | ---------------------------------------------- |
-| `PatchGetIsRunningModded` | `UserDataPathProvider.IsRunningModded` getter | Prefix | 读取时返回 `IsEffectivelyModded()` 的修正值    |
-| `PatchSetIsRunningModded` | `UserDataPathProvider.IsRunningModded` setter | Prefix | 写入时替换为 `IsEffectivelyModded()` 的修正值  |
-| `PatchGetProfileDir`      | `UserDataPathProvider.GetProfileDir`          | Prefix | 无 gamepaly mod 时返回 vanilla 路径 `profileX` |
+| 补丁                             | 目标方法                                      | 默认   | 作用                                                     |
+| -------------------------------- | --------------------------------------------- | ------ | -------------------------------------------------------- |
+| `PatchGetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` getter | ✅ 始终 | 读取属性时返回 `IsEffectivelyModded()` 的修正值          |
+| `PatchSetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` setter | ✅ 始终 | 写入属性时替换为 `IsEffectivelyModded()` 的值            |
+| `PatchGetProfileDir`             | `UserDataPathProvider.GetProfileDir`          | ✅ 始终 | 无 gameplay Mod 时返回 vanilla 路径 `profileX`           |
+| `PatchModelIdSerializationCache` | `ModelIdSerializationCache.Init`              | ✅ 始终 | 临时过滤 `ModManager.Mods`，使哈希仅由 gameplay Mod 决定 |
+| `PatchModManagerIsRunningModded` | `ModManager.IsRunningModded`                  | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制       |
+
+> **设计决策**:
+> - 存档路径由前 3 个补丁分层控制（属性 getter → setter → 最终路径生成），即使外部代码通过其他方式修改 `IsRunningModded` 也能兜底。
+> - 联机哈希由 `PatchModelIdSerializationCache` 通过 Prefix+Postfix+Finalizer 临时标志位方案精准过滤，
+>   仅在 `Init()` 执行期间让 `ModManager.Mods` 返回排除非 gameplay Mod 的列表，不永久影响其他调用方。
+> - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
+>   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 
 ---
 
@@ -70,13 +84,18 @@ flowchart TD
 
 本 Mod 依赖 [STS2-RitsuLib](https://github.com/BAKAOLC/STS2-RitsuLib) 框架，通过 `RitsuModManager.GetKnownMods()` 获取已加载 Mod 列表并逐个检查其 `affects_gameplay` 标记。
 
-在游戏内的 Mod 设置页面中，你可以选择三种运行模式：
+在游戏内的 Mod 设置页面中，你可以选择三种运行模式，以及一个可选高级开关：
 
-| 模式                             | 行为                                                         | 推荐场景                           |
-| -------------------------------- | ------------------------------------------------------------ | ---------------------------------- |
-| **Auto**（自动）                 | 仅当加载了 `affects_gameplay: true` 的 Mod 时才标记为 modded | ⭐ 推荐，大部分情况下使用           |
-| **Always Vanilla**（始终原版）   | 无论如何都不标记为 modded                                    | 测试用途（⚠️ 可能导致存档问题）     |
-| **Always Modded**（始终 Modded） | 只要加载了任意 Mod 就标记为 modded                           | 需要独立存档时使用（恢复原版行为） |
+| 设置项                     | 选项                         | 行为                                                            |
+| -------------------------- | ---------------------------- | --------------------------------------------------------------- |
+| **Modded Mode**            | `Auto`（自动）⭐              | 仅当存在 `affects_gameplay: true` 的 Mod 时视为 modded          |
+|                            | `Always Vanilla`（强制原版） | 永不视为 modded（⚠ 可能导致存档损坏）                           |
+|                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded |
+| **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                           |
+|                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制            |
+| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，拦截开关 → 关闭）       |
+
+> ⚠ 所有设置项修改后需**重启游戏**才能生效。点击按钮后设置立即持久化到 `settings.json`。
 
 ---
 
@@ -119,7 +138,10 @@ flowchart TD
 ```
 RespectAffectsGameplay/
 ├── .github/
-│   └── workflows/                      # CI / CodeQL 工作流
+│   ├── workflows/                      # CI / CodeQL 工作流
+│   ├── ISSUE_TEMPLATE/                 # Issue 模板
+│   ├── PULL_REQUEST_TEMPLATE.md        # PR 模板
+│   └── dependabot.yml                  # 依赖自动更新配置
 ├── stubs/                              # 桩项目（仅 CI 使用，本地开发不需要）
 │   ├── sts2/
 │   │   ├── sts2.csproj                 # 模拟 STS2 游戏程序集
@@ -131,18 +153,20 @@ RespectAffectsGameplay/
 │   ├── RespectAffectsGameplay.csproj   # 主项目文件 (.NET 9.0)
 │   ├── RespectAffectsGameplay.json     # Mod 元数据清单
 │   ├── RespectAffectsGameplayMod.cs    # Mod 入口: 初始化设置 / 补丁 / 核心判断 IsEffectivelyModded()
-│   ├── ModdedMode.cs                   # Modded 模式枚举 (Auto / AlwaysVanilla / AlwaysModded)
+│   ├── ModdedMode.cs                   # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
 │   ├── ModInfo.cs                      # Mod 元数据信息 (ID / 名称 / 作者 / HarmonyId)
 │   ├── ModSettingsData.cs              # 持久化设置数据模型
-│   ├── ModSettingsHelper.cs            # 设置初始化与 CRUD 辅助类
+│   ├── ModSettingsHelper.cs            # 设置初始化 / 持久化 / 重置为默认值
 │   ├── LinuxNativeHelper.cs            # Linux libgcc_s 原生库加载辅助
 │   ├── PatchGetIsRunningModded.cs      # 拦截 UserDataPathProvider.IsRunningModded getter
 │   ├── PatchSetIsRunningModded.cs      # 拦截 UserDataPathProvider.IsRunningModded setter
-│   └── PatchGetProfileDir.cs           # 拦截存档目录生成方法
+│   ├── PatchGetProfileDir.cs           # 拦截存档目录生成方法
+│   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
+│   └── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
 ├── RespectAffectsGameplay.slnx         # 解决方案文件
 ├── LICENSE                             # MIT 许可证
 ├── CHANGELOG.md                        # 变更日志
-└── README.md
+└── README.md                           # 本文档
 ```
 
 ---

@@ -27,11 +27,6 @@ public static class ModSettingsHelper
     public const SaveScope DataScope = SaveScope.Global;
 
     /// <summary>
-    /// 数据注册作用域, 用于在 mod 卸载时释放
-    /// </summary>
-    private static IDisposable? _registrationScope;
-
-    /// <summary>
     /// mod 数据存储实例
     /// </summary>
     private static ModDataStore? _store;
@@ -41,15 +36,17 @@ public static class ModSettingsHelper
     /// </summary>
     public static void Initialize()
     {
-        _registrationScope = RitsuLibFramework.BeginModDataRegistration(ModInfo.Id);
-        _store = RitsuLibFramework.GetDataStore(ModInfo.Id);
-        _store.Register(
-            key: DataKey,
-            fileName: DataFileName,
-            scope: DataScope,
-            defaultFactory: () => new ModSettingsData(),
-            autoCreateIfMissing: true
-        );
+        using (RitsuLibFramework.BeginModDataRegistration(ModInfo.Id))
+        {
+            _store = RitsuLibFramework.GetDataStore(ModInfo.Id);
+            _store.Register(
+                key: DataKey,
+                fileName: DataFileName,
+                scope: DataScope,
+                defaultFactory: () => new ModSettingsData(),
+                autoCreateIfMissing: true
+            );
+        }
     }
 
     /// <summary>
@@ -74,12 +71,18 @@ public static class ModSettingsHelper
     }
 
     /// <summary>
+    /// 重置所有设置为默认值并持久化到磁盘
+    /// </summary>
+    public static void ResetToDefaults()
+    {
+        var settings = GetSettings();
+        settings.Mode = ModdedMode.Auto;
+        settings.PatchModManagerIsRunningModded = false;
+        SaveSettings();
+    }
+
+    /// <summary>
     /// 将待处理的更改持久化到磁盘
     /// </summary>
     public static void SaveSettings() => _store?.Save(DataKey);
-
-    /// <summary>
-    /// 释放数据注册作用域
-    /// </summary>
-    public static void Shutdown() => _registrationScope?.Dispose();
 }

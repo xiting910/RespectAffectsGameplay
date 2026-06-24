@@ -6,7 +6,7 @@ namespace RespectAffectsGameplay;
 /// <summary>
 /// 补丁: 拦截 <see cref="UserDataPathProvider.IsRunningModded"/> 的 getter
 /// </summary>
-[HarmonyPatch(typeof(UserDataPathProvider), "get_IsRunningModded")]
+[HarmonyPatch(typeof(UserDataPathProvider), $"get_{nameof(UserDataPathProvider.IsRunningModded)}")]
 public static class PatchGetIsRunningModded
 {
     /// <summary>

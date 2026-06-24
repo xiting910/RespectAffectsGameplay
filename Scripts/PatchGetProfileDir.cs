@@ -6,7 +6,7 @@ namespace RespectAffectsGameplay;
 /// <summary>
 /// 补丁: 拦截 <see cref="UserDataPathProvider.GetProfileDir"/> 方法
 /// </summary>
-[HarmonyPatch(typeof(UserDataPathProvider), "GetProfileDir")]
+[HarmonyPatch(typeof(UserDataPathProvider), nameof(UserDataPathProvider.GetProfileDir))]
 public static class PatchGetProfileDir
 {
     /// <summary>
