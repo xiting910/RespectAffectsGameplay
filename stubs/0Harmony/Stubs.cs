@@ -46,7 +46,7 @@ public class Harmony(string id)
     /// </summary>
     /// <param name="original">原始方法</param>
     /// <param name="patch">补丁方法</param>
-    public void Unpatch(MethodInfo? original, MethodInfo? patch)
+    public void Unpatch(MethodBase? original, MethodInfo? patch)
     {
         // 桩实现: 不执行任何实际操作
     }
