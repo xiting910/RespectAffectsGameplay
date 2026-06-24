@@ -7,6 +7,14 @@
 
 ---
 
+## [0.1.1] - 2025-06-25
+
+### Fixed
+
+- **Stubs 类名与真实 HarmonyLib 不匹配**: 将 `HarmonyPatchAttribute` → `HarmonyPatch`、`HarmonyPrefixAttribute` → `HarmonyPrefix`、`HarmonyPostfixAttribute` → `HarmonyPostfix`、`HarmonyFinalizerAttribute` → `HarmonyFinalizer`，修复 Release 产物在运行时抛出 `TypeLoadException` 的问题
+
+---
+
 ## [0.1.0] - 2025-06-25
 
 ### Added
@@ -100,5 +108,6 @@
 
 ## [Unreleased]
 
+[0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.1...HEAD

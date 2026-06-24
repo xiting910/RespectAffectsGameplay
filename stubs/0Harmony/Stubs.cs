@@ -3,6 +3,7 @@
 // 仅用于 CI 编译, 不包含任何实际补丁逻辑
 // =============================================================================
 #pragma warning disable IDE0052
+#pragma warning disable IDE0060
 #pragma warning disable CA1822
 
 using System.Reflection;
@@ -55,20 +56,20 @@ public class Harmony(string id)
 /// Harmony 补丁特性: 标记需要补丁的目标方法 (桩)
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-public class HarmonyPatchAttribute : Attribute
+public class HarmonyPatch : Attribute
 {
     /// <summary>
     /// 指定补丁目标类型
     /// </summary>
     /// <param name="declaringType">声明目标方法的类型</param>
-    public HarmonyPatchAttribute(Type declaringType) { }
+    public HarmonyPatch(Type declaringType) { }
 
     /// <summary>
     /// 指定补丁目标类型和方法名
     /// </summary>
     /// <param name="declaringType">声明目标方法的类型</param>
     /// <param name="methodName">目标方法名称</param>
-    public HarmonyPatchAttribute(Type declaringType, string methodName) { }
+    public HarmonyPatch(Type declaringType, string methodName) { }
 
     /// <summary>
     /// 指定补丁目标类型、方法名和参数类型
@@ -76,26 +77,26 @@ public class HarmonyPatchAttribute : Attribute
     /// <param name="declaringType">声明目标方法的类型</param>
     /// <param name="methodName">目标方法名称</param>
     /// <param name="argumentTypes">目标方法参数类型数组</param>
-    public HarmonyPatchAttribute(Type declaringType, string methodName, Type[] argumentTypes) { }
+    public HarmonyPatch(Type declaringType, string methodName, Type[] argumentTypes) { }
 }
 
 /// <summary>
 /// Harmony 前缀补丁特性: 在目标方法执行前运行 (桩)
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public class HarmonyPrefixAttribute : Attribute { }
+public class HarmonyPrefix : Attribute { }
 
 /// <summary>
 /// Harmony 后缀补丁特性: 在目标方法执行后运行 (桩)
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public class HarmonyPostfixAttribute : Attribute { }
+public class HarmonyPostfix : Attribute { }
 
 /// <summary>
 /// Harmony 最终器补丁特性: 在目标方法执行后始终运行, 类似 finally 块 (桩)
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public class HarmonyFinalizerAttribute : Attribute { }
+public class HarmonyFinalizer : Attribute { }
 
 /// <summary>
 /// Harmony 反射访问工具类 (桩)

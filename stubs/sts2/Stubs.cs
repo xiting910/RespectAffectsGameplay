@@ -5,6 +5,7 @@
 #pragma warning disable IDE0130
 #pragma warning disable IDE1006
 #pragma warning disable IDE0052
+#pragma warning disable IDE0060
 #pragma warning disable CA1716
 #pragma warning disable CA1822
 #pragma warning disable CS9113
