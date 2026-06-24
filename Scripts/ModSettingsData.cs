@@ -13,5 +13,5 @@ public sealed class ModSettingsData
     /// <summary>
     /// 是否拦截 <c>ModManager.IsRunningModded()</c> 方法
     /// </summary>
-    public bool PatchModManagerIsRunningModded { get; set; } = false;
+    public bool PatchModManagerIsRunningModded { get; set; }
 }

@@ -70,8 +70,7 @@ public static class RespectAffectsGameplayMod
     /// <summary>
     /// 注册游戏内 mod 设置页面
     /// </summary>
-    private static void RegisterSettingsPage()
-    {
+    private static void RegisterSettingsPage() =>
         RitsuLibFramework.RegisterModSettings(ModInfo.Id, page => page
             .WithTitle(ModSettingsText.Literal(ModInfo.Name))
             .WithModDisplayName(ModSettingsText.Literal(ModInfo.Name))
@@ -122,5 +121,4 @@ public static class RespectAffectsGameplayMod
                     description: ModSettingsText.Literal(
                         "将所有设置恢复为默认值（Modded Mode → 自动，拦截 IsRunningModded() → 关闭）。\n" +
                         "⚠ 修改后需重启游戏才能生效。"))));
-    }
 }

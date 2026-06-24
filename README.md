@@ -59,6 +59,8 @@ RespectAffectsGameplay/
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
 │   └── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
 ├── RespectAffectsGameplay.slnx           # 解决方案文件
+├── .editorconfig                         # 代码风格配置（空格缩进 / LF / UTF-8）
+├── .gitignore                            # Git 忽略规则
 ├── LICENSE                               # MIT 许可证
 ├── CHANGELOG.md                          # 变更日志
 └── README.md                             # 本文档

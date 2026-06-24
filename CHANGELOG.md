@@ -11,6 +11,9 @@
 
 ### Added
 
+- **`.editorconfig` 代码风格配置**: 统一项目代码风格（空格缩进、LF 换行、UTF-8 编码），
+  并启用一系列 .NET 代码质量分析规则（CA1000~CA1853）
+
 - **核心功能: 尊重 `affects_gameplay` 标记**
   不再将所有已加载的 mod 都标记为 `modded`, 而是根据每个 mod 的 `affects_gameplay` 元数据判断.
   外观/基础库/辅助类等 mod (`affects_gameplay: false`) 不再导致存档路径分离或阻止联机.

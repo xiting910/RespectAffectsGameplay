@@ -19,20 +19,14 @@ public static class PatchModelIdSerializationCache
     /// </summary>
     [HarmonyPrefix]
     [HarmonyPatch(typeof(ModelIdSerializationCache), nameof(ModelIdSerializationCache.Init))]
-    public static void InitPrefix()
-    {
-        _filterModsForHash = true;
-    }
+    public static void InitPrefix() => _filterModsForHash = true;
 
     /// <summary>
     /// 在 <see cref="ModelIdSerializationCache.Init"/> 执行后清除过滤标志
     /// </summary>
     [HarmonyPostfix]
     [HarmonyPatch(typeof(ModelIdSerializationCache), nameof(ModelIdSerializationCache.Init))]
-    public static void InitPostfix()
-    {
-        _filterModsForHash = false;
-    }
+    public static void InitPostfix() => _filterModsForHash = false;
 
     /// <summary>
     /// 安全网: 即使 Init 抛出异常也确保标志位被重置

@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/Other/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="CHANGELOG.md" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="stubs/0Harmony/0Harmony.csproj" />
   <Project Path="stubs/sts2/sts2.csproj" />
   <Project Path="Scripts/RespectAffectsGameplay.csproj" />

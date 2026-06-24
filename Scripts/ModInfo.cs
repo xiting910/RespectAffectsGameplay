@@ -26,7 +26,7 @@ public static class ModInfo
         {
             if (!_resolved)
             {
-                RitsuModManager.TryGetModInfo("RespectAffectsGameplay", out _cached);
+                _ = RitsuModManager.TryGetModInfo("RespectAffectsGameplay", out _cached);
                 _resolved = true;
             }
             return _cached;
