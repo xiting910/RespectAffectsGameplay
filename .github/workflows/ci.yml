@@ -1,0 +1,25 @@
+﻿# =============================================================================
+# CI 工作流: 每次 push / PR 时自动构建、测试、上传测试结果
+# =============================================================================
+name: CI
+
+# 触发条件: 当向 main/develop 分支 push 或发起 PR 时执行
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# 权限设置: CI 需要读取代码库内容、写入检查状态和 PR 评论
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+# 作业定义: 包含构建、测试等步骤
+jobs:
+  build-and-test:
+    # TODO: 根据项目需要选择合适的运行环境
+    runs-on: ubuntu-latest
+
+    # TODO: 根据项目构建方式调整步骤

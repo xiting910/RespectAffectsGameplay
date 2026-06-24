@@ -1,0 +1,33 @@
+﻿# =============================================================================
+# CodeQL 代码安全分析工作流: 分析 C# 代码，触发时机为 push、PR 和每周定时
+# =============================================================================
+name: CodeQL Analysis
+
+# 触发时机：push 到 main、PR 到 main、每周一 0:00 UTC（北京时间 8:00）
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 0 * * 1"
+
+# 需要 security-events:write 才能把扫描结果写入 GitHub Security 面板
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+# 定义分析任务
+jobs:
+  analyze:
+    name: Analyze
+
+    # TODO: 根据项目语言选择合适的运行环境
+    runs-on: ubuntu-latest
+
+    # TODO: 根据项目语言选择合适的 CodeQL 分析器
+    strategy:
+      fail-fast: false
+
+    # TODO: 根据项目构建方式调整分析步骤

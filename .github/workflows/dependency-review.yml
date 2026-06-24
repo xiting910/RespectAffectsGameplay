@@ -1,0 +1,27 @@
+﻿# =============================================================================
+# 依赖审查工作流: PR 中依赖变更时自动扫描已知漏洞, 并在 PR 评论区报告
+# =============================================================================
+name: Dependency Review
+
+# 触发条件: 当 PR 被打开、更新或重新打开时执行
+on:
+  pull_request:
+
+# 权限设置: 需要读取代码内容和写入 PR 评论的权限
+permissions:
+  contents: read
+  pull-requests: write
+
+# 作业定义: 执行依赖审查
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v5
+        with:
+          comment-summary-in-pr: always
+          retry-on-snapshot-warnings: true

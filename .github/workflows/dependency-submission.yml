@@ -1,0 +1,23 @@
+﻿# =============================================================================
+# 依赖提交工作流: 向 GitHub 提交项目依赖快照, 供 Dependency Review 使用
+# =============================================================================
+name: Dependency Submission
+
+# 触发条件: 向 main/develop 分支 push 或发起 PR 时执行
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main, develop]
+
+# 权限设置: 需要写入权限以上传依赖快照
+permissions:
+    contents: write
+
+# 作业定义: 还原依赖并提交快照
+jobs:
+    submit:
+        # TODO: 根据项目使用的 CI 环境选择合适的 runner
+        runs-on: ubuntu-latest
+
+        # TODO: 根据项目构建方式调整步骤

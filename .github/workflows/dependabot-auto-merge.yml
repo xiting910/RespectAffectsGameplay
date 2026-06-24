@@ -1,0 +1,31 @@
+﻿# =============================================================================
+# Dependabot 自动合并: CI 通过后自动 approve 并 squash 合并
+# =============================================================================
+name: Dependabot Auto-Merge
+
+# 触发条件: 仅在 Dependabot PR 被打开或新提交推送时执行
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# 权限: approve 和 merge 需要 pull-requests 和 contents 写入权限
+permissions:
+  contents: write
+  pull-requests: write
+
+# 环境变量: 使用内置 GITHUB_TOKEN
+env:
+  PR_URL: ${{ github.event.pull_request.html_url }}
+  GH_TOKEN: ${{ github.token }}
+
+# 作业定义: 仅当 PR 的作者是 dependabot[bot] 时执行自动合并流程
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Approve PR
+        run: gh pr review --approve "$PR_URL"
+
+      - name: Enable auto-merge
+        run: gh pr merge --auto --squash "$PR_URL"
