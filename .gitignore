@@ -1,5 +1,6 @@
-﻿**/.vs/
+**/.vs/
 **/.vscode/
 **/bin/
 **/obj/
-*.csproj.user
+stubs/
+Directory.Build.props

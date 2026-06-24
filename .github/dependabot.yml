@@ -1,5 +1,5 @@
 # =============================================================================
-# Dependabot 自动依赖更新配置, 每周一自动检查 NuGet 包和 GitHub Actions 是否有新版本
+# Dependabot 自动依赖更新配置, 每周自动检查 NuGet 包和 GitHub Actions 是否有新版本
 # =============================================================================
 version: 2
 updates:
@@ -11,19 +11,10 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "nuget"
-    groups:
-      # TODO: 根据项目主要依赖的 NuGet 包添加特定的更新组
-
-      # 其他 NuGet 包合并更新
-      nuget-catchall:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
 
   # ── GitHub Actions 工作流依赖更新 ─────────────────────────────────────────
   - package-ecosystem: "github-actions"
@@ -33,6 +24,7 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "github-actions"

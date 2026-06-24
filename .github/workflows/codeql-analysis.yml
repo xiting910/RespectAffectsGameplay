@@ -1,14 +1,14 @@
-﻿# =============================================================================
-# CodeQL 代码安全分析工作流: 分析 C# 代码，触发时机为 push、PR 和每周定时
+# =============================================================================
+# CodeQL 代码安全分析工作流: 分析 C# 代码, 触发时机为 push、PR 和每周定时
 # =============================================================================
 name: CodeQL Analysis
 
-# 触发时机：push 到 main、PR 到 main、每周一 0:00 UTC（北京时间 8:00）
+# 触发时机：push 到 main、PR 到 main、每周一 0:00 UTC (即北京时间周一 8:00)
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   schedule:
     - cron: "0 0 * * 1"
 
@@ -22,12 +22,42 @@ permissions:
 jobs:
   analyze:
     name: Analyze
-
-    # TODO: 根据项目语言选择合适的运行环境
     runs-on: ubuntu-latest
-
-    # TODO: 根据项目语言选择合适的 CodeQL 分析器
     strategy:
       fail-fast: false
+      matrix:
+        language: ["csharp"]
 
-    # TODO: 根据项目构建方式调整分析步骤
+    steps:
+      # 检出代码库内容
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 初始化 CodeQL 引擎, 指定分析 C# 语言
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+
+      # 安装 .NET 9 SDK
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+
+      # 创建游戏引用的 DLL 以便 CodeQL autobuild 能编译
+      - name: Create stub game references
+        run: |
+          mkdir -p ./stubs/data_sts2_linuxbsd_x86_64
+          touch ./stubs/data_sts2_linuxbsd_x86_64/sts2.dll
+          touch ./stubs/data_sts2_linuxbsd_x86_64/0Harmony.dll
+
+      # 使用 CodeQL autobuild 功能自动编译项目
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      # 执行分析并将结果上传到 GitHub Security 面板
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{matrix.language}}"
