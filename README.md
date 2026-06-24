@@ -13,6 +13,7 @@
 
 - [Respect Affects Gameplay](#respect-affects-gameplay)
   - [目录](#目录)
+  - [项目结构](#项目结构)
   - [解决的问题](#解决的问题)
     - [问题一：存档路径被强行分离](#问题一存档路径被强行分离)
     - [问题二：联机哈希被非 gameplay Mod 污染](#问题二联机哈希被非-gameplay-mod-污染)
@@ -22,9 +23,46 @@
   - [构建](#构建)
     - [环境要求](#环境要求)
     - [构建步骤](#构建步骤)
-  - [项目结构](#项目结构)
   - [许可证](#许可证)
   - [致谢](#致谢)
+
+---
+
+## 项目结构
+
+```
+RespectAffectsGameplay/
+├── .github/
+│   ├── workflows/                        # CI / CodeQL 工作流
+│   ├── ISSUE_TEMPLATE/                   # Issue 模板
+│   ├── PULL_REQUEST_TEMPLATE.md          # PR 模板
+│   └── dependabot.yml                    # 依赖自动更新配置
+├── stubs/                                # 桩项目（仅 CI 使用，本地开发不需要）
+│   ├── sts2/
+│   │   ├── sts2.csproj                   # 模拟 STS2 游戏程序集
+│   │   └── Stubs.cs                      # 桩类型: ModManager, UserDataPathProvider 等
+│   └── 0Harmony/
+│       ├── 0Harmony.csproj               # 模拟 HarmonyLib 程序集
+│       └── Stubs.cs                      # 桩类型: Harmony, HarmonyPatch 等
+├── Scripts/
+│   ├── RespectAffectsGameplay.csproj     # 主项目文件 (.NET 9.0)
+│   ├── RespectAffectsGameplay.json       # Mod 元数据清单
+│   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化设置 / 补丁 / 核心判断 IsEffectivelyModded()
+│   ├── ModdedMode.cs                     # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
+│   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 作者 / HarmonyId)
+│   ├── ModSettingsData.cs                # 持久化设置数据模型
+│   ├── ModSettingsHelper.cs              # 设置初始化 / 持久化 / 重置为默认值
+│   ├── LinuxNativeHelper.cs              # Linux libgcc_s 原生库加载辅助
+│   ├── PatchGetIsRunningModded.cs        # 拦截 UserDataPathProvider.IsRunningModded getter
+│   ├── PatchSetIsRunningModded.cs        # 拦截 UserDataPathProvider.IsRunningModded setter
+│   ├── PatchGetProfileDir.cs             # 拦截存档目录生成方法
+│   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
+│   └── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
+├── RespectAffectsGameplay.slnx           # 解决方案文件
+├── LICENSE                               # MIT 许可证
+├── CHANGELOG.md                          # 变更日志
+└── README.md                             # 本文档
+```
 
 ---
 
@@ -130,44 +168,6 @@ flowchart TD
    ```
 
 > **CI 说明：** GitHub Actions 工作流会先编译 `stubs/` 下的桩项目，再将生成的 DLL 复制到 `stubs/data_sts2_linuxbsd_x86_64/`，最后编译主项目。本地开发无需关心此流程。
-
----
-
-## 项目结构
-
-```
-RespectAffectsGameplay/
-├── .github/
-│   ├── workflows/                      # CI / CodeQL 工作流
-│   ├── ISSUE_TEMPLATE/                 # Issue 模板
-│   ├── PULL_REQUEST_TEMPLATE.md        # PR 模板
-│   └── dependabot.yml                  # 依赖自动更新配置
-├── stubs/                              # 桩项目（仅 CI 使用，本地开发不需要）
-│   ├── sts2/
-│   │   ├── sts2.csproj                 # 模拟 STS2 游戏程序集
-│   │   └── Stubs.cs                    # 桩类型: ModManager, UserDataPathProvider 等
-│   └── 0Harmony/
-│       ├── 0Harmony.csproj             # 模拟 HarmonyLib 程序集
-│       └── Stubs.cs                    # 桩类型: Harmony, HarmonyPatch 等
-├── Scripts/
-│   ├── RespectAffectsGameplay.csproj   # 主项目文件 (.NET 9.0)
-│   ├── RespectAffectsGameplay.json     # Mod 元数据清单
-│   ├── RespectAffectsGameplayMod.cs    # Mod 入口: 初始化设置 / 补丁 / 核心判断 IsEffectivelyModded()
-│   ├── ModdedMode.cs                   # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
-│   ├── ModInfo.cs                      # Mod 元数据信息 (ID / 名称 / 作者 / HarmonyId)
-│   ├── ModSettingsData.cs              # 持久化设置数据模型
-│   ├── ModSettingsHelper.cs            # 设置初始化 / 持久化 / 重置为默认值
-│   ├── LinuxNativeHelper.cs            # Linux libgcc_s 原生库加载辅助
-│   ├── PatchGetIsRunningModded.cs      # 拦截 UserDataPathProvider.IsRunningModded getter
-│   ├── PatchSetIsRunningModded.cs      # 拦截 UserDataPathProvider.IsRunningModded setter
-│   ├── PatchGetProfileDir.cs           # 拦截存档目录生成方法
-│   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
-│   └── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
-├── RespectAffectsGameplay.slnx         # 解决方案文件
-├── LICENSE                             # MIT 许可证
-├── CHANGELOG.md                        # 变更日志
-└── README.md                           # 本文档
-```
 
 ---
 

@@ -4,6 +4,7 @@
 // =============================================================================
 #pragma warning disable IDE0130
 #pragma warning disable IDE1006
+#pragma warning disable IDE0052
 #pragma warning disable IDE0060
 #pragma warning disable CA1822
 
@@ -32,12 +33,39 @@ namespace MegaCrit.Sts2.Core.Modding
     }
 
     /// <summary>
+    /// 模组清单 (桩)
+    /// </summary>
+    public class ModManifest
+    {
+        /// <summary>是否影响游戏性</summary>
+        public bool affectsGameplay { get; set; } = true;
+    }
+
+    /// <summary>
+    /// 模组实例 (桩)
+    /// </summary>
+    public class Mod
+    {
+        /// <summary>模组加载状态</summary>
+        public ModLoadState state { get; set; } = ModLoadState.None;
+
+        /// <summary>模组清单</summary>
+        public ModManifest? manifest { get; set; }
+    }
+
+    /// <summary>
     /// 模组管理器 (桩)
     /// </summary>
     public static class ModManager
     {
+        /// <summary>私有模组列表字段 (反射访问)</summary>
+        private static readonly List<Mod> _mods = [];
+
         /// <summary>已加载的模组列表</summary>
-        public static IReadOnlyList<ModInfo> Mods { get; } = [];
+        public static IReadOnlyList<Mod> Mods { get; } = [];
+
+        /// <summary>是否以 modded 模式运行</summary>
+        public static bool IsRunningModded { get; }
     }
 
     /// <summary>
@@ -49,6 +77,18 @@ namespace MegaCrit.Sts2.Core.Modding
     {
         /// <summary>初始化方法名称</summary>
         public string MethodName { get; } = methodName;
+    }
+}
+
+namespace MegaCrit.Sts2.Core.Multiplayer.Serialization
+{
+    /// <summary>
+    /// 模型 ID 序列化缓存 (桩): 用于联机哈希计算
+    /// </summary>
+    public static class ModelIdSerializationCache
+    {
+        /// <summary>初始化缓存</summary>
+        public static void Init() { }
     }
 }
 

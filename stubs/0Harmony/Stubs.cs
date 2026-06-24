@@ -35,6 +35,16 @@ public class Harmony(string id)
     {
         // 桩实现: 不执行任何实际操作
     }
+
+    /// <summary>
+    /// 移除指定方法的补丁 (桩)
+    /// </summary>
+    /// <param name="original">原始方法</param>
+    /// <param name="patch">补丁方法</param>
+    public void Unpatch(MethodInfo? original, MethodInfo? patch)
+    {
+        // 桩实现: 不执行任何实际操作
+    }
 }
 
 /// <summary>
@@ -76,3 +86,24 @@ public class HarmonyPrefix : Attribute { }
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
 public class HarmonyPostfix : Attribute { }
+
+/// <summary>
+/// Harmony 最终器补丁特性: 在目标方法执行后始终运行, 类似 finally 块 (桩)
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public class HarmonyFinalizer : Attribute { }
+
+/// <summary>
+/// Harmony 反射访问工具类 (桩)
+/// </summary>
+public static class AccessTools
+{
+    /// <summary>
+    /// 通过反射获取类型的静态字段引用 (桩)
+    /// </summary>
+    /// <typeparam name="T">字段类型</typeparam>
+    /// <param name="type">声明字段的类型</param>
+    /// <param name="fieldName">字段名称</param>
+    /// <returns>字段值的引用</returns>
+    public static T StaticFieldRefAccess<T>(Type type, string fieldName) => default!;
+}
