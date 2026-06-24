@@ -11,6 +11,29 @@
 
 ### Added
 
+- **统一日志系统 `ModLog`**: 全局共享的日志包装类, 自动为每条日志添加 `[ModInfo.Id]` 前缀,
+  无需调用方硬编码 mod ID
+
+- **"详细日志" 设置开关**: 游戏内设置页面新增 Toggle, 开启后输出 Debug/Info 级别日志,
+  关闭后仅输出 Warn/Error。仅影响本 mod, 不影响游戏或其他 mod 的日志。修改后即时生效, 无需重启
+
+- **全面的异常处理与容错**:
+  - `PatchModelIdSerializationCache.InitFinalizer` 不再静默吞异常, 改为记录完整错误信息
+  - `GetModsPrefix` 反射访问 `_mods` 添加 try-catch, 失败时回退到原始 getter
+  - `ModSettingsHelper.ResetToDefaults()` 添加 `_store` null 检查, 防止静默失败
+  - `ModInfo.Cached` 添加 try-catch, 查询自身 ModInfo 失败时使用 fallback 值
+  - `LinuxNativeHelper.EnsureLibGccLoaded` 检查 `dlopen` 返回值并记录结果
+  - `IsEffectivelyModded()` catch 块记录异常详情, 不再静默吞错
+
+- **详细运行时日志**: 所有 5 个 Harmony 补丁、设置加载/保存、模式判断等关键路径
+  均添加 Debug/Info 级别日志, 方便排查游戏更新后的兼容性问题
+
+- **桩文件完善** (CI 构建支持):
+  - sts2 桩新增 `Logger`、`LogLevel`、`LogType`、`ModelIdSerializationCache.Hash`
+  - 修正 `ModManager.IsRunningModded` 为方法 (匹配实际游戏 API)
+  - 修正 `UserDataPathProvider` 为静态类
+  - 0Harmony 桩新增 `Harmony.GetPatchedMethods()`
+
 - **`.editorconfig` 代码风格配置**: 统一项目代码风格（空格缩进、LF 换行、UTF-8 编码），
   并启用一系列 .NET 代码质量分析规则（CA1000~CA1853）
 

@@ -19,6 +19,7 @@ public static class PatchModManagerIsRunningModded
     public static bool Prefix(ref bool __result)
     {
         __result = RespectAffectsGameplayMod.IsEffectivelyModded();
+        ModLog.Debug($"ModManager.IsRunningModded() (已拦截) → {__result}");
         return false;
     }
 }

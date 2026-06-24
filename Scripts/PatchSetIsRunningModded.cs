@@ -17,7 +17,12 @@ public static class PatchSetIsRunningModded
     [HarmonyPrefix]
     public static bool Prefix(ref bool value)
     {
+        var originalValue = value;
         value = RespectAffectsGameplayMod.IsEffectivelyModded();
+        if (originalValue != value)
+        {
+            ModLog.Debug($"UserDataPathProvider.IsRunningModded setter: {originalValue} → {value}");
+        }
         return true;
     }
 }

@@ -18,6 +18,7 @@ public static class PatchGetIsRunningModded
     public static bool Prefix(ref bool __result)
     {
         __result = RespectAffectsGameplayMod.IsEffectivelyModded();
+        ModLog.Debug($"UserDataPathProvider.IsRunningModded getter → {__result}");
         return false;
     }
 }

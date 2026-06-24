@@ -26,7 +26,17 @@ public static class ModInfo
         {
             if (!_resolved)
             {
-                _ = RitsuModManager.TryGetModInfo("RespectAffectsGameplay", out _cached);
+                try
+                {
+                    if (RitsuModManager.TryGetModInfo("RespectAffectsGameplay", out var info) && info is not null)
+                    {
+                        _cached = info;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModLog.Warn($"无法从 RitsuModManager 获取自身 ModInfo, 使用 fallback: {ex.Message}");
+                }
                 _resolved = true;
             }
             return _cached;
@@ -42,6 +52,11 @@ public static class ModInfo
     /// 获取 mod 的名称 (来自 JSON "name")
     /// </summary>
     public static string Name => Cached?.Name ?? "Respect Affects Gameplay";
+
+    /// <summary>
+    /// 获取 mod 的版本号 (来自 JSON "version")
+    /// </summary>
+    public static string Version => Cached?.Version ?? "0.1.0";
 
     /// <summary>
     /// 获取 mod 的作者 (来自 JSON "author")

@@ -27,6 +27,11 @@ public class Harmony(string id)
     }
 
     /// <summary>
+    /// 获取此 Harmony 实例已补丁的所有方法 (桩)
+    /// </summary>
+    public IEnumerable<MethodBase> GetPatchedMethods() => [];
+
+    /// <summary>
     /// 应用指定类型中所有 Harmony 补丁 (桩)
     /// </summary>
     /// <param name="type">包含补丁方法的类型</param>

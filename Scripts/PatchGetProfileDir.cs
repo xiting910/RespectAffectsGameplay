@@ -21,8 +21,10 @@ public static class PatchGetProfileDir
         if (!RespectAffectsGameplayMod.IsEffectivelyModded())
         {
             __result = $"profile{profileId}";
+            ModLog.Debug($"GetProfileDir({profileId}) → vanilla 路径: {__result}");
             return false;
         }
+        ModLog.Debug($"GetProfileDir({profileId}) → 委托原始方法 (modded 路径)");
         return true;
     }
 }

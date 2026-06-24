@@ -47,9 +47,10 @@ RespectAffectsGameplay/
 ├── Scripts/
 │   ├── RespectAffectsGameplay.csproj     # 主项目文件 (.NET 9.0)
 │   ├── RespectAffectsGameplay.json       # Mod 元数据清单
-│   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化设置 / 补丁 / 核心判断 IsEffectivelyModded()
+│   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化 / 补丁 / IsEffectivelyModded()
 │   ├── ModdedMode.cs                     # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
-│   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 作者 / HarmonyId)
+│   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 版本 / 作者 / HarmonyId)
+│   ├── ModLog.cs                         # 统一日志系统 (自动前缀 + 详细日志开关)
 │   ├── ModSettingsData.cs                # 持久化设置数据模型
 │   ├── ModSettingsHelper.cs              # 设置初始化 / 持久化 / 重置为默认值
 │   ├── LinuxNativeHelper.cs              # Linux libgcc_s 原生库加载辅助
@@ -133,9 +134,11 @@ flowchart TD
 |                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded |
 | **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                           |
 |                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制            |
-| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，拦截开关 → 关闭）       |
+| **详细日志**               | 关闭（默认）                 | 仅输出 Warn / Error 日志                                        |
+|                            | 开启                         | 额外输出 Info / Debug 日志 (仅影响本 mod, 即时生效)             |
+| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）       |
 
-> ⚠ 所有设置项修改后需**重启游戏**才能生效。点击按钮后设置立即持久化到 `settings.json`。
+> ⚠ 除「详细日志」外, 其余设置项修改后需**重启游戏**才能生效。点击按钮后设置立即持久化到 `settings.json`。
 
 ---
 

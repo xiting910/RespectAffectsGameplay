@@ -7,6 +7,7 @@
 #pragma warning disable IDE0052
 #pragma warning disable CA1716
 #pragma warning disable CA1822
+#pragma warning disable CS9113
 
 namespace MegaCrit.Sts2.Core.Modding
 {
@@ -65,7 +66,7 @@ namespace MegaCrit.Sts2.Core.Modding
         public static IReadOnlyList<Mod> Mods { get; } = [];
 
         /// <summary>是否以 modded 模式运行</summary>
-        public static bool IsRunningModded { get; }
+        public static bool IsRunningModded() => false;
     }
 
     /// <summary>
@@ -87,6 +88,9 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Serialization
     /// </summary>
     public static class ModelIdSerializationCache
     {
+        /// <summary>联机 XXH32 哈希值</summary>
+        public static uint Hash { get; }
+
         /// <summary>初始化缓存</summary>
         public static void Init() { }
     }
@@ -97,16 +101,74 @@ namespace MegaCrit.Sts2.Core.Saves
     /// <summary>
     /// 用户数据路径提供器 (桩)
     /// </summary>
-    public class UserDataPathProvider
+    public static class UserDataPathProvider
     {
         /// <summary>是否以模组模式运行</summary>
-        public bool IsRunningModded { get; set; }
+        public static bool IsRunningModded { get; set; }
 
         /// <summary>
         /// 获取存档目录路径
         /// </summary>
         /// <param name="profileId">存档槽位编号</param>
         /// <returns>存档目录路径</returns>
-        public string GetProfileDir(int profileId) => string.Empty;
+        public static string GetProfileDir(int profileId) => string.Empty;
+    }
+}
+
+namespace MegaCrit.Sts2.Core.Logging
+{
+    /// <summary>
+    /// 日志级别枚举 (桩)
+    /// </summary>
+    public enum LogLevel
+    {
+        /// <summary>详细调试日志</summary>
+        VeryDebug,
+        /// <summary>调试日志</summary>
+        Debug,
+        /// <summary>普通信息日志</summary>
+        Info,
+        /// <summary>警告日志</summary>
+        Warn,
+        /// <summary>错误日志</summary>
+        Error,
+        /// <summary>加载日志</summary>
+        Load
+    }
+
+    /// <summary>
+    /// 日志类型枚举 (桩)
+    /// </summary>
+    public enum LogType
+    {
+        /// <summary> 通用日志</summary>
+        Generic,
+        /// <summary> 联机日志</summary>
+        Network,
+        /// <summary> 动作日志</summary>
+        Actions,
+        /// <summary> 游戏同步日志</summary>
+        GameSync
+    }
+
+    /// <summary>
+    /// 日志记录器 (桩)
+    /// </summary>
+    public class Logger(string? context, LogType logType)
+    {
+        /// <summary>日志上下文</summary>
+        public string? Context { get; set; } = context;
+
+        /// <summary>输出 Debug 日志</summary>
+        public void Debug(string text, int skipFrames = 1) { }
+
+        /// <summary>输出 Info 日志</summary>
+        public void Info(string text, int skipFrames = 1) { }
+
+        /// <summary>输出 Warn 日志</summary>
+        public void Warn(string text, int skipFrames = 1) { }
+
+        /// <summary>输出 Error 日志</summary>
+        public void Error(string text, int skipFrames = 1) { }
     }
 }

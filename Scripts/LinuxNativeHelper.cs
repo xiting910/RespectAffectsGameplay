@@ -33,9 +33,21 @@ internal static partial class LinuxNativeHelper
 
         _initialized = true;
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) { return; }
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            ModLog.Debug("非 Linux 平台, 跳过 libgcc_s 加载");
+            return;
+        }
 
-        _ = dlopen("libgcc_s.so.1", RTLD_NOW | RTLD_GLOBAL);
+        var handle = dlopen("libgcc_s.so.1", RTLD_NOW | RTLD_GLOBAL);
+        if (handle == IntPtr.Zero)
+        {
+            ModLog.Warn("Linux 上 dlopen(libgcc_s.so.1) 失败, Harmony 补丁可能无法生效");
+        }
+        else
+        {
+            ModLog.Debug($"libgcc_s.so.1 已加载 (handle=0x{handle:X})");
+        }
     }
 
     /// <summary>
