@@ -4,16 +4,19 @@
 name: Dependabot Auto-Merge
 
 # 触发条件: 仅在 Dependabot PR 被打开或新提交推送时执行
+# opened   → PR 首次创建
+# synchronize → PR 分支有新的 push
+# reopened → PR 被重新打开
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-# 权限: approve 和 merge 需要 pull-requests 和 contents 写入权限
+# 权限: approve 需要 pull-requests 写入, 合并需要 contents 写入
 permissions:
   contents: write
   pull-requests: write
 
-# 环境变量: 使用内置 GITHUB_TOKEN
+# 环境变量: 使用内置 GITHUB_TOKEN 操作当前仓库
 env:
   PR_URL: ${{ github.event.pull_request.html_url }}
   GH_TOKEN: ${{ github.token }}
@@ -27,5 +30,10 @@ jobs:
       - name: Approve PR
         run: gh pr review --approve "$PR_URL"
 
-      - name: Enable auto-merge
+      - name: Update branch from base (prevent out-of-date failure)
+        run: |
+          gh pr update-branch "$PR_URL" --rebase 2>/dev/null || \
+          echo "⚠️  Branch update not needed or has conflicts — will retry on next sync"
+
+      - name: Enable auto-merge (squash)
         run: gh pr merge --auto --squash "$PR_URL"

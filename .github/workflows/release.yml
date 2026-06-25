@@ -101,6 +101,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Download build artifacts
         uses: actions/download-artifact@v8
@@ -134,16 +136,65 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Generate commit history & contributors
+        id: gitinfo
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "${{ needs.build.outputs.tag }}" | head -1)
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+            echo "📌 Previous tag: $PREV_TAG"
+          else
+            RANGE="HEAD"
+            echo "📌 No previous tag — first release"
+          fi
+
+          # Commit history (exclude merge commits)
+          COMMITS=$(git log --oneline --no-merges $RANGE | sed 's/^/- /')
+          if [ -z "$COMMITS" ]; then
+            COMMITS="_（无新提交）_"
+          fi
+          {
+            echo "commits<<EOF"
+            echo "$COMMITS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          # Contributors (unique authors)
+          CONTRIBS=$(git log --format='- @%an' $RANGE | sort -u)
+          if [ -z "$CONTRIBS" ]; then
+            CONTRIBS="_（无贡献者）_"
+          fi
+          {
+            echo "contributors<<EOF"
+            echo "$CONTRIBS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          echo "✅ Commits:"
+          echo "$COMMITS"
+          echo "✅ Contributors:"
+          echo "$CONTRIBS"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           name: "v${{ needs.build.outputs.version }} — Respect Affects Gameplay"
           tag_name: ${{ needs.build.outputs.tag }}
-          generate_release_notes: true
           body: |
             ## 🔧 Respect Affects Gameplay v${{ needs.build.outputs.version }}
 
             ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
+            ### 📝 此版本提交
+
+            ${{ steps.gitinfo.outputs.commits }}
+
+            ### 👥 贡献者
+
+            ${{ steps.gitinfo.outputs.contributors }}
 
             ---
 
@@ -197,7 +248,12 @@ jobs:
         id: ws_meta
         run: |
           echo "title=$(jq -r '.title' workshop/workshop.json)" >> $GITHUB_OUTPUT
-          echo "description=$(jq -r '.description' workshop/workshop.json)" >> $GITHUB_OUTPUT
+          # description 含多行文本（含 GitHub URL 等），必须用 heredoc 写入 $GITHUB_OUTPUT
+          {
+            echo "description<<EOF"
+            jq -r '.description' workshop/workshop.json
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
           echo "visibility=$(jq -r '.visibility' workshop/workshop.json)" >> $GITHUB_OUTPUT
           echo "📋 Workshop title: $(jq -r '.title' workshop/workshop.json)"
 
