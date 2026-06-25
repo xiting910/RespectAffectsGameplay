@@ -255,7 +255,12 @@ jobs:
             echo "EOF"
           } >> $GITHUB_OUTPUT
           echo "visibility=$(jq -r '.visibility' workshop/workshop.json)" >> $GITHUB_OUTPUT
+
+          # Dependencies: JSON array of workshop item IDs → bash array
+          DEPS_JSON=$(jq -r '.dependencies // [] | join(" ")' workshop/workshop.json)
+          echo "deps=$DEPS_JSON" >> $GITHUB_OUTPUT
           echo "📋 Workshop title: $(jq -r '.title' workshop/workshop.json)"
+          echo "🔗 Dependencies: $DEPS_JSON"
 
           if [ -f "workshop/mod_id.txt" ]; then
             ITEM_ID=$(cat workshop/mod_id.txt | tr -d '[:space:]')
@@ -308,6 +313,7 @@ jobs:
           TITLE="${{ steps.ws_meta.outputs.title }}"
           DESCRIPTION="${{ steps.ws_meta.outputs.description }}"
           VISIBILITY="${{ steps.ws_meta.outputs.visibility }}"
+          DEPS="${{ steps.ws_meta.outputs.deps }}"
 
           case "$VISIBILITY" in
             public)       VIS_NUM=0 ;;
@@ -319,19 +325,31 @@ jobs:
 
           VDF_FILE="${{ github.workspace }}/workshop.vdf"
 
+          # Flatten description: replace newlines with spaces to keep VDF single-line-safe
+          DESCRIPTION_FLAT=$(echo "$DESCRIPTION" | tr '\n' ' ' | sed 's/  */ /g')
+
           {
-            printf '"workshopitem"\n{\n'
-            printf '"appid"             "%s"\n' "2868840"
-            printf '"publishedfileid"   "%s"\n' "$ITEM_ID"
-            printf '"contentfolder"     "%s"\n' "$WS_CONTENT"
+            echo '"workshopitem"'
+            echo '{'
+            echo "\"appid\"             \"2868840\""
+            echo "\"publishedfileid\"   \"$ITEM_ID\""
+            echo "\"contentfolder\"     \"$WS_CONTENT\""
             if [ "$HAS_PREVIEW" = "true" ]; then
-              printf '"previewfile"       "%s"\n' "${{ github.workspace }}/workshop/image.png"
+              echo "\"previewfile\"       \"${{ github.workspace }}/workshop/image.png\""
             fi
-            printf '"visibility"        "%s"\n' "$VIS_NUM"
-            printf '"title"             "%s"\n' "$TITLE"
-            printf '"description"       "%s"\n' "$DESCRIPTION"
-            printf '"changenote"        "%s"\n' "$CHANGENOTE"
-            printf '}\n'
+            echo "\"visibility\"        \"$VIS_NUM\""
+            echo "\"title\"             \"$TITLE\""
+            echo "\"description\"       \"$DESCRIPTION_FLAT\""
+            echo "\"changenote\"        \"$CHANGENOTE\""
+            if [ -n "$DEPS" ]; then
+              echo '"dependencies"'
+              echo '{'
+              for dep in $DEPS; do
+                echo "    \"$dep\""
+              done
+              echo '}'
+            fi
+            echo '}'
           } > "$VDF_FILE"
 
           echo "📝 Generated workshop.vdf:"
@@ -356,8 +374,22 @@ jobs:
 
           if [ -n "$STEAM_CONFIG_B64" ]; then
             echo "🔐 Restoring cached Steam login session from STEAM_CONFIG_B64..."
-            echo "$STEAM_CONFIG_B64" | base64 -d | tar -xz -C "$STEAMCMD_DIR"
+            mkdir -p "$HOME/Steam"
+            echo "$STEAM_CONFIG_B64" | base64 -d | tar -xz -C "$HOME/Steam"
             echo "✅ config.vdf restored — steamcmd will use cached credentials"
+
+            if [ -f "$HOME/Steam/config/config.vdf" ]; then
+              echo "✅ Verified: ~/Steam/config/config.vdf exists"
+            else
+              echo "❌ config.vdf not found at ~/Steam/config/config.vdf after extraction!"
+              echo "   Listing extracted files for debugging:"
+              find "$HOME/Steam" -name "config.vdf" 2>/dev/null || echo "   (none found)"
+              echo "💡 Your STEAM_CONFIG_B64 tar should contain: config/config.vdf"
+              echo "   Generate it with:  tar -czf - -C ~/Steam config/config.vdf | base64 -w0"
+              exit 1
+            fi
+
+
           else
             echo "❌ STEAM_CONFIG_B64 not set!"
             echo "💡 Run WSL setup first, then add the secret:"

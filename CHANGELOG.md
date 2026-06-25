@@ -25,6 +25,30 @@
 
 ---
 
+## [0.1.4] - 2026-06-25
+
+### Note
+
+- 本版本无游戏功能变更，修复了 Steam 创意工坊自动上传的一些问题，并更新了依赖项。
+
+### Changed
+
+- **STS2.RitsuLib 依赖**: 从 0.4.35 升级到 0.4.36
+
+### Fixed
+
+- **Steam 创意工坊上传失败**: `config.vdf` 缓存凭据解压路径错误，导致 steamcmd 报告 "Cached credentials not found" 并回退到密码登录失败。现修正为 steamcmd 实际读取的 `~/Steam/config/` 路径
+- **工坊依赖项未同步**: 生成 `workshop.vdf` 时遗漏了 `dependencies` 字段，导致工坊物品的依赖关系未随上传更新。现已从 `workshop.json` 读取并写入 VDF
+- **工坊 VDF 描述兼容性**: 包含换行符的描述文本现会被压平为单行，避免 VDF 解析异常
+
+### Internal
+
+- GitHub Release 正文新增提交历史与贡献者列表（通过 `fetch-depth: 0` + `git log` 生成）
+- Dependabot 自动合并流程优化：新增 `rebase-strategy: auto`、`update-branch` 步骤、squash 合并
+- GitHub Actions 依赖批量升级：`upload-artifact` v4→v7、`download-artifact` v4→v8、`action-gh-release` v2→v3
+
+---
+
 ## [0.1.3] - 2026-06-25
 
 ### Note
