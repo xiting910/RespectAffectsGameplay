@@ -25,6 +25,22 @@
 
 ---
 
+## [0.1.5] - 2026-06-25
+
+### Note
+
+- 本版本无游戏功能变更，仅为 Steam 创意工坊发布流程的基础设施更新。
+
+### Fixed
+
+-  `workshop_build_commit` 已弃用，改为 `workshop_build_item`，修复了 CI 发布流程中 Steam 工坊上传失败的问题
+
+### Internal
+
+- **cache-dependency-path**: CI 构建缓存依赖路径改为 `**/*.csproj` + `**/*.slnx`
+
+---
+
 ## [0.1.4] - 2026-06-25
 
 ### Note
@@ -170,8 +186,10 @@
 
 ## [Unreleased]
 
+[0.1.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.5
+[0.1.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.4
 [0.1.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.3
 [0.1.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.2
 [0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.5...HEAD

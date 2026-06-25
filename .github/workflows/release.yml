@@ -41,9 +41,8 @@ jobs:
           dotnet-version: 9.0.x
           cache: true
           cache-dependency-path: |
-            Scripts/RespectAffectsGameplay.csproj
-            stubs/sts2/sts2.csproj
-            stubs/0Harmony/0Harmony.csproj
+            **/*.csproj
+            **/*.slnx
 
       - name: Build stubs
         run: |
@@ -191,10 +190,6 @@ jobs:
             ### 📝 此版本提交
 
             ${{ steps.gitinfo.outputs.commits }}
-
-            ### 👥 贡献者
-
-            ${{ steps.gitinfo.outputs.contributors }}
 
             ---
 
@@ -401,7 +396,7 @@ jobs:
           cd "$STEAMCMD_DIR"
           ./steamcmd.sh \
             +login "$STEAM_USERNAME" \
-            +workshop_build_commit "${{ github.workspace }}/workshop.vdf" \
+            +workshop_build_item "${{ github.workspace }}/workshop.vdf" \
             +quit
 
           EXIT_CODE=$?
