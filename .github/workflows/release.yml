@@ -209,8 +209,12 @@ jobs:
             - [问题反馈](https://github.com/${{ github.repository }}/issues)
             - [完整更新日志](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
 
-            <!-- 隐藏的 @mentions，仅用于触发 GitHub 底部贡献者头像，正文中不可见 -->
-            <!-- ${{ steps.gitinfo.outputs.contributors }} -->
+            <details>
+            <summary>Contributors</summary>
+
+            ${{ steps.gitinfo.outputs.contributors }}
+
+            </details>
           files: |
             ${{ env.MOD_ID }}_v${{ needs.build.outputs.version }}.zip
           draft: false

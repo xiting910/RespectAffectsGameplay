@@ -25,6 +25,18 @@
 
 ---
 
+## [0.1.7] - 2026-06-25
+
+### Note
+
+- 本版本无游戏功能变更，修复了 GitHub Release 页面的问题。
+
+### Fixed
+
+- **Release 贡献者头像不显示**: HTML 注释中的 @mentions 不会被 GitHub 解析。改为 `<details>` 折叠块，默认收起不影响阅读，同时能正确触发底部贡献者头像
+
+---
+
 ## [0.1.6] - 2026-06-25
 
 ### Note
@@ -202,6 +214,7 @@
 
 ## [Unreleased]
 
+[0.1.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.7
 [0.1.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.6
 [0.1.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.5
 [0.1.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.4
@@ -209,4 +222,4 @@
 [0.1.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.2
 [0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.7...HEAD
