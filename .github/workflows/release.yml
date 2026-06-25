@@ -208,6 +208,9 @@ jobs:
             - [源代码](https://github.com/${{ github.repository }})
             - [问题反馈](https://github.com/${{ github.repository }}/issues)
             - [完整更新日志](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+            <!-- 隐藏的 @mentions，仅用于触发 GitHub 底部贡献者头像，正文中不可见 -->
+            <!-- ${{ steps.gitinfo.outputs.contributors }} -->
           files: |
             ${{ env.MOD_ID }}_v${{ needs.build.outputs.version }}.zip
           draft: false
@@ -339,8 +342,10 @@ jobs:
             if [ -n "$DEPS" ]; then
               echo '"dependencies"'
               echo '{'
+              i=0
               for dep in $DEPS; do
-                echo "    \"$dep\""
+                echo "    \"$i\"        \"$dep\""
+                i=$((i + 1))
               done
               echo '}'
             fi

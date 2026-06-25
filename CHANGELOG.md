@@ -25,6 +25,22 @@
 
 ---
 
+## [0.1.6] - 2026-06-25
+
+### Note
+
+- 本版本无游戏功能变更，修复了 v0.1.5 Steam 创意工坊上传仍失败的问题。
+
+### Fixed
+
+- **Steam 工坊 VDF 依赖格式错误**: `dependencies` 块中每个条目必须是 `"index" "id"` 键值对，不能只有单独的 ID。修复后 steamcmd 可正确解析 `workshop.vdf`
+
+### Internal
+
+- Release body 贡献者 @mentions 移至 HTML 注释中，正文不可见但仍触发 GitHub 底部头像
+
+---
+
 ## [0.1.5] - 2026-06-25
 
 ### Note
@@ -186,10 +202,11 @@
 
 ## [Unreleased]
 
+[0.1.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.6
 [0.1.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.5
 [0.1.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.4
 [0.1.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.3
 [0.1.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.2
 [0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.6...HEAD
