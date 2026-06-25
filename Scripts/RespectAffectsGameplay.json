@@ -3,7 +3,7 @@
     "name": "Respect Affects Gameplay",
     "author": "xiting910",
     "description": "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer.",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "min_game_version": "0.107.1",
     "has_pck": false,
     "has_dll": true,

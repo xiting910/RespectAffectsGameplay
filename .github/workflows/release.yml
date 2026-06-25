@@ -39,6 +39,11 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 9.0.x
+          cache: true
+          cache-dependency-path: |
+            Scripts/RespectAffectsGameplay.csproj
+            stubs/sts2/sts2.csproj
+            stubs/0Harmony/0Harmony.csproj
 
       - name: Build stubs
         run: |
@@ -64,6 +69,12 @@ jobs:
       - name: Package mod
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+
+          mkdir -p workshop/content
+          cp Scripts/bin/Release/net9.0/${{ env.MOD_ID }}.dll workshop/content/
+          cp Scripts/${{ env.MOD_ID }}.json workshop/content/
+          echo "✅ Copied build output to workshop/content/"
+
           PKG="pkg/${{ env.MOD_ID }}"
           mkdir -p "$PKG"
           cp Scripts/bin/Release/net9.0/${{ env.MOD_ID }}.dll "$PKG/"
@@ -80,6 +91,7 @@ jobs:
           path: |
             ${{ env.MOD_ID }}_v*.zip
             pkg/${{ env.MOD_ID }}/
+            workshop/
           retention-days: 1
 
   github-release:
@@ -99,7 +111,6 @@ jobs:
         id: changelog
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          # 从 CHANGELOG.md 提取 ## [VERSION] 到下一个 ## [ 之间的内容
           CHANGELOG=$(awk -v ver="$VERSION" '
           BEGIN { found=0; output="" }
           $0 ~ "^## \\[" ver "\\]" { found=1; next }
@@ -108,7 +119,6 @@ jobs:
           END { print output }
           ' CHANGELOG.md)
 
-          # 未找到对应版本时回退到 [Unreleased]
           if [ -z "$(echo "$CHANGELOG" | tr -d '[:space:]')" ]; then
           echo "⚠️  No changelog for v$VERSION, using [Unreleased]"
           CHANGELOG=$(awk '
@@ -129,6 +139,7 @@ jobs:
         with:
           name: "v${{ needs.build.outputs.version }} — Respect Affects Gameplay"
           tag_name: ${{ needs.build.outputs.tag }}
+          generate_release_notes: true
           body: |
             ## 🔧 Respect Affects Gameplay v${{ needs.build.outputs.version }}
 
@@ -160,9 +171,6 @@ jobs:
   workshop:
     needs: build
     runs-on: ubuntu-latest
-    # 只有仓库级 Variable STEAM_WORKSHOP_ITEM_ID 非空时才执行
-    if: ${{ vars.STEAM_WORKSHOP_ITEM_ID != '' }}
-    environment: steam-workshop
 
     steps:
       - name: Checkout repository
@@ -173,66 +181,149 @@ jobs:
         with:
           name: mod-package
 
-      - name: Prepare Workshop content directory
+      - name: Check if workshop upload is configured
+        id: check
         run: |
-          VERSION="${{ needs.build.outputs.version }}"
-          WS="${{ github.workspace }}/workshop_content"
-          mkdir -p "$WS/${{ env.MOD_ID }}"
-
-          cp pkg/${{ env.MOD_ID }}/${{ env.MOD_ID }}.dll "$WS/${{ env.MOD_ID }}/"
-          cp pkg/${{ env.MOD_ID }}/${{ env.MOD_ID }}.json "$WS/${{ env.MOD_ID }}/"
-
-          if [ -f "preview.png" ]; then
-          cp preview.png "$WS/preview.png"
-          echo "✅ Workshop preview image found"
+          if [ -f "workshop/mod_id.txt" ] && [ -f "workshop/workshop.json" ] && [ -d "workshop/content" ]; then
+            echo "enabled=true" >> $GITHUB_OUTPUT
+            echo "✅ workshop/ 已配置，将上传到创意工坊"
           else
-          echo "⚠️  No preview.png in repo root — Workshop item will lack a preview"
+            echo "enabled=false" >> $GITHUB_OUTPUT
+            echo "⏭️  workshop/ 未完成配置（缺少 mod_id.txt / workshop.json / content/），跳过上传"
           fi
 
-          echo "📂 Workshop content:"
-          find "$WS" -type f
+      - name: Read workshop metadata
+        if: steps.check.outputs.enabled == 'true'
+        id: ws_meta
+        run: |
+          echo "title=$(jq -r '.title' workshop/workshop.json)" >> $GITHUB_OUTPUT
+          echo "description=$(jq -r '.description' workshop/workshop.json)" >> $GITHUB_OUTPUT
+          echo "visibility=$(jq -r '.visibility' workshop/workshop.json)" >> $GITHUB_OUTPUT
+          echo "📋 Workshop title: $(jq -r '.title' workshop/workshop.json)"
 
-      - name: Generate workshop VDF
+          if [ -f "workshop/mod_id.txt" ]; then
+            ITEM_ID=$(cat workshop/mod_id.txt | tr -d '[:space:]')
+            echo "item_id=$ITEM_ID" >> $GITHUB_OUTPUT
+            echo "🆔 Workshop item ID: $ITEM_ID"
+          else
+            echo "❌ workshop/mod_id.txt not found!"
+            exit 1
+          fi
+
+          if [ -f "workshop/image.png" ]; then
+            echo "has_preview=true" >> $GITHUB_OUTPUT
+            echo "✅ Workshop preview image found"
+          else
+            echo "has_preview=false" >> $GITHUB_OUTPUT
+            echo "⚠️  No workshop/image.png — Workshop item will lack a preview"
+          fi
+
+      - name: Extract changenote from CHANGELOG
+        if: steps.check.outputs.enabled == 'true'
+        id: changenote
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          PREVIEW_FILE="${{ github.workspace }}/workshop_content/preview.png"
-          PREVIEW_PATH=""
-          [ -f "$PREVIEW_FILE" ] && PREVIEW_PATH="$PREVIEW_FILE"
+          RAW=$(awk -v ver="$VERSION" '
+            BEGIN { found=0 }
+            $0 ~ "^## \\[" ver "\\]" { found=1; next }
+            found && $0 ~ "^## \\["   { exit }
+            found && $0 !~ "^$" && $0 !~ "^### " {
+              gsub(/^[[:space:]]*[-*][[:space:]]*/, "", $0)
+              print; exit
+            }
+          ' CHANGELOG.md | tr -d '\n' | sed 's/  */ /g' | cut -c1-200)
 
-          cat > "${{ github.workspace }}/workshop.vdf" << 'VDFEOF'
-          "workshopitem"
+          if [ -n "$RAW" ]; then
+            CHANGENOTE="v${VERSION}: ${RAW}"
+          else
+            CHANGENOTE="v${VERSION} — See GitHub Release for details"
+          fi
+          echo "changenote=$CHANGENOTE" >> $GITHUB_OUTPUT
+          echo "📝 Changenote: $CHANGENOTE"
+
+      - name: Generate workshop VDF
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          WS_CONTENT="${{ github.workspace }}/workshop/content"
+          ITEM_ID="${{ steps.ws_meta.outputs.item_id }}"
+          CHANGENOTE="${{ steps.changenote.outputs.changenote }}"
+          HAS_PREVIEW="${{ steps.ws_meta.outputs.has_preview }}"
+          TITLE="${{ steps.ws_meta.outputs.title }}"
+          DESCRIPTION="${{ steps.ws_meta.outputs.description }}"
+          VISIBILITY="${{ steps.ws_meta.outputs.visibility }}"
+
+          case "$VISIBILITY" in
+            public)       VIS_NUM=0 ;;
+            private)      VIS_NUM=1 ;;
+            friends_only) VIS_NUM=2 ;;
+            unlisted)     VIS_NUM=3 ;;
+            *)            VIS_NUM=0 ;;
+          esac
+
+          VDF_FILE="${{ github.workspace }}/workshop.vdf"
+
           {
-          "appid"             "2868840"
-          "publishedfileid"   "PUBLISHEDFILEID_PLACEHOLDER"
-          "contentfolder"     "CONTENTFOLDER_PLACEHOLDER"
-          "previewfile"       "PREVIEWFILE_PLACEHOLDER"
-          "visibility"        "0"
-          "title"             "Respect Affects Gameplay vVERSION_PLACEHOLDER"
-          "description"       "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer. | 只在实际影响游戏玩法的 Mod 加载时才标记游戏为 modded 状态。affects_gameplay: false 的 Mod 不再隔离存档或阻止原版联机。"
-          "changenote"        "vVERSION_PLACEHOLDER: See GitHub Release for details."
-          }
-          VDFEOF
-
-          # 替换占位符为实际值
-          sed -i "s|PUBLISHEDFILEID_PLACEHOLDER|${{ vars.STEAM_WORKSHOP_ITEM_ID }}|" workshop.vdf
-          sed -i "s|CONTENTFOLDER_PLACEHOLDER|${{ github.workspace }}/workshop_content|" workshop.vdf
-          sed -i "s|PREVIEWFILE_PLACEHOLDER|$PREVIEW_PATH|" workshop.vdf
-          sed -i "s|VERSION_PLACEHOLDER|$VERSION|g" workshop.vdf
+            printf '"workshopitem"\n{\n'
+            printf '"appid"             "%s"\n' "2868840"
+            printf '"publishedfileid"   "%s"\n' "$ITEM_ID"
+            printf '"contentfolder"     "%s"\n' "$WS_CONTENT"
+            if [ "$HAS_PREVIEW" = "true" ]; then
+              printf '"previewfile"       "%s"\n' "${{ github.workspace }}/workshop/image.png"
+            fi
+            printf '"visibility"        "%s"\n' "$VIS_NUM"
+            printf '"title"             "%s"\n' "$TITLE"
+            printf '"description"       "%s"\n' "$DESCRIPTION"
+            printf '"changenote"        "%s"\n' "$CHANGENOTE"
+            printf '}\n'
+          } > "$VDF_FILE"
 
           echo "📝 Generated workshop.vdf:"
-          cat workshop.vdf
+          cat "$VDF_FILE"
 
-      - name: Upload to Steam Workshop via SteamCmd
+      - name: Upload to Steam Workshop
+        if: steps.check.outputs.enabled == 'true'
         env:
           STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
-          STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+          STEAM_CONFIG_B64: ${{ secrets.STEAM_CONFIG_B64 }}
         run: |
-          mkdir -p steamcmd && cd steamcmd
-          curl -sSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -xz
+          STEAMCMD_DIR="${{ github.workspace }}/steamcmd"
+          mkdir -p "$STEAMCMD_DIR"
 
-          # 登录并提交 Workshop 更新
-          # 注意: 首次运行需要 Steam Guard 验证码, 请先用本地终端登录一次
+          if [ ! -f "$STEAMCMD_DIR/steamcmd.sh" ]; then
+            echo "📥 Downloading steamcmd..."
+            curl -sSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" \
+              | tar -xz -C "$STEAMCMD_DIR"
+          else
+            echo "✅ steamcmd already present, skipping download"
+          fi
+
+          if [ -n "$STEAM_CONFIG_B64" ]; then
+            echo "🔐 Restoring cached Steam login session from STEAM_CONFIG_B64..."
+            echo "$STEAM_CONFIG_B64" | base64 -d | tar -xz -C "$STEAMCMD_DIR"
+            echo "✅ config.vdf restored — steamcmd will use cached credentials"
+          else
+            echo "❌ STEAM_CONFIG_B64 not set!"
+            echo "💡 Run WSL setup first, then add the secret:"
+            echo "   https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+
+          echo "🚀 Uploading to Steam Workshop (item ${{ steps.ws_meta.outputs.item_id }})..."
+          cd "$STEAMCMD_DIR"
           ./steamcmd.sh \
-          +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
-          +workshop_build_commit "${{ github.workspace }}/workshop.vdf" \
-          +quit
+            +login "$STEAM_USERNAME" \
+            +workshop_build_commit "${{ github.workspace }}/workshop.vdf" \
+            +quit
+
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Workshop upload completed successfully!"
+          else
+            echo "❌ Workshop upload failed (exit code: $EXIT_CODE)"
+            echo "💡 Troubleshooting:"
+            echo "   1. Cached credentials may have expired — regenerate STEAM_CONFIG_B64 in WSL"
+            echo "   2. Check that STEAM_USERNAME secret is correct"
+            echo "   3. See https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit $EXIT_CODE
+          fi

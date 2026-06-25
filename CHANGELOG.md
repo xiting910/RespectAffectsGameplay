@@ -1,9 +1,48 @@
 # Changelog
 
+<!--
+  🔧 开发者注意事项
+
+  本文件被 release.yml 两次读取：
+
+  1. GitHub Release 正文 — 提取整个 ## [版本] 区块全部内容
+  2. Steam 工坊 changenote — 只取第一个非 ### 分类标题的列表项（最多 200 字符）
+
+    ✅ 正确做法：
+       - 把面向玩家的一句话摘要放在第一个 ### 分类的第一行
+       - 内部/CI/文档变更放在后面的 ### Internal 等分类
+       - 第一个分类名建议用 ### Note 作为标题，便于区分 changenote 与其他分类
+
+    ❌ 避免：
+       - 把内部细节（构建/CI/格式化）放在第一个分类的第一行
+       - changenote 超过 200 字符会触发 release.yml 的截断
+-->
+
 本文件记录了 `Respect Affects Gameplay`  Mod 的所有重要变更。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/).
+
+---
+
+## [0.1.3] - 2026-06-25
+
+### Note
+
+- 本版本无游戏功能变更，仅为 Steam 创意工坊发布流程的基础设施更新。
+
+### Changed
+
+- **构建产物路径**: Post-build 目标从游戏 `mods/` 文件夹改为 `workshop/content/`，适配 Steam 工坊上传流程
+- **文档精简**: README 移除冗余发布章节，新增 stubs 桩代码维护说明
+
+### Internal
+
+- CI 全工作流启用 .NET SDK 缓存加速构建
+- Release 工作流重构：工坊元数据改为从 `workshop.json` + `mod_id.txt` 文件读取，支持多种可见性
+- Release 工作流自动从 CHANGELOG.md 提取 changenote 用于工坊更新说明
+- 新增 `workshop/` 目录结构，`.gitignore` 忽略 `workshop/content/`
+- 统一 `.github/` 模板、`LICENSE` 等多文件代码风格
 
 ---
 
@@ -103,20 +142,12 @@
 - **文档术语修正**: "外观 Mod" → "非 gameplay Mod（外观/基础库/辅助类等）"，准确覆盖所有 `affects_gameplay: false` 的 Mod 类型
 - **修正 `BeginModDataRegistration` 用法**: 改用 `using` 模式，scope 在数据注册完毕后立即 dispose，确保框架正确调用 `InitializeGlobal`
 
-### Known Issues
-
-- Steam Workshop 的 `ItemInstalled` 回调触发时, `RitsuModManager.GetKnownMods()` 可能尚未更新新安装的 mod 列表
-
-### Planned
-
-- **Steam 创意工坊素材**: 准备 Workshop 页面截图、预览图（CI 自动化流程已就绪）
-- **多语言支持**: 为设置页面中的 UI 文本添加本地化支持
-
 ---
 
 ## [Unreleased]
 
+[0.1.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.3
 [0.1.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.2
 [0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.3...HEAD

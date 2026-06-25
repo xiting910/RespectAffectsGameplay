@@ -1,0 +1,7 @@
+﻿{
+    "title": "Respect Affects Gameplay",
+    "description": "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer. | 只在实际影响游戏玩法的 Mod 加载时才标记游戏为 modded 状态。affects_gameplay: false 的 Mod 不再隔离存档或阻止原版联机。\n\nGitHub: https://github.com/xiting910/RespectAffectsGameplay",
+    "visibility": "public",
+    "tags": ["Utility"],
+    "dependencies": [3747602295]
+}

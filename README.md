@@ -24,9 +24,6 @@
   - [构建](#构建)
     - [环境要求](#环境要求)
     - [构建步骤](#构建步骤)
-  - [发布](#发布)
-    - [发布流程](#发布流程)
-    - [如何发布新版本](#如何发布新版本)
   - [许可证](#许可证)
   - [致谢](#致谢)
 
@@ -39,7 +36,7 @@ RespectAffectsGameplay/
 ├── .github/
 │   ├── workflows/                        # CI / Release / CodeQL 工作流
 │   │   ├── ci.yml                        #   → push/PR 自动编译验证
-│   │   └── release.yml                   #   → 推送 v* 标签自动发布 GitHub Release
+│   │   └── release.yml                   #   → 推送 v* 标签自动发布 GitHub Release + Steam 创意工坊
 │   ├── ISSUE_TEMPLATE/                   # Issue 模板
 │   ├── PULL_REQUEST_TEMPLATE.md          # PR 模板
 │   └── dependabot.yml                    # 依赖自动更新配置
@@ -65,6 +62,10 @@ RespectAffectsGameplay/
 │   ├── PatchGetProfileDir.cs             # 拦截存档目录生成方法
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
 │   └── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
+├── workshop/                             # Steam 创意工坊上传工作区
+│   ├── workshop.json                     #   工坊元数据（标题、描述、可见性、标签）
+│   ├── mod_id.txt                        #   工坊物品 ID
+│   └── image.png                         #   工坊封面图
 ├── RespectAffectsGameplay.slnx           # 解决方案文件
 ├── .editorconfig                         # 代码风格配置（空格缩进 / LF / UTF-8）
 ├── .gitignore                            # Git 忽略规则
@@ -85,7 +86,7 @@ RespectAffectsGameplay/
 
 ### 问题二：联机哈希被非 gameplay Mod 污染
 
-`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。BASELIB/RitsuLib 等模组框架（通常标记 `affects_gameplay: false`）也会注册 `AbstractModel` 子类型，导致 Host 与 Vanilla Client 之间哈希不一致，触发 "版本不匹配" 错误。
+`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。BaseLib/RitsuLib 等模组框架（通常标记 `affects_gameplay: false`）也会注册 `AbstractModel` 子类型，导致 Host 与 Vanilla Client 之间哈希不一致，触发 "版本不匹配" 错误。
 
 **RespectAffectsGameplay** 同时解决这两个问题：通过 Harmony 补丁让存档路径只对 gameplay Mod 敏感，同时从联机哈希计算中排除非 gameplay Mod。
 
@@ -171,41 +172,27 @@ flowchart TD
      </PropertyGroup>
    </Project>
    ```
-   > 该文件已在 `.gitignore` 中排除，不会提交到仓库。若无此文件，项目将使用根目录 `stubs/` 下的桩程序集进行编译。
+   > 该文件已在 `.gitignore` 中排除，不会提交到仓库。若未创建此文件，项目将回退使用 `stubs/` 下的桩程序集编译。
 
 3. 构建项目：
    ```bash
    dotnet build
    ```
 
-> **CI 说明：** `ci.yml` 在每次 push/PR 时自动编译验证。本地开发无需关心此流程。
+   构建完成后，产物会自动复制到：**`workshop/content/`** — 供 Steam 创意工坊上传
 
----
+> **CI 说明：** `ci.yml` 在每次 push/PR 时自动编译验证。`release.yml` 在推送 `v*` 标签时自动发布 GitHub Release 并更新 Steam 创意工坊。
 
-## 发布
-
-本项目使用 GitHub Actions 自动化发布流程：**推送 `v*` 标签即可触发**。
-
-### 发布流程
-
-| 步骤              | 触发条件           | 说明                                                  |
-| ----------------- | ------------------ | ----------------------------------------------------- |
-| 1. 编译打包       | 推送 `v*` 标签     | 自动更新 JSON 版本号 → 编译 → 打包 zip                |
-| 2. GitHub Release | 自动（依赖步骤 1） | 从 CHANGELOG.md 提取变更日志，创建 Release 并附带 zip |
-
-### 如何发布新版本
-
-```bash
-# 1. 更新 CHANGELOG.md（将 [Unreleased] 改为新版本号）
-# 2. 更新 Scripts/RespectAffectsGameplay.json 中的 version 字段
-# 3. 提交并打标签
-git add .
-git commit -m "Release v0.2.0"
-git tag v0.2.0
-git push --follow-tags
-```
-
-推送标签后，GitHub Actions 会自动完成编译、打包、创建 Release。
+> ⚠ **重要：`stubs/` 必须与项目引用和游戏实际 API 保持同步！**
+>
+> CI 环境没有 STS2 游戏本体，完全依赖 `stubs/` 目录下的桩程序集进行编译。
+> 如果你在代码中使用了新的游戏 API（新的类、方法、属性等），**必须同步更新 `stubs/` 中对应的桩代码**，
+> 否则 CI 编译会失败，PR 无法合并。
+>
+> - `stubs/sts2/Stubs.cs` — 模拟 STS2 游戏程序集中的类型（`ModManager`、`UserDataPathProvider`、`AbstractModel` 等）
+> - `stubs/0Harmony/Stubs.cs` — 模拟 HarmonyLib 中的类型（`Harmony`、`HarmonyPatch`、`HarmonyPrefix` 等）
+>
+> 桩方法体可以留空（`throw new NotImplementedException()`），但**方法签名必须与实际游戏库一致**。
 
 ---
 
