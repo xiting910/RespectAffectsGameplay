@@ -25,6 +25,29 @@
 
 ---
 
+## [0.1.8] - 2026-06-26
+
+### Note
+
+- 本版本无游戏功能变更，完善了项目文档、CI 配置并修复了工坊描述错误
+
+### Changed
+
+- **Dependabot 检查频率**: 从每周一改为每日检查，更快获取依赖更新
+- **README 文档完善**: 新增安装说明章节（Steam 创意工坊推荐 + 手动安装）、补充项目结构中各工作流和 Issue 模板说明、修正问题描述中的措辞
+
+### Fixed
+
+- **workshop.json 描述格式错误**: GitHub 链接与描述文本合并时缺少空格导致 URL 粘连，现已修正
+
+### Internal
+
+- Release body 精简：移除安装方法和依赖章节（README 已包含），移除冗余的源代码链接
+- `.gitignore` 新增 `tag-and-push.bat`
+- README 新增 CodeQL 徽章
+
+---
+
 ## [0.1.7] - 2026-06-25
 
 ### Note
@@ -214,6 +237,7 @@
 
 ## [Unreleased]
 
+[0.1.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.8
 [0.1.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.7
 [0.1.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.6
 [0.1.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.5
@@ -222,4 +246,4 @@
 [0.1.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.2
 [0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.8...HEAD

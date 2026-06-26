@@ -191,21 +191,8 @@ jobs:
 
             ${{ steps.gitinfo.outputs.commits }}
 
-            ---
-
-            ### 📦 安装方法
-
-            1. 下载下方的 `RespectAffectsGameplay_v${{ needs.build.outputs.version }}.zip`
-            2. 解压到 Slay the Spire 2 的 `mods/` 文件夹
-            3. 启动游戏，在 Mod 设置中配置模式
-
-            ### 📋 依赖
-
-            - [STS2-RitsuLib](https://steamcommunity.com/app/${{ env.STS2_APP_ID }}/workshop/)（Steam 创意工坊自动安装）
-
             ### 🔗 链接
 
-            - [源代码](https://github.com/${{ github.repository }})
             - [问题反馈](https://github.com/${{ github.repository }}/issues)
             - [完整更新日志](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
 

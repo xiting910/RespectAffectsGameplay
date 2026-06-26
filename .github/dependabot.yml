@@ -1,5 +1,5 @@
 # =============================================================================
-# Dependabot 自动依赖更新配置, 每周自动检查 NuGet 包和 GitHub Actions 是否有新版本
+# Dependabot 自动依赖更新配置, 自动检查 NuGet 包和 GitHub Actions 是否有新版本
 # =============================================================================
 version: 2
 updates:
@@ -7,8 +7,7 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "08:00"
       timezone: "Asia/Shanghai"
     open-pull-requests-limit: 5

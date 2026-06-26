@@ -4,6 +4,7 @@
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![CI](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml)
 [![Release](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml)
+[![CodeQL](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml)
 [![STS2](https://img.shields.io/badge/STS2-0.107.1+-blue.svg)](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)
 
 **Respect Affects Gameplay** 是一个 [Slay the Spire 2](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)（STS2）的 Mod，它让游戏真正尊重每个 Mod 的 `affects_gameplay` 元数据标记。
@@ -14,6 +15,9 @@
 
 - [Respect Affects Gameplay](#respect-affects-gameplay)
   - [目录](#目录)
+  - [安装](#安装)
+    - [通过 Steam 创意工坊安装（推荐）](#通过-steam-创意工坊安装推荐)
+    - [手动安装](#手动安装)
   - [项目结构](#项目结构)
   - [解决的问题](#解决的问题)
     - [问题一：存档路径被强行分离](#问题一存档路径被强行分离)
@@ -29,17 +33,42 @@
 
 ---
 
+## 安装
+
+本 Mod 已上架 **Steam 创意工坊**，推荐通过工坊订阅安装，自动获取更新。
+
+### 通过 Steam 创意工坊安装（推荐）
+
+1. 打开创意工坊页面：[https://steamcommunity.com/sharedfiles/filedetails/?id=3751373259](https://steamcommunity.com/sharedfiles/filedetails/?id=3751373259)
+
+2. 点击绿色的 **「订阅」** 按钮。
+
+3. 开始游戏即可生效。
+
+### 手动安装
+
+如果你需要手动安装最新开发版，请参考下方 [构建](#构建) 章节自行编译，然后将 `workshop/content/` 下的文件放入游戏的 Mods 目录。
+
+---
+
 ## 项目结构
 
 ```
 RespectAffectsGameplay/
 ├── .github/
-│   ├── workflows/                        # CI / Release / CodeQL 工作流
+│   ├── workflows/                        # GitHub Actions 工作流
 │   │   ├── ci.yml                        #   → push/PR 自动编译验证
-│   │   └── release.yml                   #   → 推送 v* 标签自动发布 GitHub Release + Steam 创意工坊
+│   │   ├── release.yml                   #   → 推送 v* 标签自动构建、发布 Release + Steam 创意工坊
+│   │   ├── codeql-analysis.yml           #   → CodeQL 代码安全分析（C#）
+│   │   ├── dependency-submission.yml     #   → 提交依赖快照供 Dependency Review 使用
+│   │   ├── dependency-review.yml         #   → PR 中依赖变更时扫描已知漏洞
+│   │   └── dependabot-auto-merge.yml     #   → Dependabot PR CI 通过后自动审批并 squash 合并
 │   ├── ISSUE_TEMPLATE/                   # Issue 模板
+│   │   ├── config.yml                    #   → 模板配置（启用空白 Issue、联系链接）
+│   │   ├── bug_report.md                 #   → Bug 报告模板
+│   │   └── feature_request.md            #   → 功能建议模板
 │   ├── PULL_REQUEST_TEMPLATE.md          # PR 模板
-│   └── dependabot.yml                    # 依赖自动更新配置
+│   └── dependabot.yml                    # Dependabot 自动依赖更新配置（NuGet + GitHub Actions）
 ├── stubs/                                # 桩项目（仅 CI 使用，本地开发不需要）
 │   ├── sts2/
 │   │   ├── sts2.csproj                   # 模拟 STS2 游戏程序集
@@ -67,7 +96,7 @@ RespectAffectsGameplay/
 │   ├── mod_id.txt                        #   工坊物品 ID
 │   └── image.png                         #   工坊封面图
 ├── RespectAffectsGameplay.slnx           # 解决方案文件
-├── .editorconfig                         # 代码风格配置（空格缩进 / LF / UTF-8）
+├── .editorconfig                         # 代码风格配置
 ├── .gitignore                            # Git 忽略规则
 ├── LICENSE                               # MIT 许可证
 ├── CHANGELOG.md                          # 变更日志
@@ -86,7 +115,7 @@ RespectAffectsGameplay/
 
 ### 问题二：联机哈希被非 gameplay Mod 污染
 
-`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。BaseLib/RitsuLib 等模组框架（通常标记 `affects_gameplay: false`）也会注册 `AbstractModel` 子类型，导致 Host 与 Vanilla Client 之间哈希不一致，触发 "版本不匹配" 错误。
+`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。一些标记 `affects_gameplay: false` 的 Mod 可能也会注册 `AbstractModel` 子类型，导致 Host 与 Vanilla Client 之间哈希不一致，触发 "版本不匹配" 错误。
 
 **RespectAffectsGameplay** 同时解决这两个问题：通过 Harmony 补丁让存档路径只对 gameplay Mod 敏感，同时从联机哈希计算中排除非 gameplay Mod。
 
