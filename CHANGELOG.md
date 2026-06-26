@@ -237,6 +237,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Release 界面划分线**: 修复 GitHub Release 页面中的分割线显示异常问题
+
 [0.1.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.8
 [0.1.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.7
 [0.1.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.6

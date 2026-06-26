@@ -185,11 +185,11 @@ jobs:
 
             ${{ steps.changelog.outputs.changelog }}
 
-            ---
-
             ### 📝 此版本提交
 
             ${{ steps.gitinfo.outputs.commits }}
+
+            ---
 
             ### 🔗 链接
 
