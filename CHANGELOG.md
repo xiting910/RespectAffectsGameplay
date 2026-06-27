@@ -27,6 +27,14 @@
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-06-27
+
+### Note
+
+- 新增多语言本地化支持（中文/英文），优化 modded 状态判断性能与稳定性，修复可能存在的 Linux 平台兼容性问题
+
 ### Added
 
 - **本地化系统**: 新增 `ModLoc.cs` 及 `localization/` 目录下的 JSON 语言文件 (`eng.json`、`zhs.json`)，所有设置页面 UI 文本和日志消息均支持多语言。
@@ -266,7 +274,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.0
 [0.1.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.8
 [0.1.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.7
 [0.1.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.6
