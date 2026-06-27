@@ -31,7 +31,6 @@
 
 - **本地化系统**: 新增 `ModLoc.cs` 及 `localization/` 目录下的 JSON 语言文件 (`eng.json`、`zhs.json`)，所有设置页面 UI 文本和日志消息均支持多语言。
 - **设置页面标识符常量化**: `RegisterSettingsPage()` 中所有 UI 控件的标识符 (`"general"`、`"mode"` 等) 改为 `private const` 命名常量，消除 magic string
-- **Stubs 项目**: `sts2` 桩项目新增 `Godot.OS.GetLocale()` 方法以满足 `ModLoc` 的语言检测需求，CI 构建时提供空实现避免编译错误
 
 ### Changed
 
