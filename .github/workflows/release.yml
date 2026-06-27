@@ -72,12 +72,14 @@ jobs:
           mkdir -p workshop/content
           cp Scripts/bin/Release/net9.0/${{ env.MOD_ID }}.dll workshop/content/
           cp Scripts/${{ env.MOD_ID }}.json workshop/content/
+          cp -r Scripts/localization workshop/content/
           echo "✅ Copied build output to workshop/content/"
 
           PKG="pkg/${{ env.MOD_ID }}"
           mkdir -p "$PKG"
           cp Scripts/bin/Release/net9.0/${{ env.MOD_ID }}.dll "$PKG/"
           cp Scripts/${{ env.MOD_ID }}.json "$PKG/"
+          cp -r Scripts/localization "$PKG/"
           cd pkg
           zip -r "../${{ env.MOD_ID }}_v${VERSION}.zip" "${{ env.MOD_ID }}"
           cd ..

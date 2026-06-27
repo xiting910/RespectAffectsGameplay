@@ -82,6 +82,7 @@ RespectAffectsGameplay/
 │   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化 / 补丁 / IsEffectivelyModded()
 │   ├── ModdedMode.cs                     # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
 │   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 版本 / 作者 / HarmonyId)
+│   ├── ModLoc.cs                         # 本地化系统 (从 JSON 加载, 基于 CultureInfo 自动检测语言)
 │   ├── ModLog.cs                         # 统一日志系统 (自动前缀 + 详细日志开关)
 │   ├── ModSettingsData.cs                # 持久化设置数据模型
 │   ├── ModSettingsHelper.cs              # 设置初始化 / 持久化 / 重置为默认值
@@ -90,7 +91,11 @@ RespectAffectsGameplay/
 │   ├── PatchSetIsRunningModded.cs        # 拦截 UserDataPathProvider.IsRunningModded setter
 │   ├── PatchGetProfileDir.cs             # 拦截存档目录生成方法
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
-│   └── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
+│   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
+│   ├── localization/                     # 本地化语言文件
+│   │   ├── eng.json                      #   英语
+│   │   └── zhs.json                      #   简体中文
+│   └── Directory.Build.props             # 开发环境路径配置 (gitignore, CI 不需要)
 ├── workshop/                             # Steam 创意工坊上传工作区
 │   ├── workshop.json                     #   工坊元数据（标题、描述、可见性、标签）
 │   ├── mod_id.txt                        #   工坊物品 ID
@@ -170,8 +175,8 @@ flowchart TD
 |                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded |
 | **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                           |
 |                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制            |
-| **详细日志**               | 关闭（默认）                 | 仅输出 Warn / Error 日志                                        |
-|                            | 开启                         | 额外输出 Info / Debug 日志 (仅影响本 mod, 即时生效)             |
+| **详细日志**               | 关闭（默认）                 | 仅输出 Info / Warn / Error 日志                                 |
+|                            | 开启                         | 额外输出 Debug 日志 (仅影响本 mod, 即时生效)                    |
 | **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）       |
 
 > ⚠ 除「详细日志」外, 其余设置项修改后需**重启游戏**才能生效。点击按钮后设置立即持久化到 `settings.json`。

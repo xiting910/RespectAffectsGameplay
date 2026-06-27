@@ -30,11 +30,16 @@
     <PackageReference Include="STS2.RitsuLib" Version="0.4.40" />
   </ItemGroup>
 
+  <ItemGroup>
+    <LocFiles Include="$(MSBuildThisFileDirectory)localization\*.json" />
+  </ItemGroup>
+
   <Target Name="Copy Mod" AfterTargets="PostBuildEvent">
     <Message Text="Copying mod to workshop/content/..." Importance="high" />
     <MakeDir Directories="$(MSBuildThisFileDirectory)..\workshop\content" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)..\workshop\content\" />
     <Copy SourceFiles="$(MSBuildProjectName).json" DestinationFolder="$(MSBuildThisFileDirectory)..\workshop\content\" />
+    <Copy SourceFiles="@(LocFiles)" DestinationFolder="$(MSBuildThisFileDirectory)..\workshop\content\localization\" />
   </Target>
 
 </Project>

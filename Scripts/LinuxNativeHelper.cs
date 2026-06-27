@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 namespace RespectAffectsGameplay;
 
 /// <summary><para>
-/// Linux 原生辅助类: 提供在 Linux 平台上确保 libgcc_s.so.1 全局加载的功能
+/// Linux 原生辅助类: 提供在 Linux 平台上确保 <c>libgcc_s.so.1</c> 全局加载的功能
 /// </para><para>
-/// 必须在 <see cref="HarmonyLib.Harmony.PatchAll(System.Reflection.Assembly)"/> 之前调用 <see cref="EnsureLibGccLoaded"/> 方法, 以确保 libgcc_s 已全局加载
+/// 必须在 <see cref="HarmonyLib.Harmony.PatchAll(System.Reflection.Assembly)"/> 之前调用 <see cref="EnsureLibGccLoaded"/> 方法
 /// </para></summary>
 internal static partial class LinuxNativeHelper
 {
@@ -56,6 +56,6 @@ internal static partial class LinuxNativeHelper
     /// <param name="fileName">要加载的共享库文件名</param>
     /// <param name="flags">加载标志, 例如 <see cref="RTLD_NOW"/> 和 <see cref="RTLD_GLOBAL"/></param>
     /// <returns>共享库句柄, 如果加载失败则返回 <see cref="IntPtr.Zero"/></returns>
-    [LibraryImport("libdl.so.2", StringMarshalling = StringMarshalling.Utf16)]
+    [LibraryImport("libdl.so.2", StringMarshalling = StringMarshalling.Utf8)]
     private static partial IntPtr dlopen(string fileName, int flags);
 }

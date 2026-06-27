@@ -6,7 +6,7 @@ namespace RespectAffectsGameplay;
 public sealed class ModSettingsData
 {
     /// <summary>
-    /// Modded 模式设置 (重启生效)
+    /// Modded 模式设置
     /// </summary>
     public ModdedMode Mode { get; set; } = ModdedMode.Auto;
 

@@ -116,6 +116,21 @@ namespace MegaCrit.Sts2.Core.Saves
     }
 }
 
+namespace Godot
+{
+    /// <summary>
+    /// Godot.OS 桩: 提供 <see cref="GetLocale"/> 以支持 CI 环境下的语言检测编译
+    /// </summary>
+    public static class OS
+    {
+        /// <summary>
+        /// 获取系统/游戏 locale 字符串 (桩)
+        /// </summary>
+        /// <returns>CI 环境下固定返回 <c>"en"</c>, 实际运行时由真实 Godot API 返回玩家设置的语言</returns>
+        public static string GetLocale() => "en";
+    }
+}
+
 namespace MegaCrit.Sts2.Core.Logging
 {
     /// <summary>

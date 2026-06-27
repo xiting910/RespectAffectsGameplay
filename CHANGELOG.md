@@ -25,6 +25,38 @@
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **本地化系统**: 新增 `ModLoc.cs` 及 `localization/` 目录下的 JSON 语言文件 (`eng.json`、`zhs.json`)，所有设置页面 UI 文本和日志消息均支持多语言。
+- **设置页面标识符常量化**: `RegisterSettingsPage()` 中所有 UI 控件的标识符 (`"general"`、`"mode"` 等) 改为 `private const` 命名常量，消除 magic string
+- **Stubs 项目**: `sts2` 桩项目新增 `Godot.OS.GetLocale()` 方法以满足 `ModLoc` 的语言检测需求，CI 构建时提供空实现避免编译错误
+
+### Changed
+
+- **日志级别修正**: `ModLog.Info()` 现在始终输出，不再受 `VerboseLogging` 开关控制。仅 `Debug()` 级别受详细日志开关控制，符合标准日志惯例
+- **本地化文本**: `Initialize()` 和 `RegisterSettingsPage()` 中所有硬编码的中文/英文文本全部迁入 `ModLoc` 本地化属性，由 JSON 语言文件驱动
+- **README 项目结构**: 更新 Scripts 目录文件列表，新增 `ModLoc.cs` 和 `localization/` 条目
+
+### Fixed
+
+- **Linux 原生库字符串编码**: `dlopen()` 的 `StringMarshalling` 从 `Utf16` 修正为 `Utf8`，确保 Linux 平台上 `libgcc_s.so.1` 文件名以正确编码传递
+- **Release 界面划分线**: 修复 GitHub Release 页面中的分割线显示异常问题
+
+### Optimized
+
+- **`IsEffectivelyModded()` 结果缓存**: 添加 `_cachedIsEffectivelyModded` 字段。首次计算后缓存结果，后续调用直接返回，避免每次存档路径查询都遍历所有 mod
+- **Auto 模式安全回退**: 当 `RitsuModManager.GetKnownMods()` 返回 0 个已知 mod 时，自动回退到 `EvaluateDefaultMode()` 以保守评估
+- **Steam Workshop 重复过滤**: `EvaluateAutoMode()` 中额外过滤 `IsDisabledSteamWorkshopDuplicate` 的条目，防止同名本地 + Workshop mod 被重复计数
+
+### Internal
+
+- **构建脚本更新**: `.csproj` 新增 `localization/*.json` 到 `workshop/content/localization/` 的复制步骤
+- **Release 工作流更新**: `release.yml` Package mod 步骤新增 `cp -r Scripts/localization`，确保 GitHub Release zip 包和 Steam 工坊上传均包含本地化文件
+
+---
+
 ## [0.1.8] - 2026-06-26
 
 ### Note
@@ -235,12 +267,7 @@
 
 ---
 
-## [Unreleased]
-
-### Fixed
-
-- **Release 界面划分线**: 修复 GitHub Release 页面中的分割线显示异常问题
-
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.8...HEAD
 [0.1.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.8
 [0.1.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.7
 [0.1.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.6
@@ -250,4 +277,3 @@
 [0.1.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.2
 [0.1.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.1
 [0.1.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.0
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.1.8...HEAD

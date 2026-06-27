@@ -4,8 +4,7 @@ using STS2RitsuLib;
 namespace RespectAffectsGameplay;
 
 /// <summary>
-/// 全局日志记录器, 供整个 mod 共享使用。
-/// 自动为每条日志添加 <c>[ModInfo.Id]</c> 前缀, 无需调用方硬编码。
+/// 全局日志记录器, 供整个 mod 共享使用
 /// </summary>
 internal static class ModLog
 {
@@ -34,13 +33,10 @@ internal static class ModLog
     }
 
     /// <summary>
-    /// 输出 Info 级别日志 (仅在详细日志启用时输出)
+    /// 输出 Info 级别日志 (始终输出)
     /// </summary>
     /// <param name="text">日志内容</param>
-    public static void Info(string text)
-    {
-        if (IsVerboseEnabled) { _instance.Info($"{Prefix} {text}"); }
-    }
+    public static void Info(string text) => _instance.Info($"{Prefix} {text}");
 
     /// <summary>
     /// 输出 Warn 级别日志 (始终输出)

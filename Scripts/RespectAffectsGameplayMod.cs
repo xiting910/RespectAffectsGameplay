@@ -13,52 +13,84 @@ namespace RespectAffectsGameplay;
 public static class RespectAffectsGameplayMod
 {
     /// <summary>
+    /// 设置页面 Section 标识符: 通用设置区域
+    /// </summary>
+    private const string SectionGeneral = "general";
+
+    /// <summary>
+    /// 设置页面 EnumChoice 标识符: Modded 模式选择
+    /// </summary>
+    private const string ChoiceMode = "mode";
+
+    /// <summary>
+    /// 设置页面 Toggle 标识符: 拦截 IsRunningModded() 开关
+    /// </summary>
+    private const string TogglePatchModManager = "patchModManager";
+
+    /// <summary>
+    /// 设置页面 Toggle 标识符: 详细日志开关
+    /// </summary>
+    private const string ToggleVerboseLogging = "verboseLogging";
+
+    /// <summary>
+    /// 设置页面 Button 标识符: 重置为默认设置按钮
+    /// </summary>
+    private const string ButtonResetDefaults = "resetDefaults";
+
+    /// <summary>
+    /// 缓存 <see cref="IsEffectivelyModded"/> 的结果
+    /// </summary>
+    private static bool? _cachedIsEffectivelyModded;
+
+    /// <summary>
     /// mod 初始化入口: 依次注册持久化设置、注册游戏内设置页面、应用 Harmony 补丁
     /// </summary>
     public static void Initialize()
     {
-        ModLog.Info($"开始初始化 (ID: {ModInfo.Id}, Version: {ModInfo.Version})");
+        // 0. 初始化本地化
+        ModLoc.Initialize();
+        ModLog.Info(ModLoc.LogInitStart(ModInfo.Id, ModInfo.Version));
 
         // 1. 注册持久化设置数据存储
-        ModLog.Debug("步骤 1/5: 注册持久化设置...");
+        ModLog.Debug(ModLoc.LogStep(1, 5, "注册持久化设置"));
         ModSettingsHelper.Initialize();
 
         // 读取设置
         var settings = ModSettingsHelper.GetSettings();
         if (settings.VerboseLogging)
         {
-            ModLog.Info("详细日志已启用");
+            ModLog.Info(ModLoc.LogVerboseEnabled);
         }
 
         // 2. 注册游戏内设置页面
-        ModLog.Debug("步骤 2/5: 注册游戏内设置页面...");
+        ModLog.Debug(ModLoc.LogStep(2, 5, "注册游戏内设置页面"));
         RegisterSettingsPage();
 
         // 3. 在 Linux 上确保 libgcc_s 已全局加载
-        ModLog.Debug("步骤 3/5: 检查 Linux 原生库...");
+        ModLog.Debug(ModLoc.LogStep(3, 5, "检查 Linux 原生库"));
         LinuxNativeHelper.EnsureLibGccLoaded();
 
         // 4. 应用 Harmony 补丁
-        ModLog.Debug("步骤 4/5: 应用 Harmony 补丁...");
+        ModLog.Debug(ModLoc.LogStep(4, 5, "应用 Harmony 补丁"));
         var harmony = new Harmony(ModInfo.HarmonyId);
         harmony.PatchAll(typeof(RespectAffectsGameplayMod).Assembly);
         var patchedMethods = harmony.GetPatchedMethods();
-        ModLog.Info($"Harmony 补丁已应用, 本 mod 共 {patchedMethods.Count()} 个补丁方法:" +
+        ModLog.Info(ModLoc.LogPatchesApplied(patchedMethods.Count()) +
             string.Concat(patchedMethods.Select(m => $"\n  - {m.DeclaringType?.FullName}.{m.Name}")));
 
         // 5. 条件补丁: 根据用户设置决定是否启用 PatchModManagerIsRunningModded
         if (!settings.PatchModManagerIsRunningModded)
         {
-            ModLog.Info("PatchModManagerIsRunningModded 已禁用 (用户设置), 执行 Unpatch...");
+            ModLog.Info(ModLoc.LogPatchModManagerDisabled);
             harmony.Unpatch(typeof(ModManager).GetMethod(nameof(ModManager.IsRunningModded)),
                 typeof(PatchModManagerIsRunningModded).GetMethod(nameof(PatchModManagerIsRunningModded.Prefix)));
         }
         else
         {
-            ModLog.Info("PatchModManagerIsRunningModded 已启用, 将拦截所有 IsRunningModded() 调用");
+            ModLog.Info(ModLoc.LogPatchModManagerEnabled);
         }
 
-        ModLog.Info($"初始化完成 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
+        ModLog.Info(ModLoc.LogInitComplete(settings.Mode.ToString(), settings.PatchModManagerIsRunningModded));
     }
 
     /// <summary>
@@ -69,12 +101,12 @@ public static class RespectAffectsGameplayMod
     /// <exception cref="InvalidOperationException">当 ModdedMode 设置为未知值时抛出</exception>
     internal static bool IsEffectivelyModded()
     {
+        if (_cachedIsEffectivelyModded.HasValue) { return _cachedIsEffectivelyModded.Value; }
+
         try
         {
-            // 获取当前 mod 设置
             var settings = ModSettingsHelper.GetSettings();
 
-            // 根据设置的 Modded Mode 决定是否视为 modded 状态
             var result = settings.Mode switch
             {
                 ModdedMode.Auto => EvaluateAutoMode(),
@@ -83,13 +115,15 @@ public static class RespectAffectsGameplayMod
                 _ => throw new InvalidOperationException($"Unknown ModdedMode value: {settings.Mode}"),
             };
 
+            _cachedIsEffectivelyModded = result;
+
             ModLog.Debug($"IsEffectivelyModded() = {result} (Mode={settings.Mode})");
             return result;
         }
         catch (Exception ex)
         {
-            // 出错时保守假设为 modded 状态
             ModLog.Error($"IsEffectivelyModded() 异常, 保守假设为 modded: {ex}");
+            _cachedIsEffectivelyModded = true;
             return true;
         }
     }
@@ -101,16 +135,26 @@ public static class RespectAffectsGameplayMod
     private static bool EvaluateAutoMode()
     {
         var knownMods = RitsuModManager.GetKnownMods();
-        var loadedMods = knownMods.Where(m => m.IsLoaded).ToList();
+
+        // 如果 RitsuLib 未返回任何已知 mod (例如 RitsuLib 不可用), 回退到 Default 模式以保守评估
+        if (knownMods.Count == 0)
+        {
+            ModLog.Warn(ModLoc.LogAutoFallback);
+            return EvaluateDefaultMode();
+        }
+
+        // 过滤掉 Steam Workshop 重复条目 (本地已有同名 mod 时 Workshop 版本会被标记为 DisabledDuplicate)
+        var loadedMods = knownMods
+            .Where(m => m.IsLoaded && !m.IsDisabledSteamWorkshopDuplicate)
+            .ToList();
         var gameplayMods = loadedMods.Where(m => m.AffectsGameplay).ToList();
         var nonGameplayMods = loadedMods.Where(m => !m.AffectsGameplay).ToList();
 
-        ModLog.Debug($"Auto 模式: 共检测 {knownMods.Count} 个 mod, " +
-        $"已加载 {loadedMods.Count} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
+        ModLog.Debug(ModLoc.LogAutoMode(knownMods.Count, loadedMods.Count, gameplayMods.Count, nonGameplayMods.Count));
 
         if (gameplayMods.Count > 0)
         {
-            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => m.Id))}]");
+            ModLog.Info(ModLoc.LogGameplayModsDetected(string.Join(", ", gameplayMods.Select(m => m.Id))));
         }
 
         return gameplayMods.Count > 0;
@@ -123,7 +167,7 @@ public static class RespectAffectsGameplayMod
     private static bool EvaluateDefaultMode()
     {
         var loadedOrFailed = ModManager.Mods.Where(m => m.state is ModLoadState.Loaded or ModLoadState.Failed).ToList();
-        ModLog.Debug($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, " + $"Loaded/Failed: {loadedOrFailed.Count}");
+        ModLog.Debug(ModLoc.LogDefaultMode(ModManager.Mods.Count, loadedOrFailed.Count));
         return loadedOrFailed.Count > 0;
     }
 
@@ -132,16 +176,16 @@ public static class RespectAffectsGameplayMod
     /// </summary>
     private static void RegisterSettingsPage()
     {
-        ModLog.Debug("注册 RitsuLib 设置页面...");
+        ModLog.Debug(ModLoc.LogRegisteringSettings);
 
         RitsuLibFramework.RegisterModSettings(ModInfo.Id, page => page
             .WithTitle(ModSettingsText.Literal(ModInfo.Name))
             .WithModDisplayName(ModSettingsText.Literal(ModInfo.Name))
-            .AddSection("general", section => section
-                .WithTitle(ModSettingsText.Literal("General"))
+            .AddSection(SectionGeneral, section => section
+                .WithTitle(ModSettingsText.Literal(ModLoc.SettingsTitleGeneral))
                 .AddEnumChoice(
-                    "mode",
-                    ModSettingsText.Literal("Modded Mode"),
+                    ChoiceMode,
+                    ModSettingsText.Literal(ModLoc.SettingsTitleModdedMode),
                     new ModSettingsValueBinding<ModSettingsData, ModdedMode>(
                         ModInfo.Id,
                         ModSettingsHelper.DataKey,
@@ -150,35 +194,26 @@ public static class RespectAffectsGameplayMod
                         (s, v) => { s.Mode = v; ModSettingsHelper.SaveSettings(); }),
                     value => value switch
                     {
-                        ModdedMode.Auto => ModSettingsText.Literal("自动"),
-                        ModdedMode.AlwaysVanilla => ModSettingsText.Literal("强制原版"),
-                        ModdedMode.Default => ModSettingsText.Literal("游戏默认"),
+                        ModdedMode.Auto => ModSettingsText.Literal(ModLoc.ModeOptionAuto),
+                        ModdedMode.AlwaysVanilla => ModSettingsText.Literal(ModLoc.ModeOptionAlwaysVanilla),
+                        ModdedMode.Default => ModSettingsText.Literal(ModLoc.ModeOptionDefault),
                         _ => ModSettingsText.Literal(value.ToString()),
                     },
-                    ModSettingsText.Literal(
-                        "自动：仅当加载了 affects_gameplay: true 的 mod 时才标记游戏为 modded 状态。\n" +
-                        "强制原版：即使加载了 gameplay mod 也永不标记为 modded（⚠ 可能导致存档损坏）。\n" +
-                        "游戏默认：使用游戏默认逻辑，只要加载了任意 mod 即标记为 modded 状态。\n\n" +
-                        "⚠ 修改此选项后需重启游戏才能生效。"),
+                    ModSettingsText.Literal(ModLoc.DescModdedMode),
                     ModSettingsChoicePresentation.Dropdown)
                 .AddToggle(
-                    "patchModManager",
-                    ModSettingsText.Literal("拦截 IsRunningModded()"),
+                    TogglePatchModManager,
+                    ModSettingsText.Literal(ModLoc.SettingsTitlePatchModManager),
                     new ModSettingsValueBinding<ModSettingsData, bool>(
                         ModInfo.Id,
                         ModSettingsHelper.DataKey,
                         ModSettingsHelper.DataScope,
                         s => s.PatchModManagerIsRunningModded,
                         (s, v) => { s.PatchModManagerIsRunningModded = v; ModSettingsHelper.SaveSettings(); }),
-                    ModSettingsText.Literal(
-                        "开启：Mod 管理器、联机 Mod 列表、Sentry 上报等所有调用 IsRunningModded() 的位置\n" +
-                        "      均受当前 Modded Mode 控制。副作用：主界面 mod 数量和哈希值可能不显示。\n" +
-                        "关闭：仅存档路径受当前 Modded Mode 控制，UI 和联机列表恢复原始行为。\n\n" +
-                        "⚠ 修改此选项后需重启游戏才能生效。"),
-                    null)
+                    ModSettingsText.Literal(ModLoc.DescPatchModManager))
                 .AddToggle(
-                    "verboseLogging",
-                    ModSettingsText.Literal("详细日志"),
+                    ToggleVerboseLogging,
+                    ModSettingsText.Literal(ModLoc.SettingsTitleVerboseLogging),
                     new ModSettingsValueBinding<ModSettingsData, bool>(
                         ModInfo.Id,
                         ModSettingsHelper.DataKey,
@@ -189,20 +224,14 @@ public static class RespectAffectsGameplayMod
                             s.VerboseLogging = v;
                             ModSettingsHelper.SaveSettings();
                         }),
-                    ModSettingsText.Literal(
-                        "开启：输出详细的 Debug 级别日志, 方便排查问题。\n" +
-                        "关闭：仅输出 Warn / Error 日志。\n\n" +
-                        "⚠ 仅影响本 mod, 不影响游戏或其他 mod 的日志输出。修改后即时生效。"),
-                    null)
+                    ModSettingsText.Literal(ModLoc.DescVerboseLogging))
                 .AddButton(
-                    "resetDefaults",
-                    ModSettingsText.Literal("重置为默认设置"),
-                    ModSettingsText.Literal("恢复默认"),
+                    ButtonResetDefaults,
+                    ModSettingsText.Literal(ModLoc.SettingsTitleResetDefaults),
+                    ModSettingsText.Literal(ModLoc.SettingsButtonReset),
                     ModSettingsHelper.ResetToDefaults,
-                    description: ModSettingsText.Literal(
-                        "将所有设置恢复为默认值。\n" +
-                        "⚠ 某些修改需重启游戏才能生效。"))));
+                    description: ModSettingsText.Literal(ModLoc.DescResetDefaults))));
 
-        ModLog.Debug("设置页面注册完成");
+        ModLog.Debug(ModLoc.LogSettingsRegistered);
     }
 }
