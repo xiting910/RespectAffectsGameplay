@@ -104,6 +104,14 @@ public class HarmonyFinalizer : Attribute { }
 public static class AccessTools
 {
     /// <summary>
+    /// 通过反射获取类型的属性信息 (桩)
+    /// </summary>
+    /// <param name="type">声明属性的类型</param>
+    /// <param name="name">属性名称</param>
+    /// <returns>属性信息; 如果不存在则返回 null</returns>
+    public static PropertyInfo? Property(Type type, string name) => type.GetProperty(name);
+
+    /// <summary>
     /// 通过反射获取类型的静态字段引用 (桩)
     /// </summary>
     /// <typeparam name="T">字段类型</typeparam>

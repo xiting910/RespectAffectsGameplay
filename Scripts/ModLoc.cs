@@ -76,7 +76,7 @@ internal static class ModLoc
         locale.StartsWith("ko", StringComparison.OrdinalIgnoreCase) ? "kor" : "eng";
 
     /// <summary>
-    /// 从 JSON 文件加载指定语言的本地化文本
+    /// 从磁盘文件加载指定语言的本地化文本 (扩展名 .lang, 内容为 JSON 格式)
     /// </summary>
     /// <param name="language">STS2 标准语言代码 (如 "eng", "zhs")</param>
     private static void LoadLocalization(string language)
@@ -90,7 +90,7 @@ internal static class ModLoc
                 return;
             }
 
-            var locPath = Path.Combine(modDir, "localization", $"{language}.json");
+            var locPath = Path.Combine(modDir, "localization", $"{language}.lang");
 
             if (!File.Exists(locPath))
             {

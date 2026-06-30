@@ -45,22 +45,25 @@ public static class ModAffectsGameplayValidator
             // 遍历所有 mods
             foreach (var mod in mods)
             {
+                // 使用反射安全获取 manifest, 避免因游戏更新 API 变更导致 MissingMethodException
+                var manifest = ModManifestHelper.GetManifest(mod);
+
                 // 如果 mod 没有 manifest, 则无法验证 affects_gameplay 标记, 跳过
-                if (mod.manifest is null)
+                if (manifest is null)
                 {
-                    ModLog.Warn($"[{mod.path}] 没有 manifest, 无法验证 affects_gameplay 标记, 跳过");
+                    ModLog.Warn($"[{mod.path ?? "<unknown>"}] 没有 manifest, 无法验证 affects_gameplay 标记");
                     continue;
                 }
 
                 // 如果 affects_gameplay 标记为 true, 则无需验证, 直接跳过
-                if (mod.manifest.affectsGameplay)
+                if (ModManifestHelper.GetAffectsGameplay(manifest))
                 {
-                    ModLog.Debug($"[{mod.manifest.id}] affects_gameplay 标记为 true, 无需验证, 跳过");
+                    ModLog.Debug($"[{ModManifestHelper.GetId(manifest) ?? "<unknown>"}] affects_gameplay 标记为 true, 无需验证");
                     continue;
                 }
 
                 // 获取 mod 的 ID, 如果没有 ID 则使用 name, 如果都没有则使用 "<unknown>"
-                var modId = mod.manifest.id ?? mod.manifest.name ?? "<unknown>";
+                var modId = ModManifestHelper.GetId(manifest) ?? ModManifestHelper.GetName(manifest) ?? "<unknown>";
 
                 // 检测 mod 是否应视为影响游戏性
                 var result = EvaluateMod(mod, modId);

@@ -29,6 +29,35 @@
 
 ---
 
+## [0.2.2] - 2026-06-30
+
+### Note
+
+- 修复游戏 v0.107.1 中 `Mod.manifest` 属性缺失导致的 `MissingMethodException` 崩溃，改用反射安全访问 Mod 元数据
+
+### Fixed
+
+- **`MissingMethodException` 崩溃**: 游戏 v0.107.1 的 `Mod` 类型移除了 `manifest` 属性（getter `get_manifest()`），导致 `ValidateAll()`、`EvaluateAutoMode()` 和联机哈希过滤在 JIT 编译时崩溃。新增 `ModManifestHelper` 反射辅助类，通过 `AccessTools.Property` 安全访问 `Mod.manifest`、`ModManifest.affectsGameplay`、`id`、`name`，属性不存在时返回安全默认值
+- **本地化文件被误识别为 Mod manifest**: 游戏递归扫描 `.json` 文件寻找 Mod 清单，`localization/eng.json` 和 `zhs.json` 因缺少 `id` 字段而报错。将扩展名改为 `.lang`（内容仍为 JSON），避免被游戏扫描器发现
+
+### Changed
+
+- `ModLoc.LoadLocalization()`: 从磁盘读取 `.lang` 文件
+- `ModAffectsGameplayValidator.ValidateAll()`: 改用 `ModManifestHelper` 反射访问 manifest
+- `RespectAffectsGameplayMod.EvaluateAutoMode()`: 改用 `ModManifestHelper` 反射访问 manifest
+- `PatchModelIdSerializationCache.GetModsPrefix()`: 改用 `ModManifestHelper` 反射访问 manifest
+
+### Added
+
+- **`ModManifestHelper`** 反射辅助类: 封装 `AccessTools.Property` 调用，提供 `GetManifest()`、`GetAffectsGameplay()`、`GetId()`、`GetName()` 安全方法
+
+### Internal
+
+- `stubs/0Harmony/Stubs.cs`: 新增 `AccessTools.Property` 桩方法，确保 CI 环境编译通过
+- `simulate-ci.bat`: 文件检查改为 `.lang` 扩展名
+
+---
+
 ## [0.2.1] - 2026-06-30
 
 ### Note
@@ -302,7 +331,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.2
 [0.2.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.1
 [0.2.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.0
 [0.1.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.8

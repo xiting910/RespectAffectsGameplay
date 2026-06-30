@@ -85,7 +85,7 @@ RespectAffectsGameplay/
 │   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化 / 补丁 / IsEffectivelyModded()
 │   ├── ModdedMode.cs                     # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
 │   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 版本 / 作者 / HarmonyId)
-│   ├── ModLoc.cs                         # 本地化系统 (从 JSON 加载, 基于 CultureInfo 自动检测语言)
+│   ├── ModLoc.cs                         # 本地化系统 (从 .lang 文件加载, 基于 CultureInfo 自动检测语言)
 │   ├── ModLog.cs                         # 统一日志系统 (自动前缀 + 详细日志开关)
 │   ├── ModSettingsData.cs                # 持久化设置数据模型
 │   ├── ModSettingsHelper.cs              # 设置初始化 / 持久化 / 重置为默认值
@@ -96,9 +96,10 @@ RespectAffectsGameplay/
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
 │   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
 │   ├── ModAffectsGameplayValidator.cs    # Mod affects_gameplay 标记验证 + Toast 警告
+│   ├── ModManifestHelper.cs              # 反射安全访问 Mod manifest 属性（兼容游戏 API 变更）
 │   ├── localization/                     # 本地化语言文件
-│   │   ├── eng.json                      #   英语
-│   │   └── zhs.json                      #   简体中文
+│   │   ├── eng.lang                      #   英语
+│   │   └── zhs.lang                      #   简体中文
 │   └── Directory.Build.props             # 开发环境路径配置 (gitignore, CI 不需要)
 ├── workshop/                             # Steam 创意工坊上传工作区
 │   ├── workshop.json                     #   工坊元数据（标题、描述、可见性、标签）

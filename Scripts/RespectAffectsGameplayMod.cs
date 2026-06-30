@@ -147,8 +147,8 @@ public static class RespectAffectsGameplayMod
             return false;
         }
 
-        // 筛选出所有已加载且有 manifest 的 Mod
-        var modsWithManifest = loadedMods.Where(m => m.manifest is not null);
+        // 筛选出所有已加载且有 manifest 的 Mod (通过反射安全获取 manifest)
+        var modsWithManifest = loadedMods.Where(m => ModManifestHelper.GetManifest(m) is not null);
 
         // 如果没有已加载的 Mod 有 manifest, 则视为 vanilla
         if (!modsWithManifest.Any())
@@ -163,14 +163,14 @@ public static class RespectAffectsGameplayMod
         // 遍历所有已加载且有 manifest 的 Mod 进行分类
         foreach (var mod in modsWithManifest)
         {
-            // 获取 Mod 的 manifest, 由于已经筛选过, 所以这里可以使用非空断言
-            var manifest = mod.manifest!;
+            // 通过反射安全获取 Mod 的 manifest
+            var manifest = ModManifestHelper.GetManifest(mod)!;
 
-            // 获取 Mod 的 ID, 如果没有 ID 则使用 name, 如果都没有则使用 "<unknown>"
-            var modId = manifest.id ?? manifest.name ?? "<unknown>";
+            // 通过反射安全获取 Mod 的 ID 和 name
+            var modId = ModManifestHelper.GetId(manifest) ?? ModManifestHelper.GetName(manifest) ?? "<unknown>";
 
             // 如果 affects_gameplay 标记为 true, 或者在 MislabeledGameplayMods 中, 则视为 gameplay mod
-            if (manifest.affectsGameplay || ModAffectsGameplayValidator.MislabeledGameplayMods.Contains(modId))
+            if (ModManifestHelper.GetAffectsGameplay(manifest) || ModAffectsGameplayValidator.MislabeledGameplayMods.Contains(modId))
             {
                 gameplayMods.Add(mod);
             }
@@ -187,7 +187,7 @@ public static class RespectAffectsGameplayMod
 
         if (isModded)
         {
-            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => m.manifest!.id))}]");
+            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => ModManifestHelper.GetId(ModManifestHelper.GetManifest(m)!)))}]");
         }
         return isModded;
     }

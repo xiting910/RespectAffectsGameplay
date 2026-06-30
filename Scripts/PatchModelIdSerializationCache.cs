@@ -73,7 +73,11 @@ public static class PatchModelIdSerializationCache
             var original = AccessTools.StaticFieldRefAccess<List<Mod>>(typeof(ModManager), "_mods");
 
             var totalCount = original.Count;
-            var filtered = original.Where(m => m.manifest?.affectsGameplay ?? true).ToList();
+            var filtered = original.Where(m =>
+            {
+                var mf = ModManifestHelper.GetManifest(m);
+                return mf is null || ModManifestHelper.GetAffectsGameplay(mf);
+            }).ToList();
             var excludedCount = totalCount - filtered.Count;
 
             // 过滤掉 affects_gameplay: false 的 Mod

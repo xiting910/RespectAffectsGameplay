@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <LocFiles Include="$(MSBuildThisFileDirectory)localization\*.json" />
+    <LocFiles Include="$(MSBuildThisFileDirectory)localization\*.lang" />
   </ItemGroup>
 
   <Target Name="Copy Mod" AfterTargets="PostBuildEvent">
