@@ -28,6 +28,10 @@
 
 ## [Unreleased]
 
+### Internal
+
+- **README 徽章更新**: 移除 Release 和 STS2 版本徽章，新增 Dependency Review 徽章
+
 ---
 
 ## [0.2.3] - 2026-06-30

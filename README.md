@@ -4,8 +4,7 @@
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![CI](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml)
-[![Release](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml)
-[![STS2](https://img.shields.io/badge/STS2-0.107.1+-blue.svg)](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)
+[![Dependency Review](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/dependency-review.yml)
 
 **Respect Affects Gameplay** 是一个 [Slay the Spire 2](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)（STS2）的 Mod，它让游戏真正尊重每个 Mod 的 `affects_gameplay` 元数据标记。
 
