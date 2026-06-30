@@ -27,9 +27,13 @@
 
 ## [Unreleased]
 
+---
+
+## [0.2.1] - 2026-06-30
+
 ### Note
 
-- 新增游戏内 Toast 通知：当检测到 affects_gameplay 标记不准确的 Mod 时，在主菜单弹出警告提醒玩家
+- 新增误标 Mod 检测与 Toast 警告：自动识别 affects_gameplay 标记不准确的 Mod 并在主菜单弹出提醒；Auto 模式下还会强制将其视为玩法 Mod
 
 ### Added
 
@@ -298,7 +302,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.1
 [0.2.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.0
 [0.1.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.8
 [0.1.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.1.7

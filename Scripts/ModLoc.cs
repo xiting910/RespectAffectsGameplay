@@ -1,7 +1,7 @@
+using Godot;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
-using Godot;
 
 namespace RespectAffectsGameplay;
 
@@ -66,29 +66,14 @@ internal static class ModLoc
     /// </summary>
     /// <param name="locale">locale 字符串, 如 <c>"zh_CN"</c>, <c>"zh-Hans"</c>, <c>"ja"</c></param>
     /// <returns>STS2 标准语言代码</returns>
-    private static string ParseLocale(string locale)
-    {
-        if (locale.StartsWith("zh_CN", StringComparison.OrdinalIgnoreCase) ||
-            locale.StartsWith("zh-CN", StringComparison.OrdinalIgnoreCase) ||
-            locale.StartsWith("zh-Hans", StringComparison.OrdinalIgnoreCase) ||
-            locale.StartsWith("zh-SG", StringComparison.OrdinalIgnoreCase))
-        {
-            return "zhs";
-        }
-        if (locale.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
-        {
-            return "zht";
-        }
-        if (locale.StartsWith("ja", StringComparison.OrdinalIgnoreCase))
-        {
-            return "jpn";
-        }
-        if (locale.StartsWith("ko", StringComparison.OrdinalIgnoreCase))
-        {
-            return "kor";
-        }
-        return "eng";
-    }
+    private static string ParseLocale(string locale) =>
+        locale.StartsWith("zh_CN", StringComparison.OrdinalIgnoreCase) ||
+        locale.StartsWith("zh-CN", StringComparison.OrdinalIgnoreCase) ||
+        locale.StartsWith("zh-Hans", StringComparison.OrdinalIgnoreCase) ||
+        locale.StartsWith("zh-SG", StringComparison.OrdinalIgnoreCase) ? "zhs" :
+        locale.StartsWith("zh", StringComparison.OrdinalIgnoreCase) ? "zht" :
+        locale.StartsWith("ja", StringComparison.OrdinalIgnoreCase) ? "jpn" :
+        locale.StartsWith("ko", StringComparison.OrdinalIgnoreCase) ? "kor" : "eng";
 
     /// <summary>
     /// 从 JSON 文件加载指定语言的本地化文本

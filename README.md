@@ -40,11 +40,13 @@
 
 ### 通过 Steam 创意工坊安装（推荐）
 
-1. 打开创意工坊页面：[https://steamcommunity.com/sharedfiles/filedetails/?id=3751373259](https://steamcommunity.com/sharedfiles/filedetails/?id=3751373259)
+1. 在 Steam 中打开 Slay the Spire 2 的 **创意工坊**。
 
-2. 点击绿色的 **「订阅」** 按钮。
+2. 搜索 **"Respect Affects Gameplay"** 即可找到本 Mod。
 
-3. 开始游戏即可生效。
+3. 点击绿色的 **「订阅」** 按钮。
+
+4. 开始游戏即可生效。
 
 ### 手动安装
 
