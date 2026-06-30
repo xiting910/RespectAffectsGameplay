@@ -42,13 +42,13 @@ namespace MegaCrit.Sts2.Core.Modding
     public class ModManifest
     {
         /// <summary>是否影响游戏性</summary>
-        public bool affectsGameplay { get; set; } = true;
+        public bool affectsGameplay;
 
         /// <summary>模组唯一标识符 (来自 JSON "id")</summary>
-        public string? id { get; set; }
+        public string? id;
 
         /// <summary>模组名称 (来自 JSON "name")</summary>
-        public string? name { get; set; }
+        public string? name;
     }
 
     /// <summary>
@@ -57,16 +57,16 @@ namespace MegaCrit.Sts2.Core.Modding
     public class Mod
     {
         /// <summary>模组加载状态</summary>
-        public ModLoadState state { get; set; } = ModLoadState.None;
+        public ModLoadState state = ModLoadState.None;
 
         /// <summary>模组清单</summary>
-        public ModManifest? manifest { get; set; }
+        public ModManifest? manifest;
 
         /// <summary>模组的程序集</summary>
-        public Assembly? assembly { get; set; }
+        public Assembly? assembly;
 
         /// <summary>模组的文件系统路径</summary>
-        public string? path { get; set; }
+        public string? path;
     }
 
     /// <summary>

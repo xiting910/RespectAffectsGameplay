@@ -96,7 +96,7 @@ RespectAffectsGameplay/
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
 │   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
 │   ├── ModAffectsGameplayValidator.cs    # Mod affects_gameplay 标记验证 + Toast 警告
-│   ├── ModManifestHelper.cs              # 反射安全访问 Mod manifest 属性（兼容游戏 API 变更）
+│   ├── ModManifestHelper.cs              # 反射安全访问 Mod manifest（字段优先 + 属性回退，兼容游戏 API 变更）
 │   ├── localization/                     # 本地化语言文件
 │   │   ├── eng.lang                      #   英语
 │   │   └── zhs.lang                      #   简体中文

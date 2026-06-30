@@ -30,6 +30,23 @@
 
 ---
 
+## [0.2.3] - 2026-06-30
+
+### Note
+
+- 改进 manifest 反射访问策略，优先使用字段访问并回退到属性
+
+### Changed
+
+- **`ModManifestHelper` 反射策略优化**: 静态成员从 `AccessTools.Property` 改为 `AccessTools.Field` 作为优先访问方式，失败时回退到 `AccessTools.Property`。
+
+### Internal
+
+- `stubs/0Harmony/Stubs.cs`: 新增 `AccessTools.Field` 桩方法和 `Harmony.PatchAll(Type)` 重载
+- `stubs/sts2/Stubs.cs`: `ModManifest` 成员和 `Mod.manifest` 从属性改为公共字段，匹配游戏 v0.107.1 实际定义
+
+---
+
 ## [0.2.2] - 2026-06-30
 
 ### Note
@@ -332,7 +349,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.3
 [0.2.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.2
 [0.2.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.1
 [0.2.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.0
