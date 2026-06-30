@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="STS2.RitsuLib" Version="0.4.41" />
+    <PackageReference Include="STS2.RitsuLib" Version="0.4.42" />
   </ItemGroup>
 
   <ItemGroup>
