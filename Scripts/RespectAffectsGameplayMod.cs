@@ -1,7 +1,6 @@
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Modding;
 using STS2RitsuLib;
-using STS2RitsuLib.Compat;
 using STS2RitsuLib.Settings;
 
 namespace RespectAffectsGameplay;
@@ -49,48 +48,53 @@ public static class RespectAffectsGameplayMod
     {
         // 0. 初始化本地化
         ModLoc.Initialize();
-        ModLog.Info(ModLoc.LogInitStart(ModInfo.Id, ModInfo.Version));
+        ModLog.Info($"开始初始化 (ID: {ModInfo.Id}, Version: {ModInfo.Version})");
 
         // 1. 注册持久化设置数据存储
-        ModLog.Debug(ModLoc.LogStep(1, 5, "注册持久化设置"));
+        ModLog.Debug("步骤 1/6: 注册持久化设置...");
         ModSettingsHelper.Initialize();
 
         // 读取设置
         var settings = ModSettingsHelper.GetSettings();
         if (settings.VerboseLogging)
         {
-            ModLog.Info(ModLoc.LogVerboseEnabled);
+            ModLog.Info("详细日志已启用");
         }
 
         // 2. 注册游戏内设置页面
-        ModLog.Debug(ModLoc.LogStep(2, 5, "注册游戏内设置页面"));
+        ModLog.Debug("步骤 2/6: 注册游戏内设置页面...");
         RegisterSettingsPage();
 
         // 3. 在 Linux 上确保 libgcc_s 已全局加载
-        ModLog.Debug(ModLoc.LogStep(3, 5, "检查 Linux 原生库"));
+        ModLog.Debug("步骤 3/6: 检查 Linux 原生库...");
         LinuxNativeHelper.EnsureLibGccLoaded();
 
         // 4. 应用 Harmony 补丁
-        ModLog.Debug(ModLoc.LogStep(4, 5, "应用 Harmony 补丁"));
+        ModLog.Debug("步骤 4/6: 应用 Harmony 补丁...");
         var harmony = new Harmony(ModInfo.HarmonyId);
         harmony.PatchAll(typeof(RespectAffectsGameplayMod).Assembly);
         var patchedMethods = harmony.GetPatchedMethods();
-        ModLog.Info(ModLoc.LogPatchesApplied(patchedMethods.Count()) +
+        ModLog.Info($"Harmony 补丁已应用, 本 mod 共 {patchedMethods.Count()} 个补丁方法:" +
             string.Concat(patchedMethods.Select(m => $"\n  - {m.DeclaringType?.FullName}.{m.Name}")));
 
         // 5. 条件补丁: 根据用户设置决定是否启用 PatchModManagerIsRunningModded
         if (!settings.PatchModManagerIsRunningModded)
         {
-            ModLog.Info(ModLoc.LogPatchModManagerDisabled);
+            ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已禁用 (用户设置)");
             harmony.Unpatch(typeof(ModManager).GetMethod(nameof(ModManager.IsRunningModded)),
                 typeof(PatchModManagerIsRunningModded).GetMethod(nameof(PatchModManagerIsRunningModded.Prefix)));
         }
         else
         {
-            ModLog.Info(ModLoc.LogPatchModManagerEnabled);
+            ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已启用, 将拦截所有 {nameof(ModManager.IsRunningModded)} 调用");
         }
 
-        ModLog.Info(ModLoc.LogInitComplete(settings.Mode.ToString(), settings.PatchModManagerIsRunningModded));
+        // 6. 验证所有 Mod 的 affects_gameplay 标记是否准确
+        ModLog.Debug("步骤 6/6: 验证 affects_gameplay 标记...");
+        ModAffectsGameplayValidator.ValidateAll();
+
+        // 输出初始化完成日志
+        ModLog.Info($"初始化完成 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
     }
 
     /// <summary>
@@ -129,35 +133,63 @@ public static class RespectAffectsGameplayMod
     }
 
     /// <summary>
-    /// Auto 模式: 遍历所有已知 mod, 检测是否有已加载的 gameplay mod
+    /// Auto 模式: 遍历所有已加载 mod, 检测是否有 gameplay mod
     /// </summary>
-    /// <returns><see langword="true"/> 表示有已加载的 gameplay mod; <see langword="false"/> 表示没有</returns>
     private static bool EvaluateAutoMode()
     {
-        var knownMods = RitsuModManager.GetKnownMods();
+        // 获取所有已加载且有 manifest 的 Mod
+        var loadedMods = ModManager.Mods.Where(m => m.state is ModLoadState.Loaded or ModLoadState.Failed);
 
-        // 如果 RitsuLib 未返回任何已知 mod (例如 RitsuLib 不可用), 回退到 Default 模式以保守评估
-        if (knownMods.Count == 0)
+        // 如果没有已加载的 Mod, 则视为 vanilla
+        if (!loadedMods.Any())
         {
-            ModLog.Warn(ModLoc.LogAutoFallback);
-            return EvaluateDefaultMode();
+            ModLog.Debug("Auto 模式: 没有已加载的 Mod, 视为 vanilla");
+            return false;
         }
 
-        // 过滤掉 Steam Workshop 重复条目 (本地已有同名 mod 时 Workshop 版本会被标记为 DisabledDuplicate)
-        var loadedMods = knownMods
-            .Where(m => m.IsLoaded && !m.IsDisabledSteamWorkshopDuplicate)
-            .ToList();
-        var gameplayMods = loadedMods.Where(m => m.AffectsGameplay).ToList();
-        var nonGameplayMods = loadedMods.Where(m => !m.AffectsGameplay).ToList();
+        // 筛选出所有已加载且有 manifest 的 Mod
+        var modsWithManifest = loadedMods.Where(m => m.manifest is not null);
 
-        ModLog.Debug(ModLoc.LogAutoMode(knownMods.Count, loadedMods.Count, gameplayMods.Count, nonGameplayMods.Count));
-
-        if (gameplayMods.Count > 0)
+        // 如果没有已加载的 Mod 有 manifest, 则视为 vanilla
+        if (!modsWithManifest.Any())
         {
-            ModLog.Info(ModLoc.LogGameplayModsDetected(string.Join(", ", gameplayMods.Select(m => m.Id))));
+            ModLog.Debug("Auto 模式: 没有已加载的 Mod 有 manifest, 视为 vanilla");
+            return false;
         }
 
-        return gameplayMods.Count > 0;
+        // 将所有已加载且有 manifest 的 Mod 分为 gameplay mod 和 non-gameplay mod
+        List<Mod> gameplayMods = [], nonGameplayMods = [];
+
+        // 遍历所有已加载且有 manifest 的 Mod 进行分类
+        foreach (var mod in modsWithManifest)
+        {
+            // 获取 Mod 的 manifest, 由于已经筛选过, 所以这里可以使用非空断言
+            var manifest = mod.manifest!;
+
+            // 获取 Mod 的 ID, 如果没有 ID 则使用 name, 如果都没有则使用 "<unknown>"
+            var modId = manifest.id ?? manifest.name ?? "<unknown>";
+
+            // 如果 affects_gameplay 标记为 true, 或者在 MislabeledGameplayMods 中, 则视为 gameplay mod
+            if (manifest.affectsGameplay || ModAffectsGameplayValidator.MislabeledGameplayMods.Contains(modId))
+            {
+                gameplayMods.Add(mod);
+            }
+            else
+            {
+                nonGameplayMods.Add(mod);
+            }
+        }
+
+        ModLog.Debug($"Auto 模式: 共检测 {ModManager.Mods.Count} 个 mod, 已加载 {loadedMods.Count()} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
+
+        // 是否应该被视为 modded 模式
+        var isModded = gameplayMods.Count > 0;
+
+        if (isModded)
+        {
+            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => m.manifest!.id))}]");
+        }
+        return isModded;
     }
 
     /// <summary>
@@ -166,9 +198,9 @@ public static class RespectAffectsGameplayMod
     /// <returns><see langword="true"/> 表示游戏原版逻辑认为 modded; <see langword="false"/> 表示游戏原版逻辑认为 vanilla</returns>
     private static bool EvaluateDefaultMode()
     {
-        var loadedOrFailed = ModManager.Mods.Where(m => m.state is ModLoadState.Loaded or ModLoadState.Failed).ToList();
-        ModLog.Debug(ModLoc.LogDefaultMode(ModManager.Mods.Count, loadedOrFailed.Count));
-        return loadedOrFailed.Count > 0;
+        var count = ModManager.Mods.Count(m => m.state is ModLoadState.Loaded or ModLoadState.Failed);
+        ModLog.Debug($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, Loaded/Failed: {count}");
+        return count > 0;
     }
 
     /// <summary>
@@ -176,7 +208,7 @@ public static class RespectAffectsGameplayMod
     /// </summary>
     private static void RegisterSettingsPage()
     {
-        ModLog.Debug(ModLoc.LogRegisteringSettings);
+        ModLog.Debug("注册 RitsuLib 设置页面...");
 
         RitsuLibFramework.RegisterModSettings(ModInfo.Id, page => page
             .WithTitle(ModSettingsText.Literal(ModInfo.Name))
@@ -232,6 +264,6 @@ public static class RespectAffectsGameplayMod
                     ModSettingsHelper.ResetToDefaults,
                     description: ModSettingsText.Literal(ModLoc.DescResetDefaults))));
 
-        ModLog.Debug(ModLoc.LogSettingsRegistered);
+        ModLog.Debug("设置页面注册完成");
     }
 }

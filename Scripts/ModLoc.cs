@@ -151,22 +151,6 @@ internal static class ModLoc
     }
 
     /// <summary>
-    /// 获取指定键的本地化文本, 并用参数替换 <c>{Key}</c> 占位符
-    /// </summary>
-    /// <param name="key">本地化键, 对应 JSON 中的模板字符串</param>
-    /// <param name="args">占位符键值对数组, 例如 <c>("Count", 5)</c> 会替换模板中的 <c>{Count}</c></param>
-    /// <returns>替换占位符后的本地化文本</returns>
-    private static string Format(string key, params (string Key, object Value)[] args)
-    {
-        var template = Get(key);
-        foreach (var (k, v) in args)
-        {
-            template = template.Replace($"{{{k}}}", v?.ToString() ?? "null");
-        }
-        return template;
-    }
-
-    /// <summary>
     /// 设置页面 "通用" Section 的标题
     /// </summary>
     public static string SettingsTitleGeneral => Get("settings.section.general");
@@ -232,82 +216,12 @@ internal static class ModLoc
     public static string DescResetDefaults => Get("settings.resetDefaults.desc");
 
     /// <summary>
-    /// 初始化开始日志消息
+    /// Toast 通知标题: 检测到 Mislabeled Mod
     /// </summary>
-    /// <param name="id">mod ID</param>
-    /// <param name="version">mod 版本号</param>
-    public static string LogInitStart(string id, string version) => Format("log.initStart", ("Id", id), ("Version", version));
+    public static string ToastMislabeledTitle(int count) => Get("toast.mislabeled.title").Replace("{Count}", count.ToString());
 
     /// <summary>
-    /// 详细日志已启用的日志消息
+    /// Toast 通知正文: 列出误标的 Mod
     /// </summary>
-    public static string LogVerboseEnabled => Get("log.verboseEnabled");
-
-    /// <summary>
-    /// 初始化步骤进度日志消息
-    /// </summary>
-    /// <param name="step">当前步骤编号</param>
-    /// <param name="total">总步骤数</param>
-    /// <param name="desc">步骤描述</param>
-    public static string LogStep(int step, int total, string desc) => Format("log.step", ("Step", step), ("Total", total), ("Desc", desc));
-
-    /// <summary>
-    /// Harmony 补丁应用完成日志消息
-    /// </summary>
-    /// <param name="count">已补丁的方法数量</param>
-    public static string LogPatchesApplied(int count) => Format("log.patchesApplied", ("Count", count));
-
-    /// <summary>
-    /// PatchModManagerIsRunningModded 已禁用的日志消息
-    /// </summary>
-    public static string LogPatchModManagerDisabled => Get("log.patchModManagerDisabled");
-
-    /// <summary>
-    /// PatchModManagerIsRunningModded 已启用的日志消息
-    /// </summary>
-    public static string LogPatchModManagerEnabled => Get("log.patchModManagerEnabled");
-
-    /// <summary>
-    /// 初始化完成日志消息
-    /// </summary>
-    /// <param name="mode">当前 ModdedMode 名称</param>
-    /// <param name="patchModManager">是否启用了 PatchModManagerIsRunningModded</param>
-    public static string LogInitComplete(string mode, bool patchModManager) => Format("log.initComplete", ("Mode", mode), ("PatchModManager", patchModManager));
-
-    /// <summary>
-    /// Auto 模式统计日志消息
-    /// </summary>
-    /// <param name="known">已知 mod 总数</param>
-    /// <param name="loaded">已加载 mod 数</param>
-    /// <param name="gameplay">gameplay mod 数</param>
-    /// <param name="nonGameplay">非 gameplay mod 数</param>
-    public static string LogAutoMode(int known, int loaded, int gameplay, int nonGameplay) => Format("log.autoMode", ("Known", known), ("Loaded", loaded), ("Gameplay", gameplay), ("NonGameplay", nonGameplay));
-
-    /// <summary>
-    /// 检测到 gameplay mod 的日志消息
-    /// </summary>
-    /// <param name="modList">gameplay mod ID 列表, 逗号分隔</param>
-    public static string LogGameplayModsDetected(string modList) => Format("log.gameplayModsDetected", ("ModList", modList));
-
-    /// <summary>
-    /// Default 模式统计日志消息
-    /// </summary>
-    /// <param name="total">ModManager 中 mod 总数</param>
-    /// <param name="loadedOrFailed">已加载或失败的 mod 数</param>
-    public static string LogDefaultMode(int total, int loadedOrFailed) => Format("log.defaultMode", ("Total", total), ("LoadedOrFailed", loadedOrFailed));
-
-    /// <summary>
-    /// Auto 模式回退到 Default 模式的日志消息
-    /// </summary>
-    public static string LogAutoFallback => Get("log.autoFallback");
-
-    /// <summary>
-    /// 开始注册设置页面的日志消息
-    /// </summary>
-    public static string LogRegisteringSettings => Get("log.registeringSettings");
-
-    /// <summary>
-    /// 设置页面注册完成的日志消息
-    /// </summary>
-    public static string LogSettingsRegistered => Get("log.settingsRegistered");
+    public static string ToastMislabeledBody(string modList) => Get("toast.mislabeled.body").Replace("{ModList}", modList);
 }

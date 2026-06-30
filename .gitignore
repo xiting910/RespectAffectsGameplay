@@ -4,4 +4,5 @@
 **/obj/
 **/Directory.Build.props
 workshop/content/
+simulate-ci.bat
 tag-and-push.bat

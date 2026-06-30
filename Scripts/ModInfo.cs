@@ -56,7 +56,7 @@ public static class ModInfo
     /// <summary>
     /// 获取 mod 的版本号 (来自 JSON "version")
     /// </summary>
-    public static string Version => Cached?.Version ?? "0.1.0";
+    public static string Version => Cached?.Version ?? "unknown";
 
     /// <summary>
     /// 获取 mod 的作者 (来自 JSON "author")

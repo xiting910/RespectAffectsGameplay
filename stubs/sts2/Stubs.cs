@@ -10,6 +10,8 @@
 #pragma warning disable CA1822
 #pragma warning disable CS9113
 
+using System.Reflection;
+
 namespace MegaCrit.Sts2.Core.Modding
 {
     /// <summary>
@@ -41,6 +43,12 @@ namespace MegaCrit.Sts2.Core.Modding
     {
         /// <summary>是否影响游戏性</summary>
         public bool affectsGameplay { get; set; } = true;
+
+        /// <summary>模组唯一标识符 (来自 JSON "id")</summary>
+        public string? id { get; set; }
+
+        /// <summary>模组名称 (来自 JSON "name")</summary>
+        public string? name { get; set; }
     }
 
     /// <summary>
@@ -53,6 +61,12 @@ namespace MegaCrit.Sts2.Core.Modding
 
         /// <summary>模组清单</summary>
         public ModManifest? manifest { get; set; }
+
+        /// <summary>模组的程序集</summary>
+        public Assembly? assembly { get; set; }
+
+        /// <summary>模组的文件系统路径</summary>
+        public string? path { get; set; }
     }
 
     /// <summary>
@@ -172,4 +186,29 @@ namespace MegaCrit.Sts2.Core.Logging
         /// <summary>输出 Error 日志</summary>
         public void Error(string text, int skipFrames = 1) { }
     }
+}
+
+namespace MegaCrit.Sts2.Core.Helpers
+{
+    /// <summary>
+    /// 反射辅助类 (桩): 提供程序集类型扫描功能
+    /// </summary>
+    public static class ReflectionHelper
+    {
+        /// <summary>
+        /// 从指定程序集中获取指定类型的所有子类型 (桩)
+        /// </summary>
+        /// <param name="assembly">要扫描的程序集</param>
+        /// <param name="baseType">基类或接口类型</param>
+        /// <returns>子类型枚举 (桩实现始终返回空)</returns>
+        public static IEnumerable<Type> GetSubtypesFromAssembly(Assembly assembly, Type baseType) => [];
+    }
+}
+
+namespace MegaCrit.Sts2.Core.Models
+{
+    /// <summary>
+    /// 抽象模型基类 (桩): 游戏中所有数据模型的基类
+    /// </summary>
+    public abstract class AbstractModel { }
 }

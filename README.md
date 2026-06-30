@@ -3,8 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![CI](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/ci.yml)
-[![Release](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml)
 [![CodeQL](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml)
+[![Release](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/release.yml)
 [![STS2](https://img.shields.io/badge/STS2-0.107.1+-blue.svg)](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)
 
 **Respect Affects Gameplay** 是一个 [Slay the Spire 2](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)（STS2）的 Mod，它让游戏真正尊重每个 Mod 的 `affects_gameplay` 元数据标记。
@@ -24,6 +24,7 @@
     - [问题二：联机哈希被非 gameplay Mod 污染](#问题二联机哈希被非-gameplay-mod-污染)
   - [工作原理](#工作原理)
     - [Harmony 补丁](#harmony-补丁)
+    - [Mod 标记验证与 Toast 警告](#mod-标记验证与-toast-警告)
   - [模式说明](#模式说明)
   - [构建](#构建)
     - [环境要求](#环境要求)
@@ -92,6 +93,7 @@ RespectAffectsGameplay/
 │   ├── PatchGetProfileDir.cs             # 拦截存档目录生成方法
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
 │   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
+│   ├── ModAffectsGameplayValidator.cs    # Mod affects_gameplay 标记验证 + Toast 警告
 │   ├── localization/                     # 本地化语言文件
 │   │   ├── eng.json                      #   英语
 │   │   └── zhs.json                      #   简体中文
@@ -120,7 +122,7 @@ RespectAffectsGameplay/
 
 ### 问题二：联机哈希被非 gameplay Mod 污染
 
-`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。一些标记 `affects_gameplay: false` 的 Mod 可能也会注册 `AbstractModel` 子类型，导致 Host 与 Vanilla Client 之间哈希不一致，触发 "版本不匹配" 错误。
+`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。
 
 **RespectAffectsGameplay** 同时解决这两个问题：通过 Harmony 补丁让存档路径只对 gameplay Mod 敏感，同时从联机哈希计算中排除非 gameplay Mod。
 
@@ -132,7 +134,7 @@ RespectAffectsGameplay/
 flowchart TD
     A[游戏启动 / 加载 Mod] --> B[读取 Modded Mode 设置]
     B --> C{当前模式?}
-    C -->|Auto| D{存在 affects_gameplay: true<br/>的已加载 Mod?}
+    C -->|Auto| D{存在 affects_gameplay: true<br/>或 MislabeledGameplayMods<br/>中的已加载 Mod?}
     D -->|是| E[视为 Modded]
     D -->|否| F[视为 Vanilla]
     C -->|Always Vanilla| F
@@ -160,6 +162,39 @@ flowchart TD
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 
+### Mod 标记验证与 Toast 警告
+
+`ModAffectsGameplayValidator` 在 Mod 初始化阶段（第 6 步）自动执行，验证所有已加载 Mod 的 `affects_gameplay` 标记是否准确：
+
+```mermaid
+flowchart TD
+    A[ValidateAll 开始] --> B[清空上次结果]
+    B --> C[遍历已加载 / 失败的 Mod]
+    C --> D{Mod 有 manifest?}
+    D -->|否| E[跳过]
+    D -->|是| F{affects_gameplay 已为 true?}
+    F -->|是| G[跳过]
+    F -->|否| H[扫描程序集: 是否包含 AbstractModel 子类?]
+    H -->|是| I[加入 MislabeledGameplayMods 集合]
+    H -->|否| J[视为非 gameplay]
+    I --> C
+    J --> C
+    G --> C
+    E --> C
+    C -->|遍历完成| K{集合非空?}
+    K -->|是| L[订阅 MainMenuReadyEvent]
+    K -->|否| M[结束]
+    L --> N[主菜单就绪时弹出 Toast]
+```
+
+**验证逻辑**: 通过 `ReflectionHelper.GetSubtypesFromAssembly()` 扫描每个 `affects_gameplay: false` 的 Mod 程序集，若发现任何 `AbstractModel` 子类型，说明该 Mod 实际包含游戏内容数据，应被标记为 `affects_gameplay: true`。
+
+**Toast 提醒**: 主菜单就绪后通过 `RitsuToastService` 弹出 5 秒 `Warning` 级别通知，列出所有标记不准确的 Mod ID，提醒玩家联系 Mod 作者修复并建议暂时禁用。
+
+**Auto 模式自动修正**: 验证结果不止用于报警。`EvaluateAutoMode()` 在分类 Mod 时会将 `MislabeledGameplayMods` 中的 Mod **强制视为 gameplay Mod**，等同于修正了 `affects_gameplay` 标记。这意味着即使 Mod 作者未正确设置元数据，本 Mod 也能在运行时主动保护存档路径和联机哈希不受误标 Mod 影响而导致出错。
+
+> ⚠ 若 RitsuLib 版本不支持 Toast API，会静默跳过，不影响 Mod 核心功能及 Auto 模式修正逻辑。
+
 ---
 
 ## 模式说明
@@ -168,16 +203,16 @@ flowchart TD
 
 在游戏内的 Mod 设置页面中，你可以选择三种运行模式，以及一个可选高级开关：
 
-| 设置项                     | 选项                         | 行为                                                            |
-| -------------------------- | ---------------------------- | --------------------------------------------------------------- |
-| **Modded Mode**            | `Auto`（自动）⭐              | 仅当存在 `affects_gameplay: true` 的 Mod 时视为 modded          |
-|                            | `Always Vanilla`（强制原版） | 永不视为 modded（⚠ 可能导致存档损坏）                           |
-|                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded |
-| **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                           |
-|                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制            |
-| **详细日志**               | 关闭（默认）                 | 仅输出 Info / Warn / Error 日志                                 |
-|                            | 开启                         | 额外输出 Debug 日志 (仅影响本 mod, 即时生效)                    |
-| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）       |
+| 设置项                     | 选项                         | 行为                                                                                                   |
+| -------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Modded Mode**            | `Auto`（自动）⭐              | 仅当存在 `affects_gameplay: true` 或被验证器检测到误标（`MislabeledGameplayMods`）的 Mod 时视为 modded |
+|                            | `Always Vanilla`（强制原版） | 永不视为 modded（⚠ 可能导致存档损坏）                                                                  |
+|                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded                                        |
+| **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                                                                  |
+|                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制                                                   |
+| **详细日志**               | 关闭（默认）                 | 仅输出 Info / Warn / Error 日志                                                                        |
+|                            | 开启                         | 额外输出 Debug 日志 (仅影响本 mod, 即时生效)                                                           |
+| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）                                              |
 
 > ⚠ 除「详细日志」外, 其余设置项修改后需**重启游戏**才能生效。点击按钮后设置立即持久化到 `settings.json`。
 

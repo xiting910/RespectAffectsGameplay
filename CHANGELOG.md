@@ -27,6 +27,30 @@
 
 ## [Unreleased]
 
+### Note
+
+- 新增游戏内 Toast 通知：当检测到 affects_gameplay 标记不准确的 Mod 时，在主菜单弹出警告提醒玩家
+
+### Added
+
+- **误标 Mod 检测与 Toast 通知**: `ModAffectsGameplayValidator` 在初始化阶段自动扫描每个已加载 Mod 的程序集（通过 `ReflectionHelper.GetSubtypesFromAssembly`），若 `affects_gameplay: false` 的 Mod 包含 `AbstractModel` 子类型，则加入 `MislabeledGameplayMods` 集合。验证完成后订阅 `MainMenuReadyEvent`，主菜单就绪时通过 `RitsuToastService` 弹出 5 秒 `Warning` 级 Toast，列出问题 Mod ID 并建议玩家联系 Mod 作者修复或暂时禁用
+- **Auto 模式自动修正**: `EvaluateAutoMode()` 的分类逻辑新增 `MislabeledGameplayMods` 检查——即使 Mod 的 `affects_gameplay` 标记为 `false`，只要存在于 `MislabeledGameplayMods` 集合中，即被强制视为 gameplay Mod。这意味着验证器不仅发出警告，还能**主动修正**误标 Mod 对 modded 状态判定的影响，防止存档路径和联机哈希被污染
+- **`EvaluationResult` 结构体**: 封装单个 Mod 的判定结果，包含 `ShouldTreatAsGameplay`、`Reason`（如 "包含 AbstractModel 子类: xxx"）和 `Exception` 字段
+- **Toast 本地化文本**: `eng.json` / `zhs.json` 新增 `toast.mislabeled.title` 和 `toast.mislabeled.body` 键
+
+### Changed
+
+- **版本号回退值**: `ModInfo.Version` 在无法获取 JSON 版本时回退值从 `"0.1.0"` 改为 `"unknown"`，避免误导
+
+### Removed
+
+- **日志本地化方法**: 移除 `ModLoc` 中所有 `Log*` 系列方法和 `Format()` 辅助方法（日志消息无需本地化，直接硬编码即可）
+
+### Internal
+
+- **代码清理**: `RespectAffectsGameplayMod.cs` 移除未使用的 `using STS2RitsuLib.Compat;`
+- **`.gitignore`**: 新增 `simulate-ci.bat`
+
 ---
 
 ## [0.2.0] - 2026-06-27
