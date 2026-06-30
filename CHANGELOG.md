@@ -16,6 +16,7 @@
     ❌ 避免：
        - 把内部细节（构建/CI/格式化）放在第一个分类的第一行
        - changenote 超过 200 字符会触发 release.yml 的截断
+       - Note 部分不要使用反引号 `, 会导致 changenote 解析异常
 -->
 
 本文件记录了 `Respect Affects Gameplay`  Mod 的所有重要变更。
@@ -33,7 +34,7 @@
 
 ### Note
 
-- 修复游戏 v0.107.1 中 `Mod.manifest` 属性缺失导致的 `MissingMethodException` 崩溃，改用反射安全访问 Mod 元数据
+- 修复游戏 v0.107.1 中 Mod.manifest 属性缺失导致的 MissingMethodException 崩溃，改用反射安全访问 Mod 元数据
 
 ### Fixed
 
