@@ -1,4 +1,6 @@
 {
+    "mod.description": "只在实际影响游戏玩法的 Mod 加载时才标记游戏为 modded 状态。affects_gameplay: false 的 Mod 不再隔离存档或阻止原版联机。",
+
     "settings.section.general": "通用",
     "settings.mode.label": "Modded 模式",
     "settings.mode.option.auto": "自动",

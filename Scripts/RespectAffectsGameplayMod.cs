@@ -239,6 +239,7 @@ public static class RespectAffectsGameplayMod
         RitsuLibFramework.RegisterModSettings(ModInfo.Id, page => page
             .WithTitle(ModSettingsText.Literal(ModInfo.Name))
             .WithModDisplayName(ModSettingsText.Literal(ModInfo.Name))
+            .WithDescription(ModSettingsText.I18N(ModLoc.Instance, "mod.description", string.Empty))
             .AddSection(SectionGeneral, section => section
                 .WithTitle(ModSettingsText.I18N(ModLoc.Instance, "settings.section.general", "General"))
                 .AddEnumChoice(

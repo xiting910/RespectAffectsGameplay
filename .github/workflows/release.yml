@@ -234,7 +234,6 @@ jobs:
         id: ws_meta
         run: |
           echo "title=$(jq -r '.title' workshop/workshop.json)" >> $GITHUB_OUTPUT
-          # description 含多行文本（含 GitHub URL 等），必须用 heredoc 写入 $GITHUB_OUTPUT
           {
             echo "description<<EOF"
             jq -r '.description' workshop/workshop.json
@@ -242,7 +241,6 @@ jobs:
           } >> $GITHUB_OUTPUT
           echo "visibility=$(jq -r '.visibility' workshop/workshop.json)" >> $GITHUB_OUTPUT
 
-          # Dependencies: JSON array of workshop item IDs → bash array
           DEPS_JSON=$(jq -r '.dependencies // [] | join(" ")' workshop/workshop.json)
           echo "deps=$DEPS_JSON" >> $GITHUB_OUTPUT
           echo "📋 Workshop title: $(jq -r '.title' workshop/workshop.json)"
@@ -311,8 +309,7 @@ jobs:
 
           VDF_FILE="${{ github.workspace }}/workshop.vdf"
 
-          # Flatten description: replace newlines with spaces to keep VDF single-line-safe
-          DESCRIPTION_FLAT=$(echo "$DESCRIPTION" | tr '\n' ' ' | sed 's/  */ /g')
+          DESCRIPTION_ESCAPED=$(echo "$DESCRIPTION" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
 
           {
             echo '"workshopitem"'
@@ -325,7 +322,7 @@ jobs:
             fi
             echo "\"visibility\"        \"$VIS_NUM\""
             echo "\"title\"             \"$TITLE\""
-            echo "\"description\"       \"$DESCRIPTION_FLAT\""
+            echo "\"description\"       \"$DESCRIPTION_ESCAPED\""
             echo "\"changenote\"        \"$CHANGENOTE\""
             if [ -n "$DEPS" ]; then
               echo '"dependencies"'

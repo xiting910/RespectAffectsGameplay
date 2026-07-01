@@ -1,4 +1,6 @@
 {
+    "mod.description": "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer.",
+
     "settings.section.general": "General",
     "settings.mode.label": "Modded Mode",
     "settings.mode.option.auto": "Auto",

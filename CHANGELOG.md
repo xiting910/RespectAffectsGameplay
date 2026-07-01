@@ -30,6 +30,20 @@
 
 ---
 
+## [0.2.5] - 2026-07-01
+
+### Note
+
+- 设置页面标题描述现支持本地化，根据游戏语言自动切换中英文
+
+### Added
+
+- **设置页面描述本地化**: `RegisterSettingsPage()` 新增 `.WithDescription(ModSettingsText.I18N(...))`，使用本地化键 `mod.description` 替代 manifest `description` 回退。`eng.json` / `zhs.json` 分别添加对应的中英文描述文本
+
+### Changed
+
+- **Workshop VDF 描述换行处理**: `release.yml` 中 workshop 描述从压扁为空格改为转义 VDF 特殊字符（`\`、`"`）+ 保留换行符，Steam 工坊页面按段落显示
+
 ## [0.2.4] - 2026-07-01
 
 ### Note
@@ -380,7 +394,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.5
 [0.2.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.4
 [0.2.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.3
 [0.2.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.2
