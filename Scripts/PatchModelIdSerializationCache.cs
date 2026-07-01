@@ -72,18 +72,20 @@ public static class PatchModelIdSerializationCache
             // 反射获取原始 _mods 列表
             var original = AccessTools.StaticFieldRefAccess<List<Mod>>(typeof(ModManager), "_mods");
 
+            // 获取原始列表的总数
             var totalCount = original.Count;
-            var filtered = original.Where(m =>
-            {
-                var mf = ModManifestHelper.GetManifest(m);
-                return mf is null || ModManifestHelper.GetAffectsGameplay(mf);
-            }).ToList();
-            var excludedCount = totalCount - filtered.Count;
 
             // 过滤掉 affects_gameplay: false 的 Mod
-            __result = filtered;
+            __result = [.. original.Where(m => m.manifest?.affectsGameplay ?? true)];
 
-            ModLog.Debug($"哈希过滤: 共 {totalCount} 个 mod, 保留 {filtered.Count} 个 (gameplay), 排除 {excludedCount} 个 (非 gameplay)");
+            // 获取过滤后的列表的数量
+            var filteredCount = __result.Count;
+
+            // 计算被排除的 Mod 数量
+            var excludedCount = totalCount - filteredCount;
+
+            // 记录日志
+            ModLog.Debug($"哈希过滤: 共 {totalCount} 个 mod, 保留 {filteredCount} 个 (gameplay), 排除 {excludedCount} 个 (非 gameplay)");
 
             // 跳过原始 getter
             return false;

@@ -3,7 +3,6 @@
 // 仅用于 CI 编译, 不包含任何实际游戏逻辑
 // =============================================================================
 #pragma warning disable IDE0130
-#pragma warning disable IDE1006
 #pragma warning disable IDE0052
 #pragma warning disable IDE0060
 #pragma warning disable CA1716
@@ -25,15 +24,6 @@ namespace MegaCrit.Sts2.Core.Modding
         Loaded,
         /// <summary>加载失败</summary>
         Failed,
-    }
-
-    /// <summary>
-    /// 模组信息类 (桩)
-    /// </summary>
-    public class ModInfo
-    {
-        /// <summary>模组加载状态</summary>
-        public ModLoadState state { get; set; } = ModLoadState.None;
     }
 
     /// <summary>
@@ -132,25 +122,6 @@ namespace MegaCrit.Sts2.Core.Saves
 
 namespace MegaCrit.Sts2.Core.Logging
 {
-    /// <summary>
-    /// 日志级别枚举 (桩)
-    /// </summary>
-    public enum LogLevel
-    {
-        /// <summary>详细调试日志</summary>
-        VeryDebug,
-        /// <summary>调试日志</summary>
-        Debug,
-        /// <summary>普通信息日志</summary>
-        Info,
-        /// <summary>警告日志</summary>
-        Warn,
-        /// <summary>错误日志</summary>
-        Error,
-        /// <summary>加载日志</summary>
-        Load
-    }
-
     /// <summary>
     /// 日志类型枚举 (桩)
     /// </summary>

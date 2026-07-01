@@ -28,8 +28,35 @@
 
 ## [Unreleased]
 
+---
+
+## [0.2.4] - 2026-07-01
+
+### Note
+
+- 重构本地化系统使用 RitsuLib I18N 框架，移除冗余的 ModManifestHelper 反射层，新增 RitsuLib 联机哈希补丁冲突检测
+
+### Added
+
+- **RitsuLib 联机哈希补丁冲突检测**: 初始化步骤 5 中检测 RitsuLib 是否已安装 `ModelIdSerializationCacheDynamicContentPatch`，若存在则自动禁用本 Mod 的 `PatchModelIdSerializationCache`，避免两个补丁冲突导致异常
+
+### Changed
+
+- **`ModLoc` 本地化系统重构**: 从自定义 JSON 文件磁盘加载方案迁移至 RitsuLib 内置 `I18N` 框架（`RitsuLibFramework.CreateModLocalization`）。翻译文件通过嵌入资源（`EmbeddedResource`）分发，初始化时自动导出到用户目录，替代原有的手动 `.lang` 文件管理
+- **移除 `ModManifestHelper` 反射层**: 游戏已稳定提供 `Mod.manifest` 字段访问，不再需要反射安全回退。`ModAffectsGameplayValidator`、`RespectAffectsGameplayMod.EvaluateAutoMode()` 和 `PatchModelIdSerializationCache` 直接通过 `mod.manifest` 及其属性访问元数据
+- **设置页面文本绑定**: 从静态 `ModLoc` 属性改为 `ModSettingsText.I18N` 动态本地化绑定，简化代码并提高可维护性
+
+### Fixed
+
+- **构建产物目录逻辑**: `.csproj` Post-build 目标简化，移除手动拼接文件列表，直接从 `workshop/content/` 统一输出
+
 ### Internal
 
+- **`.csproj`**: 本地化文件从 `*.lang` 文件复制改为 `EmbeddedResource` 嵌入方式；新增 `WorkshopContentDir` 属性简化路径管理；移除 localization 复制步骤（现由嵌入资源处理）
+- **`release.yml`**: Package mod 步骤改为直接从 `workshop/content/` 复制，移除重复的手动文件拷贝逻辑
+- **`stubs/0Harmony/Stubs.cs`**: 新增 `HarmonyPatchType` 枚举、`Harmony.Unpatch(MethodBase, HarmonyPatchType, string?)` 重载、`AccessTools.TypeByName`、`AccessTools.Method`、`AccessTools.PropertyGetter` 桩方法
+- **`stubs/sts2/Stubs.cs`**: 移除未使用的 `ModInfo` 和 `LogLevel` 桩类型（IDE1006 抑制符同步移除）
+- **`workshop/image.png`**: 更新工坊封面图
 - **README 徽章更新**: 移除 Release 和 STS2 版本徽章，新增 Dependency Review 徽章
 
 ---
@@ -353,7 +380,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.4
 [0.2.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.3
 [0.2.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.2
 [0.2.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.1

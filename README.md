@@ -28,6 +28,10 @@
   - [构建](#构建)
     - [环境要求](#环境要求)
     - [构建步骤](#构建步骤)
+  - [本地化](#本地化)
+    - [翻译文件格式](#翻译文件格式)
+    - [添加新语言翻译](#添加新语言翻译)
+    - [翻译文件加载优先级](#翻译文件加载优先级)
   - [许可证](#许可证)
   - [致谢](#致谢)
 
@@ -84,7 +88,7 @@ RespectAffectsGameplay/
 │   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化 / 补丁 / IsEffectivelyModded()
 │   ├── ModdedMode.cs                     # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
 │   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 版本 / 作者 / HarmonyId)
-│   ├── ModLoc.cs                         # 本地化系统 (从 .lang 文件加载, 基于 CultureInfo 自动检测语言)
+│   ├── ModLoc.cs                         # 本地化系统 (基于 RitsuLib I18N 框架，翻译文件作为嵌入资源分发)
 │   ├── ModLog.cs                         # 统一日志系统 (自动前缀 + 详细日志开关)
 │   ├── ModSettingsData.cs                # 持久化设置数据模型
 │   ├── ModSettingsHelper.cs              # 设置初始化 / 持久化 / 重置为默认值
@@ -95,10 +99,9 @@ RespectAffectsGameplay/
 │   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
 │   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
 │   ├── ModAffectsGameplayValidator.cs    # Mod affects_gameplay 标记验证 + Toast 警告
-│   ├── ModManifestHelper.cs              # 反射安全访问 Mod manifest（字段优先 + 属性回退，兼容游戏 API 变更）
 │   ├── localization/                     # 本地化语言文件
-│   │   ├── eng.lang                      #   英语
-│   │   └── zhs.lang                      #   简体中文
+│   │   ├── eng.json                      #   英语
+│   │   └── zhs.json                      #   简体中文
 │   └── Directory.Build.props             # 开发环境路径配置 (gitignore, CI 不需要)
 ├── workshop/                             # Steam 创意工坊上传工作区
 │   ├── workshop.json                     #   工坊元数据（标题、描述、可见性、标签）
@@ -149,24 +152,26 @@ flowchart TD
 
 本 Mod 使用 5 个 Harmony 补丁，其中 4 个始终启用，1 个由用户可选开关控制：
 
-| 补丁                             | 目标方法                                      | 默认   | 作用                                                     |
-| -------------------------------- | --------------------------------------------- | ------ | -------------------------------------------------------- |
-| `PatchGetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` getter | ✅ 始终 | 读取属性时返回 `IsEffectivelyModded()` 的修正值          |
-| `PatchSetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` setter | ✅ 始终 | 写入属性时替换为 `IsEffectivelyModded()` 的值            |
-| `PatchGetProfileDir`             | `UserDataPathProvider.GetProfileDir`          | ✅ 始终 | 无 gameplay Mod 时返回 vanilla 路径 `profileX`           |
-| `PatchModelIdSerializationCache` | `ModelIdSerializationCache.Init`              | ✅ 始终 | 临时过滤 `ModManager.Mods`，使哈希仅由 gameplay Mod 决定 |
-| `PatchModManagerIsRunningModded` | `ModManager.IsRunningModded`                  | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制       |
+| 补丁                             | 目标方法                                      | 默认   | 作用                                                                                                           |
+| -------------------------------- | --------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
+| `PatchGetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` getter | ✅ 始终 | 读取属性时返回 `IsEffectivelyModded()` 的修正值                                                                |
+| `PatchSetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` setter | ✅ 始终 | 写入属性时替换为 `IsEffectivelyModded()` 的值                                                                  |
+| `PatchGetProfileDir`             | `UserDataPathProvider.GetProfileDir`          | ✅ 始终 | 无 gameplay Mod 时返回 vanilla 路径 `profileX`                                                                 |
+| `PatchModelIdSerializationCache` | `ModelIdSerializationCache.Init`              | ⚡ 自动 | 临时过滤 `ModManager.Mods`，使哈希仅由 gameplay Mod 决定；若检测到 RitsuLib 已安装同名补丁则自动禁用，避免冲突 |
+| `PatchModManagerIsRunningModded` | `ModManager.IsRunningModded`                  | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                                             |
 
 > **设计决策**:
 > - 存档路径由前 3 个补丁分层控制（属性 getter → setter → 最终路径生成），即使外部代码通过其他方式修改 `IsRunningModded` 也能兜底。
 > - 联机哈希由 `PatchModelIdSerializationCache` 通过 Prefix+Postfix+Finalizer 临时标志位方案精准过滤，
 >   仅在 `Init()` 执行期间让 `ModManager.Mods` 返回排除非 gameplay Mod 的列表，不永久影响其他调用方。
+> - 初始化步骤 5 会检测 RitsuLib 版本中是否包含 `ModelIdSerializationCacheDynamicContentPatch`，
+>   若存在则自动 Unpatch 本 Mod 的 `PatchModelIdSerializationCache`，避免两个补丁对同一方法进行修改导致意外行为。
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 
 ### Mod 标记验证与 Toast 警告
 
-`ModAffectsGameplayValidator` 在 Mod 初始化阶段（第 6 步）自动执行，验证所有已加载 Mod 的 `affects_gameplay` 标记是否准确：
+`ModAffectsGameplayValidator` 在 Mod 初始化阶段（第 7 步）自动执行，验证所有已加载 Mod 的 `affects_gameplay` 标记是否准确：
 
 ```mermaid
 flowchart TD
@@ -264,6 +269,52 @@ flowchart TD
 > - `stubs/0Harmony/Stubs.cs` — 模拟 HarmonyLib 中的类型（`Harmony`、`HarmonyPatch`、`HarmonyPrefix` 等）
 >
 > 桩方法体可以留空（`throw new NotImplementedException()`），但**方法签名必须与实际游戏库一致**。
+
+---
+
+## 本地化
+
+本 Mod 的界面文本通过 [STS2-RitsuLib](https://github.com/BAKAOLC/STS2-RitsuLib) 的 I18N 框架实现多语言支持。翻译文件以 JSON 格式存放于 `Scripts/localization/` 目录，作为嵌入资源（`EmbeddedResource`）编译到程序集中。
+
+### 翻译文件格式
+
+```json
+{
+    "settings.section.general": "通用",
+    "settings.mode.label": "Modded 模式",
+    "settings.mode.option.auto": "自动",
+    ...
+}
+```
+
+键名与代码中的 `ModSettingsText.I18N` 调用一一对应。
+
+### 添加新语言翻译
+
+**方式一：从源码构建（开发者推荐）**
+
+1. 在 `Scripts/localization/` 下创建新的 JSON 文件，命名为 `{语言代码}.json`（例如 `jpn.json`、`kor.json`）
+   > 语言代码参考 STS2 规范：`eng`（英语）、`zhs`（简体中文）、`zht`（繁体中文）、`jpn`（日语）、`kor`（韩语）等
+2. 复制 `eng.json` 的全部键，将值翻译为目标语言
+3. 构建项目，新文件会被 `.csproj` 的通配符 `<EmbeddedResource Include="localization\*.*" />` 自动收录为嵌入资源
+
+**方式二：运行时添加（最终用户方式）**
+
+1. 找到本 Mod 的用户数据目录：`Godot.OS.GetUserDataDir()/RespectAffectsGameplay/localization/`
+   - Windows 位于 `%AppData%/Roaming/SlayTheSpire2/RespectAffectsGameplay/localization/`
+2. 将 `{语言代码}.json` 文件放入该目录
+3. 重启游戏即可生效
+
+### 翻译文件加载优先级
+
+```
+用户数据目录下的文件（最高优先级）
+         ↓
+内置嵌入资源（回退，随 Mod 分发）
+```
+
+> 首次运行时，`ModLoc.Initialize()` 会自动将内置的翻译文件从嵌入资源导出到用户数据目录。
+> 用户可在此目录中直接修改或替换翻译，无需重新编译 Mod。
 
 ---
 

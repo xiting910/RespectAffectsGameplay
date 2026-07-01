@@ -12,6 +12,7 @@
     <Sts2DataDirSuffix Condition="'$(Sts2DataDirSuffix)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">linuxbsd_x86_64</Sts2DataDirSuffix>
     <Sts2DataDirSuffix Condition="'$(Sts2DataDirSuffix)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Android)))' == 'true'">android_arm64</Sts2DataDirSuffix>
     <Sts2DataDir Condition="'$(Sts2DataDir)' == ''">$(Sts2Dir)\data_sts2_$(Sts2DataDirSuffix)</Sts2DataDir>
+    <WorkshopContentDir>$(MSBuildThisFileDirectory)..\workshop\content\</WorkshopContentDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,15 +32,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <LocFiles Include="$(MSBuildThisFileDirectory)localization\*.lang" />
+    <EmbeddedResource Include="localization\*.*" LogicalName="localization.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="Copy Mod" AfterTargets="PostBuildEvent">
     <Message Text="Copying mod to workshop/content/..." Importance="high" />
-    <MakeDir Directories="$(MSBuildThisFileDirectory)..\workshop\content" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)..\workshop\content\" />
-    <Copy SourceFiles="$(MSBuildProjectName).json" DestinationFolder="$(MSBuildThisFileDirectory)..\workshop\content\" />
-    <Copy SourceFiles="@(LocFiles)" DestinationFolder="$(MSBuildThisFileDirectory)..\workshop\content\localization\" />
+    <MakeDir Directories="$(WorkshopContentDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(WorkshopContentDir)" />
+    <Copy SourceFiles="$(MSBuildProjectName).json" DestinationFolder="$(WorkshopContentDir)" />
   </Target>
 
 </Project>

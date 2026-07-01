@@ -1,212 +1,107 @@
-using Godot;
-using System.Globalization;
-using System.Reflection;
-using System.Text.Json;
+using System.Text.RegularExpressions;
+using STS2RitsuLib;
+using STS2RitsuLib.Utils;
 
 namespace RespectAffectsGameplay;
 
 /// <summary>
-/// 本地化辅助类
+/// 工具类: 用于管理本地化资源
 /// </summary>
-internal static class ModLoc
+public static partial class ModLoc
 {
     /// <summary>
-    /// 已加载的本地化键值对
+    /// 本地化资源所在的文件夹名称
     /// </summary>
-    private static Dictionary<string, string> _entries = [];
+    public const string LocalizationFolderName = "localization";
 
     /// <summary>
-    /// 当前语言代码 (如 "eng", "zhs")
+    /// 本地化资源文件的扩展名
     /// </summary>
-    private static string _language = "eng";
+    public const string LocalizationFileExtension = ".json";
 
     /// <summary>
-    /// 是否已初始化
+    /// 匹配嵌入资源中本地化文件的模式: localization.&lt;lang&gt;.json
     /// </summary>
-    private static bool _initialized;
+    [GeneratedRegex("^" + LocalizationFolderName + "\\.([^.]+)\\" + LocalizationFileExtension + "$")]
+    private static partial Regex LocalizationResourceRegex();
 
     /// <summary>
-    /// 初始化本地化: 检测游戏语言并从对应 JSON 文件加载文本
+    /// 本地化实例, 在 <see cref="Initialize"/> 后可用
+    /// </summary>
+    private static I18N? _instance;
+
+    /// <summary>
+    /// 获取本地化实例, 在 <see cref="Initialize"/> 前访问将抛出异常
+    /// </summary>
+    public static I18N Instance => _instance ?? throw new InvalidOperationException("本地化尚未初始化！");
+
+    /// <summary>
+    /// 初始化本地化系统
     /// </summary>
     public static void Initialize()
     {
-        if (_initialized) { return; }
-        _initialized = true;
+        // 获取用户目录下的本地化资源文件夹路径
+        var userLocDir = Path.Combine(Godot.OS.GetUserDataDir(), ModInfo.Id, LocalizationFolderName);
 
-        _language = DetectLanguage();
-        LoadLocalization(_language);
+        // 确保将内置的默认翻译文件导出到用户目录
+        EnsureDefaultTranslationsExtracted(userLocDir);
+
+        // 创建本地化实例, 优先使用用户目录下的翻译文件, 如果缺失则使用内置的默认翻译
+        _instance = RitsuLibFramework.CreateModLocalization(
+            ModInfo.Id, ModInfo.Id,
+            fileSystemFolders: [userLocDir],
+            resourceFolders: [LocalizationFolderName],
+            resourceAssembly: typeof(RespectAffectsGameplayMod).Assembly);
+
+        // 记录日志
+        ModLog.Info("本地化已初始化");
     }
 
     /// <summary>
-    /// 检测当前语言, 返回 STS2 标准的语言代码。
-    /// 优先使用 <see cref="OS.GetLocale"/> 读取玩家在游戏内设置的语言,
-    /// Godot API 不可用时 (如 CI 环境) 回退到 <see cref="CultureInfo.CurrentUICulture"/>。
+    /// 确保将内置的默认翻译文件导出到用户目录
     /// </summary>
-    /// <returns>STS2 标准语言代码, 如 <c>"eng"</c>, <c>"zhs"</c>, <c>"zht"</c>, <c>"jpn"</c>, <c>"kor"</c></returns>
-    private static string DetectLanguage()
-    {
-        string? locale = null;
-
-        // 1. 优先读取游戏内语言设置
-        try { locale = OS.GetLocale(); }
-        catch { ModLog.Debug("Godot.OS.GetLocale() 不可用, 回退到系统语言"); }
-
-        // 2. 回退到系统 UI 语言
-        if (string.IsNullOrEmpty(locale))
-        {
-            try { locale = CultureInfo.CurrentUICulture.Name; }
-            catch { return "eng"; }
-        }
-
-        return ParseLocale(locale);
-    }
-
-    /// <summary>
-    /// 将 locale 字符串解析为 STS2 标准语言代码
-    /// </summary>
-    /// <param name="locale">locale 字符串, 如 <c>"zh_CN"</c>, <c>"zh-Hans"</c>, <c>"ja"</c></param>
-    /// <returns>STS2 标准语言代码</returns>
-    private static string ParseLocale(string locale) =>
-        locale.StartsWith("zh_CN", StringComparison.OrdinalIgnoreCase) ||
-        locale.StartsWith("zh-CN", StringComparison.OrdinalIgnoreCase) ||
-        locale.StartsWith("zh-Hans", StringComparison.OrdinalIgnoreCase) ||
-        locale.StartsWith("zh-SG", StringComparison.OrdinalIgnoreCase) ? "zhs" :
-        locale.StartsWith("zh", StringComparison.OrdinalIgnoreCase) ? "zht" :
-        locale.StartsWith("ja", StringComparison.OrdinalIgnoreCase) ? "jpn" :
-        locale.StartsWith("ko", StringComparison.OrdinalIgnoreCase) ? "kor" : "eng";
-
-    /// <summary>
-    /// 从磁盘文件加载指定语言的本地化文本 (扩展名 .lang, 内容为 JSON 格式)
-    /// </summary>
-    /// <param name="language">STS2 标准语言代码 (如 "eng", "zhs")</param>
-    private static void LoadLocalization(string language)
+    /// <param name="userLocDir">用户目录下的本地化资源文件路径</param>
+    private static void EnsureDefaultTranslationsExtracted(string userLocDir)
     {
         try
         {
-            var modDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (string.IsNullOrEmpty(modDir))
-            {
-                ModLog.Warn("无法确定 mod 目录路径, 本地化不可用");
-                return;
-            }
+            // 创建用户目录下的本地化资源文件夹（如果不存在）
+            _ = Directory.CreateDirectory(userLocDir);
 
-            var locPath = Path.Combine(modDir, "localization", $"{language}.lang");
+            // 获取内置翻译资源的程序集
+            var asm = typeof(RespectAffectsGameplayMod).Assembly;
 
-            if (!File.Exists(locPath))
+            // 遍历程序集中的所有嵌入资源, 匹配 localization.<lang>.json 格式的文件
+            foreach (var name in asm.GetManifestResourceNames())
             {
-                if (language != "eng")
+                // 匹配嵌入资源名称是否符合 localization.<lang>.json 的模式
+                var match = LocalizationResourceRegex().Match(name);
+                if (match.Success)
                 {
-                    ModLog.Warn($"本地化文件不存在: {locPath}, 回退到 eng");
-                    LoadLocalization("eng");
-                    return;
-                }
-                ModLog.Warn($"本地化文件不存在: {locPath}");
-                return;
-            }
+                    // 从嵌入资源流中读取翻译文件
+                    using var s = asm.GetManifestResourceStream(name);
+                    if (s is null)
+                    {
+                        ModLog.Warn($"无法获取内置翻译资源流: {name}");
+                        continue;
+                    }
 
-            var json = File.ReadAllText(locPath);
-            _entries = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? [];
-            _language = language;
-            ModLog.Info($"本地化已加载: {language} ({_entries.Count} 条)");
+                    // 获取导出到用户目录的文件名, 例如 localization.zh.json -> zh.json
+                    var fn = match.Groups[1].Value + LocalizationFileExtension;
+
+                    // 创建用户目录下的翻译文件, 如果已存在则覆盖
+                    using var fs = File.Create(Path.Combine(userLocDir, fn));
+
+                    // 将内置翻译资源流复制到用户目录下的文件
+                    s.CopyTo(fs);
+                    ModLog.Debug($"已导出内置翻译: {fn}");
+                }
+            }
+            ModLog.Info($"内置翻译已导出到用户目录: {userLocDir}");
         }
         catch (Exception ex)
         {
-            ModLog.Error($"加载本地化文件失败: {ex.Message}");
-            if (language != "eng")
-            {
-                ModLog.Warn("回退到 eng");
-                LoadLocalization("eng");
-            }
+            ModLog.Warn($"无法导出内置翻译到用户目录: {ex.Message}");
         }
     }
-
-    /// <summary>
-    /// 获取指定键的本地化文本
-    /// </summary>
-    /// <param name="key">本地化键</param>
-    /// <returns>本地化后的文本; 如果键不存在则返回键名本身</returns>
-    private static string Get(string key)
-    {
-        if (_entries.TryGetValue(key, out var value))
-        {
-            return value;
-        }
-        ModLog.Warn($"本地化键缺失: {key}");
-        return key;
-    }
-
-    /// <summary>
-    /// 设置页面 "通用" Section 的标题
-    /// </summary>
-    public static string SettingsTitleGeneral => Get("settings.section.general");
-
-    /// <summary>
-    /// 设置页面 Modded Mode 选项的标签
-    /// </summary>
-    public static string SettingsTitleModdedMode => Get("settings.mode.label");
-
-    /// <summary>
-    /// 设置页面 "拦截 IsRunningModded()" Toggle 的标签
-    /// </summary>
-    public static string SettingsTitlePatchModManager => Get("settings.patchModManager.label");
-
-    /// <summary>
-    /// 设置页面 "详细日志" Toggle 的标签
-    /// </summary>
-    public static string SettingsTitleVerboseLogging => Get("settings.verboseLogging.label");
-
-    /// <summary>
-    /// 设置页面 "重置为默认设置" Button 的标签
-    /// </summary>
-    public static string SettingsTitleResetDefaults => Get("settings.resetDefaults.label");
-
-    /// <summary>
-    /// 设置页面 "重置为默认设置" Button 上显示的文本
-    /// </summary>
-    public static string SettingsButtonReset => Get("settings.resetDefaults.button");
-
-    /// <summary>
-    /// Modded Mode 选项 "自动" 的显示文本
-    /// </summary>
-    public static string ModeOptionAuto => Get("settings.mode.option.auto");
-
-    /// <summary>
-    /// Modded Mode 选项 "强制原版" 的显示文本
-    /// </summary>
-    public static string ModeOptionAlwaysVanilla => Get("settings.mode.option.alwaysVanilla");
-
-    /// <summary>
-    /// Modded Mode 选项 "游戏默认" 的显示文本
-    /// </summary>
-    public static string ModeOptionDefault => Get("settings.mode.option.default");
-
-    /// <summary>
-    /// Modded Mode 选项的详细描述文本
-    /// </summary>
-    public static string DescModdedMode => Get("settings.mode.desc");
-
-    /// <summary>
-    /// "拦截 IsRunningModded()" Toggle 的详细描述文本
-    /// </summary>
-    public static string DescPatchModManager => Get("settings.patchModManager.desc");
-
-    /// <summary>
-    /// "详细日志" Toggle 的详细描述文本
-    /// </summary>
-    public static string DescVerboseLogging => Get("settings.verboseLogging.desc");
-
-    /// <summary>
-    /// "重置为默认设置" Button 的详细描述文本
-    /// </summary>
-    public static string DescResetDefaults => Get("settings.resetDefaults.desc");
-
-    /// <summary>
-    /// Toast 通知标题: 检测到 Mislabeled Mod
-    /// </summary>
-    public static string ToastMislabeledTitle(int count) => Get("toast.mislabeled.title").Replace("{Count}", count.ToString());
-
-    /// <summary>
-    /// Toast 通知正文: 列出误标的 Mod
-    /// </summary>
-    public static string ToastMislabeledBody(string modList) => Get("toast.mislabeled.body").Replace("{ModList}", modList);
 }
