@@ -71,7 +71,10 @@ namespace MegaCrit.Sts2.Core.Modding
         public static IReadOnlyList<Mod> Mods { get; } = [];
 
         /// <summary>是否以 modded 模式运行</summary>
-        public static bool IsRunningModded() => false;
+        public static bool IsRunningModded()
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -116,7 +119,10 @@ namespace MegaCrit.Sts2.Core.Saves
         /// </summary>
         /// <param name="profileId">存档槽位编号</param>
         /// <returns>存档目录路径</returns>
-        public static string GetProfileDir(int profileId) => string.Empty;
+        public static string GetProfileDir(int profileId)
+        {
+            return string.Empty;
+        }
     }
 }
 
@@ -172,7 +178,10 @@ namespace MegaCrit.Sts2.Core.Helpers
         /// <param name="assembly">要扫描的程序集</param>
         /// <param name="baseType">基类或接口类型</param>
         /// <returns>子类型枚举 (桩实现始终返回空)</returns>
-        public static IEnumerable<Type> GetSubtypesFromAssembly(Assembly assembly, Type baseType) => [];
+        public static IEnumerable<Type> GetSubtypesFromAssembly(Assembly assembly, Type baseType)
+        {
+            return [];
+        }
     }
 }
 

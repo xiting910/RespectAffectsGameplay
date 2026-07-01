@@ -36,17 +36,26 @@ internal static class ModLog
     /// 输出 Info 级别日志 (始终输出)
     /// </summary>
     /// <param name="text">日志内容</param>
-    public static void Info(string text) => _instance.Info($"{Prefix} {text}");
+    public static void Info(string text)
+    {
+        _instance.Info($"{Prefix} {text}");
+    }
 
     /// <summary>
     /// 输出 Warn 级别日志 (始终输出)
     /// </summary>
     /// <param name="text">日志内容</param>
-    public static void Warn(string text) => _instance.Warn($"{Prefix} {text}");
+    public static void Warn(string text)
+    {
+        _instance.Warn($"{Prefix} {text}");
+    }
 
     /// <summary>
     /// 输出 Error 级别日志 (始终输出)
     /// </summary>
     /// <param name="text">日志内容</param>
-    public static void Error(string text) => _instance.Error($"{Prefix} {text}");
+    public static void Error(string text)
+    {
+        _instance.Error($"{Prefix} {text}");
+    }
 }

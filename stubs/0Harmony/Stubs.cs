@@ -30,7 +30,10 @@ public class Harmony(string id)
     /// <summary>
     /// 获取此 Harmony 实例已补丁的所有方法 (桩)
     /// </summary>
-    public IEnumerable<MethodBase> GetPatchedMethods() => [];
+    public IEnumerable<MethodBase> GetPatchedMethods()
+    {
+        return [];
+    }
 
     /// <summary>
     /// 应用指定类型中所有 Harmony 补丁 (桩)
@@ -137,7 +140,10 @@ public static class AccessTools
     /// <param name="type">声明字段的类型</param>
     /// <param name="name">字段名称</param>
     /// <returns>字段信息; 如果不存在则返回 null</returns>
-    public static FieldInfo? Field(Type type, string name) => type.GetField(name);
+    public static FieldInfo? Field(Type type, string name)
+    {
+        return type.GetField(name);
+    }
 
     /// <summary>
     /// 通过反射获取类型的属性信息 (桩)
@@ -145,7 +151,10 @@ public static class AccessTools
     /// <param name="type">声明属性的类型</param>
     /// <param name="name">属性名称</param>
     /// <returns>属性信息; 如果不存在则返回 null</returns>
-    public static PropertyInfo? Property(Type type, string name) => type.GetProperty(name);
+    public static PropertyInfo? Property(Type type, string name)
+    {
+        return type.GetProperty(name);
+    }
 
     /// <summary>
     /// 通过反射获取类型的静态字段引用 (桩)
@@ -154,14 +163,20 @@ public static class AccessTools
     /// <param name="type">声明字段的类型</param>
     /// <param name="fieldName">字段名称</param>
     /// <returns>字段值的引用</returns>
-    public static T StaticFieldRefAccess<T>(Type type, string fieldName) => default!;
+    public static T StaticFieldRefAccess<T>(Type type, string fieldName)
+    {
+        return default!;
+    }
 
     /// <summary>
     /// 通过类型名称获取 Type 对象 (桩)
     /// </summary>
     /// <param name="name">类型全名 (包含命名空间)</param>
     /// <returns>Type 对象; 如果不存在则返回 null</returns>
-    public static Type? TypeByName(string name) => Type.GetType(name);
+    public static Type? TypeByName(string name)
+    {
+        return Type.GetType(name);
+    }
 
     /// <summary>
     /// 通过反射获取方法信息 (桩)
@@ -171,7 +186,9 @@ public static class AccessTools
     /// <param name="parameters">方法参数类型 (可选)</param>
     /// <returns>方法信息; 如果不存在则返回 null</returns>
     public static MethodInfo? Method(Type type, string name, Type[]? parameters = null, Type[]? generics = null)
-        => type.GetMethod(name, parameters ?? Type.EmptyTypes);
+    {
+        return type.GetMethod(name, parameters ?? Type.EmptyTypes);
+    }
 
     /// <summary>
     /// 通过反射获取属性 getter 方法信息 (桩)
@@ -180,5 +197,7 @@ public static class AccessTools
     /// <param name="name">属性名称</param>
     /// <returns>属性 getter 方法信息; 如果不存在则返回 null</returns>
     public static MethodInfo? PropertyGetter(Type type, string name)
-        => type.GetProperty(name)?.GetGetMethod();
+    {
+        return type.GetProperty(name)?.GetGetMethod();
+    }
 }

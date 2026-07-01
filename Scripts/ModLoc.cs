@@ -1,6 +1,6 @@
-using System.Text.RegularExpressions;
 using STS2RitsuLib;
 using STS2RitsuLib.Utils;
+using System.Text.RegularExpressions;
 
 namespace RespectAffectsGameplay;
 

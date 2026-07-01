@@ -28,6 +28,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **代码风格统一**: `ModLog.cs`、`stubs/0Harmony/Stubs.cs`、`stubs/sts2/Stubs.cs` 中将表达式体成员（`=>`）转换为块体语句（`{}`），消除 IDE 编码风格建议
+- **Using 指令排序**: `ModLoc.cs` 中项目级 using（`STS2RitsuLib`）移至前，系统级 using（`System.Text.RegularExpressions`）移至后
+
+### Internal
+
+- **`.editorconfig` 重构**: 所有 `dotnet_style_*` 和 `dotnet_diagnostic.CA*` 规则严重级别从 `warning` 降为 `suggestion`；移除约 50+ 条冗余 CA 诊断规则；新增安全相关 CA 规则（CA30xx–CA53xx）；行尾从 LF 改为 CRLF；增加中文注释；移除 XML 专属节，新增 C#/VB 专属节
+
 ---
 
 ## [0.2.5] - 2026-07-01
