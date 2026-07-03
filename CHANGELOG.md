@@ -28,6 +28,10 @@
 
 ## [Unreleased]
 
+-
+
+## [0.2.6] - 2026-07-03
+
 ### Note
 
 - 适配 STS2 v0.108.0 API 变更：替换存档路径补丁、移除已由官方修复的联机哈希补丁、新增首次存档复制拦截。正式版 v0.107.1 请继续使用 v0.2.5 版本，v0.2.6 及以上版本仅适用于 STS2 v0.108.0
@@ -431,7 +435,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.6
 [0.2.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.5
 [0.2.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.4
 [0.2.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.3
