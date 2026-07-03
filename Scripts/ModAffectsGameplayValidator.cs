@@ -149,7 +149,8 @@ public static class ModAffectsGameplayValidator
     /// <returns>封装了判定结果和原因的 <see cref="EvaluationResult"/></returns>
     private static EvaluationResult EvaluateMod(Mod mod, string modId)
     {
-        if (mod.assembly is null)
+        // 如果 mod 没有程序集, 则无法扫描 AbstractModel 子类, 视为非 gameplay
+        if (mod.assemblies.Count == 0)
         {
             ModLog.Debug($"[{modId}] 没有程序集, 无法扫描 AbstractModel 子类, 视为非 gameplay");
             return new(false, string.Empty);
@@ -157,12 +158,18 @@ public static class ModAffectsGameplayValidator
 
         try
         {
-            var subtypes = ReflectionHelper.GetSubtypesFromAssembly(mod.assembly, typeof(AbstractModel));
-            return subtypes.Any() ? new(true, $"包含 AbstractModel 子类: {string.Join(", ", subtypes.Select(t => t.FullName))}") : new(false, string.Empty);
+            // 使用 SelectMany 扫描所有程序集中的 AbstractModel 子类
+            var subTypes = mod.assemblies
+                .SelectMany(assembly => ReflectionHelper.GetSubtypesFromAssembly(assembly, typeof(AbstractModel)));
+
+            // 根据扫描结果返回判定结果
+            return subTypes.Any()
+                ? new(true, $"包含 AbstractModel 子类: {string.Join(", ", subTypes.Select(t => t.FullName))}")
+                : new(false, string.Empty);
         }
         catch (Exception ex)
         {
-            ModLog.Debug($"[{modId}] 扫描 AbstractModel 子类时出错: {ex.Message}");
+            ModLog.Warn($"[{modId}] 扫描 AbstractModel 子类时发生异常, 视为非 gameplay: {ex}");
             return new(false, string.Empty, ex);
         }
     }

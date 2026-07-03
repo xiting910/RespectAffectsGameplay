@@ -17,8 +17,13 @@ public static class PatchGetIsRunningModded
     [HarmonyPrefix]
     public static bool Prefix(ref bool __result)
     {
+        // 将返回值设为 RespectAffectsGameplayMod.IsEffectivelyModded() 的结果
         __result = RespectAffectsGameplayMod.IsEffectivelyModded();
+
+        // 输出调试日志
         ModLog.Debug($"UserDataPathProvider.IsRunningModded getter → {__result}");
+
+        // 跳过原始 getter
         return false;
     }
 }

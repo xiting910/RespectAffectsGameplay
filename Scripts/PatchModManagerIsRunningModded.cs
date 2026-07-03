@@ -18,8 +18,13 @@ public static class PatchModManagerIsRunningModded
     [HarmonyPrefix]
     public static bool Prefix(ref bool __result)
     {
+        // 将返回值设为 RespectAffectsGameplayMod.IsEffectivelyModded() 的结果
         __result = RespectAffectsGameplayMod.IsEffectivelyModded();
+
+        // 输出调试日志
         ModLog.Debug($"ModManager.IsRunningModded() (已拦截) → {__result}");
+
+        // 跳过原始方法
         return false;
     }
 }

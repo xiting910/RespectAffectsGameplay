@@ -1,12 +1,12 @@
 {
-    "id": "RespectAffectsGameplay",
-    "name": "Respect Affects Gameplay",
-    "author": "xiting910",
-    "description": "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer.",
-    "version": "0.2.5",
-    "min_game_version": "0.107.1",
-    "has_pck": false,
-    "has_dll": true,
-    "dependencies": [{ "id": "STS2-RitsuLib" }],
-    "affects_gameplay": false
+  "id": "RespectAffectsGameplay",
+  "name": "Respect Affects Gameplay",
+  "author": "xiting910",
+  "description": "Only marks the game as modded when gameplay-affecting mods are installed. Mods with 'affects_gameplay': false no longer separate save files or block vanilla multiplayer.",
+  "version": "0.2.5",
+  "min_game_version": "0.108.0",
+  "has_pck": false,
+  "has_dll": true,
+  "dependencies": [{ "id": "STS2-RitsuLib" }],
+  "affects_gameplay": false
 }

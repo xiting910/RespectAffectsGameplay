@@ -19,8 +19,8 @@
     - [手动安装](#手动安装)
   - [项目结构](#项目结构)
   - [解决的问题](#解决的问题)
-    - [问题一：存档路径被强行分离](#问题一存档路径被强行分离)
-    - [问题二：联机哈希被非 gameplay Mod 污染](#问题二联机哈希被非-gameplay-mod-污染)
+    - [存档路径被强行分离](#存档路径被强行分离)
+    - [联机哈希污染（已在 STS2 v0.108.0 由官方修复）](#联机哈希污染已在-sts2-v01080-由官方修复)
   - [工作原理](#工作原理)
     - [Harmony 补丁](#harmony-补丁)
     - [Mod 标记验证与 Toast 警告](#mod-标记验证与-toast-警告)
@@ -95,8 +95,8 @@ RespectAffectsGameplay/
 │   ├── LinuxNativeHelper.cs              # Linux libgcc_s 原生库加载辅助
 │   ├── PatchGetIsRunningModded.cs        # 拦截 UserDataPathProvider.IsRunningModded getter
 │   ├── PatchSetIsRunningModded.cs        # 拦截 UserDataPathProvider.IsRunningModded setter
-│   ├── PatchGetProfileDir.cs             # 拦截存档目录生成方法
-│   ├── PatchModelIdSerializationCache.cs # 拦截联机哈希计算，排除非 gameplay Mod
+│   ├── PatchGetAccountDir.cs             # 拦截存档路径决策方法 GetAccountDir
+│   ├── PatchCopyUnmoddedSaveFilesIfNeeded.cs # 仅 gameplay modded 时才复制存档
 │   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
 │   ├── ModAffectsGameplayValidator.cs    # Mod affects_gameplay 标记验证 + Toast 警告
 │   ├── localization/                     # 本地化语言文件
@@ -119,17 +119,26 @@ RespectAffectsGameplay/
 
 ## 解决的问题
 
-默认情况下，STS2 只要检测到**任意** Mod 被加载，就会将整个游戏标记为 "modded（已修改）" 状态。具体表现为两个独立问题：
+默认情况下，STS2 只要检测到**任意** Mod 被加载，就会将整个游戏标记为 "modded（已修改）" 状态。这会导致以下问题：
 
-### 问题一：存档路径被强行分离
+### 存档路径被强行分离
 
 `UserDataPathProvider.GetProfileDir()` 根据 `IsRunningModded` 属性决定存档目录是否带有 `modded/` 前缀。任何 Mod（包括外观、基础库、辅助类等 `affects_gameplay: false` 的 Mod）加载后，`IsRunningModded` 被设为 `true`，存档即被隔离到 `modded/profileX/`。卸载这些 Mod 后存档看似"丢失"，因为它还在 `modded/` 子目录中。
 
-### 问题二：联机哈希被非 gameplay Mod 污染
+### 联机哈希污染（已在 STS2 v0.108.0 由官方修复）
 
-`ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，遍历 `ModManager.Mods` 中**所有**已加载 Mod 的 `AbstractModel` 子类型，不区分 `affects_gameplay`。
+早期版本中 `ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，不区分 Mod 的 `affects_gameplay` 标记，导致纯外观 Mod 也会阻塞联机匹配。
+**此问题已在 STS2 v0.108.0 中由官方修复**：`Init()` 重写后使用 `ContentSorter<T>` 排序，并在哈希计算中加入 `affectsGameplay` 条件过滤，且 `JoinFlow` 在联机握手阶段通过 `GetGameplayRelevantModNameList()` / `GetNonGameplayRelevantModNameList()` 正确区分 gameplay 与非 gameplay Mod。
 
-**RespectAffectsGameplay** 同时解决这两个问题：通过 Harmony 补丁让存档路径只对 gameplay Mod 敏感，同时从联机哈希计算中排除非 gameplay Mod。
+**RespectAffectsGameplay** 现在专注于解决存档路径问题：通过 Harmony 补丁让存档路径只对 gameplay Mod 敏感。
+
+### 首次存档复制的副作用（v0.108.0 新增）
+
+v0.108.0 引入了 `ModManager.CopyUnmoddedSaveFilesIfNeeded()` 方法：当玩家从「从未安装过 Mod」首次过渡到「安装了任意 Mod」时，游戏会**无条件**将原版存档全量复制到 `modded/` 子目录。问题在于它只看 `_settings.ModList` 是否为空（即「上次有没有 Mod」），而不检查这些 Mod 是否真正影响 gameplay。
+
+这意味着：玩家第一次安装一个纯外观 Mod（`affects_gameplay: false`）时，存档也会被复制到 `modded/` 目录。由于本 Mod 让游戏继续在 vanilla 路径读写，被复制的文件将永远不被使用，成为死数据。
+
+**RespectAffectsGameplay** 通过劫持 `CopyUnmoddedSaveFilesIfNeeded` 解决了这个副作用：只有在确实处于 gameplay modded 状态时才放行复制，纯外观 Mod 不会触发无用的存档迁移。
 
 ---
 
@@ -152,26 +161,30 @@ flowchart TD
 
 本 Mod 使用 5 个 Harmony 补丁，其中 4 个始终启用，1 个由用户可选开关控制：
 
-| 补丁                             | 目标方法                                      | 默认   | 作用                                                                                                           |
-| -------------------------------- | --------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
-| `PatchGetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` getter | ✅ 始终 | 读取属性时返回 `IsEffectivelyModded()` 的修正值                                                                |
-| `PatchSetIsRunningModded`        | `UserDataPathProvider.IsRunningModded` setter | ✅ 始终 | 写入属性时替换为 `IsEffectivelyModded()` 的值                                                                  |
-| `PatchGetProfileDir`             | `UserDataPathProvider.GetProfileDir`          | ✅ 始终 | 无 gameplay Mod 时返回 vanilla 路径 `profileX`                                                                 |
-| `PatchModelIdSerializationCache` | `ModelIdSerializationCache.Init`              | ⚡ 自动 | 临时过滤 `ModManager.Mods`，使哈希仅由 gameplay Mod 决定；若检测到 RitsuLib 已安装同名补丁则自动禁用，避免冲突 |
-| `PatchModManagerIsRunningModded` | `ModManager.IsRunningModded`                  | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                                             |
+| 补丁                                   | 目标方法                                        | 默认   | 作用                                                                                     |
+| -------------------------------------- | ----------------------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| `PatchGetIsRunningModded`              | `UserDataPathProvider.IsRunningModded` getter   | ✅ 始终 | 读取属性时返回 `IsEffectivelyModded()` 的修正值                                          |
+| `PatchSetIsRunningModded`              | `UserDataPathProvider.IsRunningModded` setter   | ✅ 始终 | 写入属性时替换为 `IsEffectivelyModded()` 的值                                            |
+| `PatchGetAccountDir`                   | `UserDataPathProvider.GetAccountDir`            | ✅ 始终 | 无 gameplay Mod 且 `forceModState` 为 null 时返回 `""`（vanilla 路径），否则透传原始逻辑 |
+| `PatchCopyUnmoddedSaveFilesIfNeeded`   | `ModManager.CopyUnmoddedSaveFilesIfNeeded`      | ✅ 始终 | 仅 gameplay modded 状态才执行首次存档复制，避免纯外观 Mod 产生无用存档副本               |
+| `PatchModManagerIsRunningModded`       | `ModManager.IsRunningModded`                    | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                       |
 
 > **设计决策**:
-> - 存档路径由前 3 个补丁分层控制（属性 getter → setter → 最终路径生成），即使外部代码通过其他方式修改 `IsRunningModded` 也能兜底。
-> - 联机哈希由 `PatchModelIdSerializationCache` 通过 Prefix+Postfix+Finalizer 临时标志位方案精准过滤，
->   仅在 `Init()` 执行期间让 `ModManager.Mods` 返回排除非 gameplay Mod 的列表，不永久影响其他调用方。
-> - 初始化步骤 5 会检测 RitsuLib 版本中是否包含 `ModelIdSerializationCacheDynamicContentPatch`，
->   若存在则自动 Unpatch 本 Mod 的 `PatchModelIdSerializationCache`，避免两个补丁对同一方法进行修改导致意外行为。
+> - 存档路径由前 3 个补丁分层控制（属性 getter/setter → `GetAccountDir` 单一决策点），
+>   即使外部代码通过其他方式修改 `IsRunningModded` 也能兜底。
+> - v0.108.0 重构了路径系统：`GetAccountDir(bool? forceModState)` 成为所有路径构造的唯一决策点。
+>   `forceModState` 非 null 时表示调用者显式指定了路径类型（如 `CopyUnmoddedSaveFilesIfNeeded` 的存档迁移），
+>   补丁尊重这一意图、直接透传；仅当 `forceModState` 为 null 时接管决策。
+> - `PatchCopyUnmoddedSaveFilesIfNeeded` 解决 v0.108.0 首次存档复制的副作用。
+>   游戏在 `Initialize()` 末尾通过 `_settings.ModList.Count == 0` 判定「首次安装 Mod」，
+>   不区分 gameplay 与 非 gameplay，导致纯外观 Mod 也会触发存档迁移。补丁在
+>   `IsEffectivelyModded()` 为 false 时直接跳过整个方法，避免在 `modded/` 目录产生永远不被读取的死文件。
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 
 ### Mod 标记验证与 Toast 警告
 
-`ModAffectsGameplayValidator` 在 Mod 初始化阶段（第 7 步）自动执行，验证所有已加载 Mod 的 `affects_gameplay` 标记是否准确：
+`ModAffectsGameplayValidator` 在 Mod 初始化阶段（第 6 步）自动执行，验证所有已加载 Mod 的 `affects_gameplay` 标记是否准确：
 
 ```mermaid
 flowchart TD
@@ -198,7 +211,7 @@ flowchart TD
 
 **Toast 提醒**: 主菜单就绪后通过 `RitsuToastService` 弹出 5 秒 `Warning` 级别通知，列出所有标记不准确的 Mod ID，提醒玩家联系 Mod 作者修复并建议暂时禁用。
 
-**Auto 模式自动修正**: 验证结果不止用于报警。`EvaluateAutoMode()` 在分类 Mod 时会将 `MislabeledGameplayMods` 中的 Mod **强制视为 gameplay Mod**，等同于修正了 `affects_gameplay` 标记。这意味着即使 Mod 作者未正确设置元数据，本 Mod 也能在运行时主动保护存档路径和联机哈希不受误标 Mod 影响而导致出错。
+**Auto 模式自动修正**: 验证结果不止用于报警。`EvaluateAutoMode()` 在分类 Mod 时会将 `MislabeledGameplayMods` 中的 Mod **强制视为 gameplay Mod**，等同于修正了 `affects_gameplay` 标记。这意味着即使 Mod 作者未正确设置元数据，本 Mod 也能在运行时主动保护存档路径不受误标 Mod 影响而导致出错。
 
 > ⚠ 若 RitsuLib 版本不支持 Toast API，会静默跳过，不影响 Mod 核心功能及 Auto 模式修正逻辑。
 

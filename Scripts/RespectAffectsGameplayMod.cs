@@ -1,6 +1,5 @@
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Modding;
-using MegaCrit.Sts2.Core.Multiplayer.Serialization;
 using STS2RitsuLib;
 using STS2RitsuLib.Settings;
 
@@ -12,11 +11,6 @@ namespace RespectAffectsGameplay;
 [ModInitializer(nameof(Initialize))]
 public static class RespectAffectsGameplayMod
 {
-    /// <summary>
-    /// RitsuLib 的联机哈希补丁类型名称
-    /// </summary>
-    private const string RitsuLibHashPatchTypeName = "STS2RitsuLib.Content.Patches.ModelIdSerializationCacheDynamicContentPatch";
-
     /// <summary>
     /// 设置页面 Section 标识符: 通用设置区域
     /// </summary>
@@ -83,27 +77,7 @@ public static class RespectAffectsGameplayMod
         ModLog.Info($"Harmony 补丁已应用, 本 mod 共 {patchedMethods.Count()} 个补丁方法:" +
             string.Concat(patchedMethods.Select(m => $"\n  - {m.DeclaringType?.FullName}.{m.Name}")));
 
-        // 5. 检测 RitsuLib 的联机哈希补丁, 避免冲突
-        ModLog.Debug("步骤 5: 检测 RitsuLib 的联机哈希补丁...");
-        if (AccessTools.TypeByName(RitsuLibHashPatchTypeName) is not null)
-        {
-            harmony.Unpatch(
-                AccessTools.Method(typeof(ModelIdSerializationCache), nameof(ModelIdSerializationCache.Init)),
-                HarmonyPatchType.All,
-                ModInfo.HarmonyId);
-            harmony.Unpatch(
-                AccessTools.PropertyGetter(typeof(ModManager), nameof(ModManager.Mods)),
-                HarmonyPatchType.All,
-                ModInfo.HarmonyId);
-
-            ModLog.Info($"联机哈希补丁 {nameof(PatchModelIdSerializationCache)} 已禁用");
-        }
-        else
-        {
-            ModLog.Debug($"未检测到 RitsuLib 的联机哈希补丁, 无需禁用 {nameof(PatchModelIdSerializationCache)}");
-        }
-
-        // 6. 条件补丁: 根据用户设置决定是否启用 PatchModManagerIsRunningModded
+        // 5. 条件补丁: 根据用户设置决定是否启用 PatchModManagerIsRunningModded
         if (!settings.PatchModManagerIsRunningModded)
         {
             ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已禁用");
@@ -115,8 +89,8 @@ public static class RespectAffectsGameplayMod
             ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已启用, 将拦截所有 {nameof(ModManager.IsRunningModded)} 调用");
         }
 
-        // 7. 验证所有 Mod 的 affects_gameplay 标记是否准确
-        ModLog.Debug("步骤 7: 验证所有 mods 的 affects_gameplay 标记...");
+        // 6. 验证所有 Mod 的 affects_gameplay 标记是否准确
+        ModLog.Debug("步骤 6: 验证所有 mods 的 affects_gameplay 标记...");
         ModAffectsGameplayValidator.ValidateAll();
 
         // 输出初始化完成日志

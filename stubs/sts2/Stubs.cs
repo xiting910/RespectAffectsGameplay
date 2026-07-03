@@ -5,6 +5,7 @@
 #pragma warning disable IDE0130
 #pragma warning disable IDE0052
 #pragma warning disable IDE0060
+#pragma warning disable CA1051
 #pragma warning disable CA1716
 #pragma warning disable CA1822
 #pragma warning disable CS9113
@@ -29,7 +30,7 @@ namespace MegaCrit.Sts2.Core.Modding
     /// <summary>
     /// 模组清单 (桩)
     /// </summary>
-    public class ModManifest
+    public record ModManifest
     {
         /// <summary>是否影响游戏性</summary>
         public bool affectsGameplay;
@@ -52,8 +53,8 @@ namespace MegaCrit.Sts2.Core.Modding
         /// <summary>模组清单</summary>
         public ModManifest? manifest;
 
-        /// <summary>模组的程序集</summary>
-        public Assembly? assembly;
+        /// <summary>模组的程序集列表</summary>
+        public List<Assembly> assemblies = [];
 
         /// <summary>模组的文件系统路径</summary>
         public string? path;
@@ -75,6 +76,9 @@ namespace MegaCrit.Sts2.Core.Modding
         {
             return false;
         }
+
+        /// <summary>首次安装 mod 时复制原版存档到 modded 目录 (桩)</summary>
+        public static void CopyUnmoddedSaveFilesIfNeeded() { }
     }
 
     /// <summary>
@@ -89,21 +93,6 @@ namespace MegaCrit.Sts2.Core.Modding
     }
 }
 
-namespace MegaCrit.Sts2.Core.Multiplayer.Serialization
-{
-    /// <summary>
-    /// 模型 ID 序列化缓存 (桩): 用于联机哈希计算
-    /// </summary>
-    public static class ModelIdSerializationCache
-    {
-        /// <summary>联机 XXH32 哈希值</summary>
-        public static uint Hash { get; }
-
-        /// <summary>初始化缓存</summary>
-        public static void Init() { }
-    }
-}
-
 namespace MegaCrit.Sts2.Core.Saves
 {
     /// <summary>
@@ -115,11 +104,11 @@ namespace MegaCrit.Sts2.Core.Saves
         public static bool IsRunningModded { get; set; }
 
         /// <summary>
-        /// 获取存档目录路径
+        /// 获取用户数据目录路径 (桩)
         /// </summary>
-        /// <param name="profileId">存档槽位编号</param>
-        /// <returns>存档目录路径</returns>
-        public static string GetProfileDir(int profileId)
+        /// <param name="forceModState">是否强制使用模组模式路径, 如果为 null 则使用当前运行模式</param>
+        /// <returns>用户数据目录路径 (桩实现始终返回空字符串)</returns>
+        public static string GetAccountDir(bool? forceModState = null)
         {
             return string.Empty;
         }

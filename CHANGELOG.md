@@ -28,14 +28,42 @@
 
 ## [Unreleased]
 
+### Note
+
+- 适配 STS2 v0.108.0 API 变更：替换存档路径补丁、移除已由官方修复的联机哈希补丁、新增首次存档复制拦截。正式版 v0.107.1 请继续使用 v0.2.5 版本，v0.2.6 及以上版本仅适用于 STS2 v0.108.0
+
+### Added
+
+- **`PatchGetAccountDir`**: 新增补丁拦截 `UserDataPathProvider.GetAccountDir(bool? forceModState)`——v0.108.0 将所有路径构造统一到该单一决策点。当 `forceModState` 为 null 时根据 `IsEffectivelyModded()` 返回 `""`（vanilla）或 `"modded"`；非 null 时透传原始逻辑
+- **`PatchCopyUnmoddedSaveFilesIfNeeded`**: 新增补丁拦截 `ModManager.CopyUnmoddedSaveFilesIfNeeded()`——v0.108.0 引入的首次存档迁移方法。仅在 gameplay modded 状态时放行，避免纯外观 Mod 触发无用的存档副本
+
 ### Changed
 
 - **代码风格统一**: `ModLog.cs`、`stubs/0Harmony/Stubs.cs`、`stubs/sts2/Stubs.cs` 中将表达式体成员（`=>`）转换为块体语句（`{}`），消除 IDE 编码风格建议
 - **Using 指令排序**: `ModLoc.cs` 中项目级 using（`STS2RitsuLib`）移至前，系统级 using（`System.Text.RegularExpressions`）移至后
+- **`min_game_version` 提升**: 从 `0.107.1` 提升至 `0.108.0`，因新增补丁依赖 v0.108.0 API
+- **本地化描述更新**: `eng.json` / `zhs.json` 中 `mod.description` 移除"阻止原版联机"措辞（联机哈希问题已在 v0.108.0 官方修复），改为聚焦存档路径保护
+
+### Removed
+
+- **`PatchGetProfileDir`**: 移除。v0.108.0 将 `GetProfileDir(int)` 替换为 `GetAccountDir(bool?)` 作为路径构造入口，原补丁不再适用
+- **`PatchModelIdSerializationCache`**: 移除。联机哈希污染问题已在 STS2 v0.108.0 官方修复——`Init()` 重写为基于 `ContentSorter<T>` 并加入 `affectsGameplay` 过滤，`JoinFlow` 通过 `GetGameplayRelevantModNameList()` 正确区分 gameplay 与非 gameplay Mod
+- **RitsuLib 哈希补丁冲突检测**: 随 `PatchModelIdSerializationCache` 移除，`Initialize()` 中步骤 5（检测 `ModelIdSerializationCacheDynamicContentPatch` 并自动 Unpatch）同步移除，初始化步骤从 7 步精简为 6 步
+
+### Fixed
+
+- **`ModAffectsGameplayValidator` 程序集扫描**: `mod.assembly`（单个）→ `mod.assemblies`（列表），适配 v0.108.0 Mod 支持多程序集的 API 变更。使用 `SelectMany` 遍历所有程序集中的 `AbstractModel` 子类
+- **验证器异常日志级别**: 扫描 `AbstractModel` 子类时的异常日志从 `Debug` 提升为 `Warn`，并输出完整异常信息而非仅 `Message`
 
 ### Internal
 
 - **`.editorconfig` 重构**: 所有 `dotnet_style_*` 和 `dotnet_diagnostic.CA*` 规则严重级别从 `warning` 降为 `suggestion`；移除约 50+ 条冗余 CA 诊断规则；新增安全相关 CA 规则（CA30xx–CA53xx）；行尾从 LF 改为 CRLF；增加中文注释；移除 XML 专属节，新增 C#/VB 专属节
+- **`stubs/sts2/Stubs.cs`**: `ModManifest` 从 `class` 改为 `record`（匹配 v0.108.0）；`Mod.assembly` → `Mod.assemblies`（`Assembly?` → `List<Assembly>`）；新增 `ModManager.CopyUnmoddedSaveFilesIfNeeded()` 桩方法；`UserDataPathProvider.GetProfileDir(int)` → `GetAccountDir(bool?)`；移除 `ModelIdSerializationCache` 桩类及其命名空间 `MegaCrit.Sts2.Core.Multiplayer.Serialization`；新增 `#pragma warning disable CA1051`
+- **`stubs/0Harmony/Stubs.cs`**: 移除约 100 行未使用的桩定义——`HarmonyPostfix`、`HarmonyFinalizer` 特性、`HarmonyPatchType` 枚举、`AccessTools` 静态类（含 `Field`、`Property`、`StaticFieldRefAccess`、`TypeByName`、`Method`、`PropertyGetter`）、`Harmony.Unpatch(MethodBase, HarmonyPatchType, string?)` 重载、`HarmonyPatch(Type)` 及 `HarmonyPatch(Type, string, Type[])` 构造函数重载；新增 `#pragma warning disable IDE0290` 和 `CA1710`
+- **补丁文件注释完善**: `PatchGetIsRunningModded`、`PatchSetIsRunningModded`、`PatchModManagerIsRunningModded` 中将紧凑表达式体展开为块体语句并添加逐行注释
+- **`RespectAffectsGameplayMod.cs`**: 移除 `using MegaCrit.Sts2.Core.Multiplayer.Serialization`；移除 `RitsuLibHashPatchTypeName` 常量
+- **`RespectAffectsGameplay.json`**: 缩进从 4 空格统一为 2 空格
+- **README**: 更新项目结构、补丁表格、设计决策说明，新增 "首次存档复制的副作用" 问题描述，联机哈希污染标注为"已在 v0.108.0 官方修复"
 
 ---
 
