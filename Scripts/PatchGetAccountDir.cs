@@ -25,8 +25,8 @@ public static class PatchGetAccountDir
             return true;
         }
 
-        // 否则, 根据 RespectAffectsGameplayMod.IsEffectivelyModded() 的结果返回 "modded" 或 "" 作为账号目录
-        __result = RespectAffectsGameplayMod.IsEffectivelyModded() ? "modded" : "";
+        // 否则, 根据 RespectAffectsGameplayMod.IsEffectivelyModded(true) 的结果返回 "modded" 或 "" 作为账号目录
+        __result = RespectAffectsGameplayMod.IsEffectivelyModded(true) ? "modded" : "";
 
         // 输出调试日志
         ModLog.Debug($"UserDataPathProvider.GetAccountDir(forceModState: null) → \"{__result}\" (已拦截)");

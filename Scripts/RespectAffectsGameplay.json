@@ -2,7 +2,7 @@
   "id": "RespectAffectsGameplay",
   "name": "Respect Affects Gameplay",
   "author": "xiting910",
-  "description": "Only marks the game as modded when gameplay-affecting mods are installed, preventing save files from being unnecessarily separated into the modded/ directory.",
+  "description": "Stops STS2 from blindly marking the game as modded just because any mod is loaded. Scans mod assemblies to detect actual game content (cards, relics, heroes, etc.), and only treats the game as modded when it truly matters. Respects each mod's affects_gameplay flag for overall modded state, isolates save files only for content mods, and warns when a mod is mislabeled.",
   "version": "0.2.7",
   "min_game_version": "0.108.0",
   "has_pck": false,

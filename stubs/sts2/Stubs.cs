@@ -3,7 +3,6 @@
 // 仅用于 CI 编译, 不包含任何实际游戏逻辑
 // =============================================================================
 #pragma warning disable IDE0130
-#pragma warning disable IDE0052
 #pragma warning disable IDE0060
 #pragma warning disable CA1051
 #pragma warning disable CA1716
@@ -65,9 +64,6 @@ namespace MegaCrit.Sts2.Core.Modding
     /// </summary>
     public static class ModManager
     {
-        /// <summary>私有模组列表字段 (反射访问)</summary>
-        private static readonly List<Mod> _mods = [];
-
         /// <summary>已加载的模组列表</summary>
         public static IReadOnlyList<Mod> Mods { get; } = [];
 
@@ -103,9 +99,6 @@ namespace MegaCrit.Sts2.Core.Saves
     /// </summary>
     public static class UserDataPathProvider
     {
-        /// <summary>是否以模组模式运行</summary>
-        public static bool IsRunningModded { get; set; }
-
         /// <summary>
         /// 获取用户数据目录路径 (桩)
         /// </summary>

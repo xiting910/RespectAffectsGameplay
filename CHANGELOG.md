@@ -28,7 +28,36 @@
 
 ## [Unreleased]
 
--
+### Note
+
+- 重构内容 Mod 检测系统：存档路径隔离改为基于程序集扫描（仅检测到 AbstractModel 子类的内容 Mod 才触发），非存档功能继续基于 affects_gameplay 标记 + 内容检测，实现存档/非存档双重判定标准
+
+### Added
+
+- **`ContentModDetector`**: 新增内容 Mod 检测器，替代旧的 `ModAffectsGameplayValidator`。提供 `ScanAllMods()`（扫描 + Toast 警告）、`HasContentModsLoaded()`（存档路径判定查询）、`IsContentMod(string modId)`（单个 Mod 查询）三个接口。内部使用 `ModIdsWithContent` HashSet 存储检测结果
+- **`ModExtensions`**: 新增 `Mod` 扩展方法类，提供 `IsLoaded()`（判断 Loaded/Failed 状态）、`GetId()`（获取 Mod ID，优先 manifest.id → manifest.name → path → "UnknownMod"）、`ContainsAbstractModel()`（扫描程序集检测 AbstractModel 子类），消除代码中多处重复的内联逻辑
+- **双重判定标准**: `IsEffectivelyModded` 新增 `isForSaveDir` 参数。存档路径判定 (`isForSaveDir: true`) 基于 `ContentModDetector.HasContentModsLoaded()` 程序集扫描结果，非存档判定 (`isForSaveDir: false`) 基于 `EvaluateAutoMode()` 的 affects_gameplay 标记 + 内容检测。两个判定独立缓存，互不干扰
+
+### Changed
+
+- **Manifest 描述更新**: `RespectAffectsGameplay.json` 和 `workshop/workshop.json` 中描述内容大幅扩展，反映程序集扫描、双重标准、误标警告、智能存档迁移等新特性
+- **本地化描述更新**: `eng.json` / `zhs.json` 中 `mod.description` 和 `settings.mode.desc` 更新为双重标准说明——存档路径隔离仅对程序集扫描检测到的内容 Mod 生效，非存档功能继续基于 affects_gameplay 标记
+- **`ModInfo` fallback 值**: `Id` 和 `Name` 属性在无法获取 ModInfo 时的回退值从硬编码的 `"RespectAffectsGameplay"` / `"Respect Affects Gameplay"` 改为通用 `"unknown"`，与 `Version` 属性保持一致
+- **`ModdedMode` 枚举注释精简**: 移除各枚举值的冗长描述，保留核心语义
+- **日志级别调整**: `IsEffectivelyModded` 异常日志从 `Error` 降为 `Warn`，更准确反映"保守假设为 modded"的回退行为并非错误
+- **代码现代化**: `EvaluateAutoMode()` / `EvaluateDefaultMode()` 中 `.Where().Any()` 替换为 `.Where().ToList()` + `.Count == 0`（提前物化，避免多次迭代）；`new ModSettingsData()` 替换为 `new()`
+
+### Removed
+
+- **`ModAffectsGameplayValidator`**: 移除（200 行）。拆分为 `ContentModDetector`（检测 + Toast 通知）和 `ModExtensions`（Mod 扩展方法）。旧 `MislabeledGameplayMods` HashSet 被 `ContentModDetector.ModIdsWithContent` + `IsContentMod()` 替代，`EvaluationResult` 结构体不再需要
+- **`PatchGetIsRunningModded`**: 移除。v0.108.0 后 `GetAccountDir(bool? forceModState)` 已成为所有路径构造的唯一决策点，不再需要拦截 `IsRunningModded` getter
+- **`PatchSetIsRunningModded`**: 移除。同上原因，不再需要拦截 `IsRunningModded` setter
+
+### Internal
+
+- **`stubs/sts2/Stubs.cs`**: 移除不再使用的 `ModManager._mods` 私有字段桩和 `UserDataPathProvider.IsRunningModded` 属性桩；移除未使用的 `IDE0052` pragma
+- **`stubs/0Harmony/Stubs.cs`**: 移除不再使用的 `Harmony.PatchAll(Type)` 重载桩方法
+- **README**: 更新项目结构（新增/移除文件）、补丁表格（5→3 补丁）、设计决策（双重判定标准说明）、工作原理流程图、Mod 标记验证章节（`ModAffectsGameplayValidator` → `ContentModDetector`）、模式说明表格
 
 ## [0.2.7] - 2026-07-05
 

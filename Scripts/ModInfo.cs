@@ -46,12 +46,12 @@ public static class ModInfo
     /// <summary>
     /// 获取 mod 的唯一标识符 (来自 JSON "id")
     /// </summary>
-    public static string Id => Cached?.Id ?? "RespectAffectsGameplay";
+    public static string Id => Cached?.Id ?? "unknown";
 
     /// <summary>
     /// 获取 mod 的名称 (来自 JSON "name")
     /// </summary>
-    public static string Name => Cached?.Name ?? "Respect Affects Gameplay";
+    public static string Name => Cached?.Name ?? "unknown";
 
     /// <summary>
     /// 获取 mod 的版本号 (来自 JSON "version")

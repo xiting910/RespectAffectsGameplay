@@ -6,17 +6,17 @@ namespace RespectAffectsGameplay;
 public enum ModdedMode
 {
     /// <summary>
-    /// 自动判断: 如果加载了任意 affects_gameplay 为 true 的 mod 则视为 modded, 否则视为 vanilla
+    /// 自动判断
     /// </summary>
     Auto = 0,
 
     /// <summary>
-    /// 强制视为 vanilla 状态，无论加载了什么 mod
+    /// 强制视为 vanilla 状态, 无论加载了什么 mod
     /// </summary>
     AlwaysVanilla = 1,
 
     /// <summary>
-    /// 使用游戏原版逻辑判断 modded 状态
+    /// 使用游戏原版逻辑
     /// </summary>
-    Default = 2,
+    Default = 2
 }

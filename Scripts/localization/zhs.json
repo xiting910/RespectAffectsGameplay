@@ -1,12 +1,12 @@
 {
-    "mod.description": "只在实际影响游戏玩法的 Mod 加载时才标记游戏为 modded 状态，防止存档被不必要地隔离到 modded/ 子目录。",
+    "mod.description": "阻止 STS2 盲目地将所有已加载 Mod 都视为影响游戏性。扫描 Mod 程序集检测真正的游戏内容（卡片、遗物、角色等），尊重每个 Mod 的 affects_gameplay 标记，仅在内容 Mod 存在时隔离存档路径，并警告标记不准确的 Mod。",
 
     "settings.section.general": "通用",
     "settings.mode.label": "Modded 模式",
     "settings.mode.option.auto": "自动",
     "settings.mode.option.alwaysVanilla": "强制原版",
     "settings.mode.option.default": "游戏默认",
-    "settings.mode.desc": "自动：仅当加载了 affects_gameplay: true 的 mod 时才标记游戏为 modded 状态。\n强制原版：即使加载了 gameplay mod 也永不标记为 modded（⚠ 可能导致存档损坏和联机问题）。\n游戏默认：使用游戏默认逻辑，只要加载了任意 mod 即标记为 modded 状态。\n\n⚠ 修改此选项后需重启游戏才能生效。",
+    "settings.mode.desc": "自动：使用双重标准分别判定：\n  - 存档路径隔离：仅当通过程序集扫描检测到内容 Mod（卡片、遗物、角色等）时触发\n  - 非存档功能：当存在 affects_gameplay: true 或被检测出内容 Mod 时触发\n强制原版：即使加载了内容 Mod 也永不标记为 modded（⚠ 可能导致存档损坏和联机问题）。\n游戏默认：使用游戏默认逻辑，只要加载了任意 mod 即标记为 modded 状态。\n\n⚠ 修改此选项后需重启游戏才能生效。",
     "settings.patchModManager.label": "拦截 IsRunningModded()",
     "settings.patchModManager.desc": "开启后，ModManager.IsRunningModded() 的所有调用方均受当前 Modded Mode 控制。\n🖥 界面：\"MODDED\" 警告标签、mod 数量和哈希值不再显示\n🐛 Sentry 错误上报：GDExtension 与 .NET SDK 的 Sentry 上报不再自动禁用\n📊 遥测数据：游戏统计数据上传不再自动跳过\n📝 反馈系统：提交反馈时 isModded 标记不再自动设为 true\n🛠 调试功能：控制台不再自动启用完整命令，拖放 .run 文件加载回放不再自动允许\n\n关闭：仅存档路径受 Modded Mode 控制，以上所有行为恢复游戏默认。\n\n⚠ 修改此选项后需重启游戏才能生效。",
     "settings.verboseLogging.label": "详细日志",

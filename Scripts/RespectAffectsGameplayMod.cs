@@ -42,6 +42,11 @@ public static class RespectAffectsGameplayMod
     private static bool? _cachedIsEffectivelyModded;
 
     /// <summary>
+    /// 缓存 <see cref="IsEffectivelyModdedForSaveDir"/> 的结果
+    /// </summary>
+    private static bool? _cachedIsEffectivelyModdedForSaveDir;
+
+    /// <summary>
     /// mod 初始化入口: 依次注册持久化设置、注册游戏内设置页面、应用 Harmony 补丁
     /// </summary>
     public static void Initialize()
@@ -89,9 +94,9 @@ public static class RespectAffectsGameplayMod
             ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已启用, 将拦截所有 {nameof(ModManager.IsRunningModded)} 调用");
         }
 
-        // 6. 验证所有 Mod 的 affects_gameplay 标记是否准确
-        ModLog.Debug("步骤 6: 验证所有 mods 的 affects_gameplay 标记...");
-        ModAffectsGameplayValidator.ValidateAll();
+        // 6. 扫描所有已加载的 mod
+        ModLog.Debug("步骤 6: 扫描所有已加载的 mod...");
+        ContentModDetector.ScanAllMods();
 
         // 7. 检查是否需要补触发存档复制
         ModLog.Debug("步骤 7: 检查是否需要补触发存档复制...");
@@ -104,34 +109,64 @@ public static class RespectAffectsGameplayMod
     /// <summary>
     /// 判断当前是否应视为 "modded" 状态
     /// </summary>
+    /// <param name="isForSaveDir">是否为用于存档目录判断</param>
     /// <returns><see langword="true"/> 表示应视为 modded 状态;
     /// <see langword="false"/> 表示应视为 vanilla 状态</returns>
     /// <exception cref="InvalidOperationException">当 ModdedMode 设置为未知值时抛出</exception>
-    internal static bool IsEffectivelyModded()
+    internal static bool IsEffectivelyModded(bool isForSaveDir)
     {
-        if (_cachedIsEffectivelyModded.HasValue) { return _cachedIsEffectivelyModded.Value; }
+        // 如果是用于存档目录判断, 且缓存值存在, 则直接返回缓存值
+        if (isForSaveDir && _cachedIsEffectivelyModdedForSaveDir.HasValue)
+        {
+            return _cachedIsEffectivelyModdedForSaveDir.Value;
+        }
+
+        // 如果不是用于存档目录判断, 且缓存值存在, 则直接返回缓存值
+        if (!isForSaveDir && _cachedIsEffectivelyModded.HasValue)
+        {
+            return _cachedIsEffectivelyModded.Value;
+        }
 
         try
         {
+            // 获取当前 mod 设置
             var settings = ModSettingsHelper.GetSettings();
 
+            // 根据设置的 ModdedMode 决定是否应视为 modded 状态
             var result = settings.Mode switch
             {
-                ModdedMode.Auto => EvaluateAutoMode(),
+                ModdedMode.Auto => isForSaveDir ? ContentModDetector.HasContentModsLoaded() : EvaluateAutoMode(),
                 ModdedMode.AlwaysVanilla => false,
                 ModdedMode.Default => EvaluateDefaultMode(),
                 _ => throw new InvalidOperationException($"Unknown ModdedMode value: {settings.Mode}"),
             };
 
-            _cachedIsEffectivelyModded = result;
+            // 缓存结果
+            if (isForSaveDir)
+            {
+                _cachedIsEffectivelyModdedForSaveDir = result;
+            }
+            else
+            {
+                _cachedIsEffectivelyModded = result;
+            }
 
-            ModLog.Debug($"IsEffectivelyModded() = {result} (Mode={settings.Mode})");
+            // 输出调试日志并返回结果
+            ModLog.Debug($"IsEffectivelyModded(isForSaveDir={isForSaveDir}) => {result} (Mode={settings.Mode})");
             return result;
         }
         catch (Exception ex)
         {
-            ModLog.Error($"IsEffectivelyModded() 异常, 保守假设为 modded: {ex}");
-            _cachedIsEffectivelyModded = true;
+            // 如果发生异常, 则视为 modded 状态, 缓存结果并输出警告日志
+            if (isForSaveDir)
+            {
+                _cachedIsEffectivelyModdedForSaveDir = true;
+            }
+            else
+            {
+                _cachedIsEffectivelyModded = true;
+            }
+            ModLog.Warn($"判断 IsEffectivelyModded 时发生异常, 将视为 modded 状态: {ex}");
             return true;
         }
     }
@@ -139,23 +174,24 @@ public static class RespectAffectsGameplayMod
     /// <summary>
     /// Auto 模式: 遍历所有已加载 mod, 检测是否有 gameplay mod
     /// </summary>
+    /// <returns><see langword="true"/> 表示检测到 gameplay mod; <see langword="false"/> 表示未检测到 gameplay mod</returns>
     private static bool EvaluateAutoMode()
     {
         // 获取所有已加载的 mod (Loaded 或 Failed)
-        var loadedMods = ModManager.Mods.Where(m => m.state is ModLoadState.Loaded or ModLoadState.Failed);
+        var loadedMods = ModManager.Mods.Where(m => m.IsLoaded()).ToList();
 
         // 如果没有已加载的 Mod, 则视为 vanilla
-        if (!loadedMods.Any())
+        if (loadedMods.Count == 0)
         {
             ModLog.Debug("Auto 模式: 没有已加载的 Mod, 视为 vanilla");
             return false;
         }
 
         // 筛选出所有已加载且有 manifest 的 Mod
-        var modsWithManifest = loadedMods.Where(m => m.manifest is not null);
+        var modsWithManifest = loadedMods.Where(m => m.manifest is not null).ToList();
 
         // 如果没有已加载的 Mod 有 manifest, 则视为 vanilla
-        if (!modsWithManifest.Any())
+        if (modsWithManifest.Count == 0)
         {
             ModLog.Debug("Auto 模式: 没有已加载的 Mod 有 manifest, 视为 vanilla");
             return false;
@@ -170,11 +206,8 @@ public static class RespectAffectsGameplayMod
             // 获取 Mod 的 manifest
             var manifest = mod.manifest!;
 
-            // 获取 mod 的 ID, 如果没有 ID 则使用 name, 如果都没有则使用 "<unknown>"
-            var modId = manifest.id ?? manifest.name ?? "<unknown>";
-
-            // 如果 affects_gameplay 标记为 true, 或者在 MislabeledGameplayMods 中, 则视为 gameplay mod
-            if (manifest.affectsGameplay || ModAffectsGameplayValidator.MislabeledGameplayMods.Contains(modId))
+            // 如果 affects_gameplay 标记为 true, 或者是 ContentModDetector 检测到的内容 mod, 则视为 gameplay mod
+            if (manifest.affectsGameplay || ContentModDetector.IsContentMod(mod.GetId()))
             {
                 gameplayMods.Add(mod);
             }
@@ -185,13 +218,13 @@ public static class RespectAffectsGameplayMod
         }
 
         // 输出日志: Auto 模式下的检测结果
-        ModLog.Debug($"Auto 模式: 共检测 {ModManager.Mods.Count} 个 mod, 已加载 {loadedMods.Count()} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
+        ModLog.Debug($"Auto 模式: 共检测 {ModManager.Mods.Count} 个 mod, 已加载 {loadedMods.Count} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
 
         // 是否应该被视为 modded 模式
         var isModded = gameplayMods.Count > 0;
         if (isModded)
         {
-            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => m.manifest?.id ?? m.manifest?.name ?? "<unknown>"))}]");
+            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => m.GetId()))}]");
         }
         return isModded;
     }
@@ -202,7 +235,7 @@ public static class RespectAffectsGameplayMod
     /// <returns><see langword="true"/> 表示游戏原版逻辑认为 modded; <see langword="false"/> 表示游戏原版逻辑认为 vanilla</returns>
     private static bool EvaluateDefaultMode()
     {
-        var count = ModManager.Mods.Count(m => m.state is ModLoadState.Loaded or ModLoadState.Failed);
+        var count = ModManager.Mods.Count(m => m.IsLoaded());
         ModLog.Debug($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, Loaded/Failed: {count}");
         return count > 0;
     }
@@ -214,8 +247,8 @@ public static class RespectAffectsGameplayMod
     {
         try
         {
-            // 如果当前不是 gameplay modded 状态, 则无需补触发存档复制
-            if (!IsEffectivelyModded())
+            // 如果按照当前设置判断, 不是 gameplay modded 状态, 则无需补触发存档复制
+            if (!IsEffectivelyModded(true))
             {
                 ModLog.Debug("当前不是 gameplay modded 状态, 无需补触发存档复制");
                 return;
@@ -228,12 +261,11 @@ public static class RespectAffectsGameplayMod
                 return;
             }
 
-            // 如果当前是 gameplay modded 状态, 且游戏尚未完成首次存档复制, 则记录日志并补触发存档复制
-            ModLog.Info("检测到 gameplay mod 但存档尚未迁移, 补触发 CopyUnmoddedSaveFilesIfNeeded");
+            // 调用 ModManager.CopyUnmoddedSaveFilesIfNeeded() 方法, 补触发存档复制
             ModManager.CopyUnmoddedSaveFilesIfNeeded();
 
-            // 输出日志: 补触发存档复制完成
-            ModLog.Info("补触发 CopyUnmoddedSaveFilesIfNeeded 完成");
+            // 记录日志: 补触发存档复制
+            ModLog.Info("当前为 gameplay modded 状态, 且游戏未完成首次存档复制, 已补触发存档复制");
         }
         catch (Exception ex)
         {

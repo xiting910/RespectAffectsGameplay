@@ -41,11 +41,11 @@ public static class ModSettingsHelper
         using (RitsuLibFramework.BeginModDataRegistration(ModInfo.Id))
         {
             _store = RitsuLibFramework.GetDataStore(ModInfo.Id);
-            _store.Register(
+            _store.Register<ModSettingsData>(
                 key: DataKey,
                 fileName: DataFileName,
                 scope: DataScope,
-                defaultFactory: () => new ModSettingsData(),
+                defaultFactory: () => new(),
                 autoCreateIfMissing: true
             );
         }

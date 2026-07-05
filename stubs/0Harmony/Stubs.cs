@@ -38,15 +38,6 @@ public class Harmony(string id)
     }
 
     /// <summary>
-    /// 应用指定类型中所有 Harmony 补丁 (桩)
-    /// </summary>
-    /// <param name="type">包含补丁方法的类型</param>
-    public void PatchAll(Type type)
-    {
-        // 桩实现: 不执行任何实际操作
-    }
-
-    /// <summary>
     /// 移除指定方法的指定补丁 (桩)
     /// </summary>
     /// <param name="original">原始方法</param>
