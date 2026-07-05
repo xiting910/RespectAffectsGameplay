@@ -30,6 +30,25 @@
 
 ---
 
+## [0.2.9] - 2026-07-05
+
+### Note
+
+- ContentModDetector 改为懒加载扫描：不再需要显式调用 ScanAllMods()，首次查询时自动触发；存档复制检查延迟到主菜单就绪后执行，避免初始化阶段阻塞
+
+### Changed
+
+- **`ContentModDetector` 懒加载扫描**: `ScanAllMods()` 公有方法替换为私有 `PerformScan()`，新增 `_scanned` 标记。`HasContentModsLoaded()` 和 `IsContentMod()` 在首次调用时自动触发扫描，无需调用方显式初始化。消除 `Initialize()` 中对 `ScanAllMods()` 的显式调用依赖
+- **存档复制检查延迟执行**: `Initialize()` 步骤 6 不再立即调用 `EnsureSaveFilesCopiedIfNeeded()`，改为订阅 `MainMenuReadyEvent` 延迟到主菜单就绪后执行。原步骤 7 合并入步骤 6，初始化流程从 7 步精简为 6 步
+- **移除未使用的 using**: `ContentModDetector.cs` 移除未使用的 `using MegaCrit.Sts2.Core.Helpers;`
+
+### Internal
+
+- **`RespectAffectsGameplay.json`**: 版本号从 `0.2.8` 提升至 `0.2.9`
+- **README**: 更新 `ContentModDetector` 描述为懒加载扫描机制、更新流程图起始节点、设计决策中步骤编号从 7 改为 6
+
+---
+
 ## [0.2.8] - 2026-07-05
 
 ### Note
@@ -64,6 +83,8 @@
 - **README**: 更新项目结构（新增/移除文件）、补丁表格（5→3 补丁）、设计决策（双重判定标准说明）、工作原理流程图、Mod 标记验证章节（`ModAffectsGameplayValidator` → `ContentModDetector`）、模式说明表格
 - **`RespectAffectsGameplay.json`**: 版本号从 `0.2.7` 提升至 `0.2.8`
 - **`workshop/image.png`**: 更新工坊封面图
+
+---
 
 ## [0.2.7] - 2026-07-05
 
@@ -140,6 +161,8 @@
 ### Changed
 
 - **Workshop VDF 描述换行处理**: `release.yml` 中 workshop 描述从压扁为空格改为转义 VDF 特殊字符（`\`、`"`）+ 保留换行符，Steam 工坊页面按段落显示
+
+---
 
 ## [0.2.4] - 2026-07-01
 
@@ -491,7 +514,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.8...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.9...HEAD
+[0.2.9]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.7
 [0.2.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.6

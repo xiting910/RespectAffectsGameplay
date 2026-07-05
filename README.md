@@ -191,19 +191,19 @@ flowchart TD
 >   `IsEffectivelyModded(true)` 为 false 时直接跳过整个方法。
 >   但跳过复制后会留下一个缺口：`_settings.ModList` 已被填充，后续即使安装了 gameplay Mod，
 >   游戏也不会再触发复制（`ModList` 已非空）。
->   为此，`Initialize()` 步骤 7 会在 `IsEffectivelyModded(true)` 为 true 且
->   `ModManager.UnmoddedSavesWereCopied` 为 false 时补调用一次 `CopyUnmoddedSaveFilesIfNeeded`，
->   确保 gameplay Mod 首次出现时存档一定会被迁移。
+>   为此，`Initialize()` 步骤 6 通过订阅 `MainMenuReadyEvent`，在主菜单就绪后检查
+>   `IsEffectivelyModded(true)` 为 true 且 `ModManager.UnmoddedSavesWereCopied` 为 false 时
+>   补调用一次 `CopyUnmoddedSaveFilesIfNeeded`，确保 gameplay Mod 首次出现时存档一定会被迁移。
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 
 ### Mod 标记验证与 Toast 警告
 
-`ContentModDetector` 在 Mod 初始化阶段（第 6 步）自动执行，扫描所有已加载 Mod 的程序集，检测 `affects_gameplay` 标记是否准确：
+`ContentModDetector` 采用懒加载扫描机制：首次调用 `HasContentModsLoaded()` 或 `IsContentMod()` 时自动触发 `PerformScan()`，扫描所有已加载 Mod 的程序集，检测 `affects_gameplay` 标记是否准确：
 
 ```mermaid
 flowchart TD
-    A[ScanAllMods 开始] --> B[遍历已加载 Mod]
+    A[首次查询触发扫描] --> B[遍历已加载 Mod]
     B --> C{Mod 程序集包含 AbstractModel 子类?}
     C -->|是| D[加入 ModIdsWithContent 集合]
     C -->|否| E[跳过]

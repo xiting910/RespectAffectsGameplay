@@ -94,13 +94,13 @@ public static class RespectAffectsGameplayMod
             ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已启用, 将拦截所有 {nameof(ModManager.IsRunningModded)} 调用");
         }
 
-        // 6. 扫描所有已加载的 mod
-        ModLog.Debug("步骤 6: 扫描所有已加载的 mod...");
-        ContentModDetector.ScanAllMods();
-
-        // 7. 检查是否需要补触发存档复制
-        ModLog.Debug("步骤 7: 检查是否需要补触发存档复制...");
-        EnsureSaveFilesCopiedIfNeeded();
+        // 6. 订阅主菜单就绪事件, 补触发存档复制检查
+        ModLog.Debug("步骤 6: 订阅主菜单就绪事件补触发存档复制检查...");
+        _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>((evt, sub) =>
+        {
+            sub.Dispose();
+            EnsureSaveFilesCopiedIfNeeded();
+        });
 
         // 输出初始化完成日志
         ModLog.Info($"初始化完成 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");

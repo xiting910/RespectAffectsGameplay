@@ -1,4 +1,3 @@
-using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Models;
 using STS2RitsuLib;
@@ -22,6 +21,11 @@ public static class ContentModDetector
     private const string PlaceholderCount = "{Count}";
 
     /// <summary>
+    /// 标记是否已完成扫描
+    /// </summary>
+    private static bool _scanned;
+
+    /// <summary>
     /// 标记是否已订阅主菜单就绪事件, 避免重复订阅
     /// </summary>
     private static bool _toastSubscribed;
@@ -32,9 +36,39 @@ public static class ContentModDetector
     private static readonly HashSet<string> ModIdsWithContent = [];
 
     /// <summary>
-    /// 扫描所有已加载的 Mod, 检测是否包含 <see cref="AbstractModel"/> 子类, 并在发现误标的 Mod 时显示 Toast 通知
+    /// 判断是否有实现了 <see cref="AbstractModel"/> 的 Mod 被加载
     /// </summary>
-    public static void ScanAllMods()
+    /// <returns><see langword="true"/> 如果有实现了 <see cref="AbstractModel"/> 的 Mod 被加载,
+    /// <see langword="false"/> 否则</returns>
+    public static bool HasContentModsLoaded()
+    {
+        if (!_scanned)
+        {
+            PerformScan();
+            _scanned = true;
+        }
+        return ModIdsWithContent.Count > 0;
+    }
+
+    /// <summary>
+    /// 判断某个 Mod 是否是内容性 Mod (即是否包含 <see cref="AbstractModel"/> 子类)
+    /// </summary>
+    /// <param name="modId">要检测的 Mod 的 ID</param>
+    /// <returns><see langword="true"/> 如果该 Mod 是内容性 Mod, <see langword="false"/> 否则</returns>
+    public static bool IsContentMod(string modId)
+    {
+        if (!_scanned)
+        {
+            PerformScan();
+            _scanned = true;
+        }
+        return ModIdsWithContent.Contains(modId);
+    }
+
+    /// <summary>
+    /// 执行扫描: 遍历所有已加载的 Mod, 检测是否包含 <see cref="AbstractModel"/> 子类
+    /// </summary>
+    private static void PerformScan()
     {
         try
         {
@@ -76,26 +110,6 @@ public static class ContentModDetector
             ModLog.Error($"扫描 Mod 内容时发生异常 (不影响 mod 核心功能, 但存档可能被错误隔离): {ex}");
             ModIdsWithContent.Clear();
         }
-    }
-
-    /// <summary>
-    /// 判断是否有实现了 <see cref="AbstractModel"/> 的 Mod 被加载
-    /// </summary>
-    /// <returns><see langword="true"/> 如果有实现了 <see cref="AbstractModel"/> 的 Mod 被加载,
-    /// <see langword="false"/> 否则</returns>
-    public static bool HasContentModsLoaded()
-    {
-        return ModIdsWithContent.Count > 0;
-    }
-
-    /// <summary>
-    /// 判断某个 Mod 是否是内容性 Mod (即是否包含 <see cref="AbstractModel"/> 子类)
-    /// </summary>
-    /// <param name="modId">要检测的 Mod 的 ID</param>
-    /// <returns><see langword="true"/> 如果该 Mod 是内容性 Mod, <see langword="false"/> 否则</returns>
-    public static bool IsContentMod(string modId)
-    {
-        return ModIdsWithContent.Contains(modId);
     }
 
     /// <summary>
