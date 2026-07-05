@@ -1,20 +1,22 @@
 {
-    "mod.description": "Stops STS2 from blindly marking the game as modded just because any mod is loaded. Scans mod assemblies to detect actual game content (cards, relics, heroes, etc.), respects each mod's affects_gameplay flag, isolates save files only for content mods, and warns when a mod is mislabeled.",
+  "_version": "0.3.0",
 
-    "settings.section.general": "General",
-    "settings.mode.label": "Modded Mode",
-    "settings.mode.option.auto": "Auto",
-    "settings.mode.option.alwaysVanilla": "Always Vanilla",
-    "settings.mode.option.default": "Game Default",
-    "settings.mode.desc": "Auto: Uses two separate criteria:\n  - Save path isolation: only triggered when content mods (cards, relics, characters, etc.) are detected via assembly scanning\n  - Non-save functions: triggered when affects_gameplay: true mods or content mods are present\nAlways Vanilla: Never mark as modded even if gameplay mods are loaded (⚠ may corrupt saves and cause multiplayer issues).\nGame Default: Use the game's default logic — any loaded mod marks the game as modded.\n\n⚠ Restart the game for this change to take effect.",
-    "settings.patchModManager.label": "Intercept IsRunningModded()",
-    "settings.patchModManager.desc": "When enabled, all callers of ModManager.IsRunningModded() are controlled by the current Modded Mode.\n🖥 UI: \"MODDED\" warning label, mod count and hash no longer displayed\n🐛 Sentry: GDExtension and .NET SDK Sentry reporting are no longer auto-disabled\n📊 Telemetry: run statistics upload is no longer auto-skipped\n📝 Feedback: isModded flag in feedback submissions is no longer auto-set\n🛠 Debug: dev console full command set is no longer auto-enabled, .run file drag-and-drop is no longer auto-allowed\n\nOff: Only the save path is controlled by Modded Mode; all behaviors above revert to game defaults.\n\n⚠ Restart the game for this change to take effect.",
-    "settings.verboseLogging.label": "Verbose Logging",
-    "settings.verboseLogging.desc": "On: Additionally output Debug-level logs for troubleshooting.\nOff: Only output Info / Warn / Error logs.\n\n⚠ Only affects this mod. Takes effect immediately.",
-    "settings.resetDefaults.label": "Reset to Defaults",
-    "settings.resetDefaults.button": "Restore Defaults",
-    "settings.resetDefaults.desc": "Restore all settings to their default values.\n⚠ Some changes require a restart to take effect.",
+  "mod.description": "Stops STS2 from blindly marking the game as modded just because any mod is loaded. Scans mod assemblies to detect actual game content (cards, relics, heroes, etc.), respects each mod's affects_gameplay flag, isolates save files only for content mods, and warns when a mod is mislabeled.",
 
-    "toast.mislabeled.title": "[RespectAffectsGameplay] ⚠ {Count} mod(s) mislabeled",
-    "toast.mislabeled.body": "These mods are marked as non-gameplay but contain game content:\n{ModList}\n\nThis may cause save corruption or multiplayer sync issues.\nPlease contact the mod authors to fix this. Consider disabling these mods for now."
+  "settings.section.general": "General",
+  "settings.mode.label": "Modded Mode",
+  "settings.mode.option.auto": "Auto",
+  "settings.mode.option.alwaysVanilla": "Always Vanilla",
+  "settings.mode.option.default": "Game Default",
+  "settings.mode.desc": "Auto: Uses two separate criteria:\n  - Save path isolation: only triggered when content mods (cards, relics, characters, etc.) are detected via assembly scanning\n  - Non-save functions: triggered when affects_gameplay: true mods or content mods are present\nAlways Vanilla: Never mark as modded even if gameplay mods are loaded (⚠ may corrupt saves and cause multiplayer issues).\nGame Default: Use the game's default logic — any loaded mod marks the game as modded.\n\n⚠ Restart the game for this change to take effect.",
+  "settings.patchModManager.label": "Intercept IsRunningModded()",
+  "settings.patchModManager.desc": "When enabled, all callers of ModManager.IsRunningModded() are controlled by the current Modded Mode.\n🖥 UI: \"MODDED\" warning label, mod count and hash no longer displayed\n🐛 Sentry: GDExtension and .NET SDK Sentry reporting are no longer auto-disabled\n📊 Telemetry: run statistics upload is no longer auto-skipped\n📝 Feedback: isModded flag in feedback submissions is no longer auto-set\n🛠 Debug: dev console full command set is no longer auto-enabled, .run file drag-and-drop is no longer auto-allowed\n\nOff: Only the save path is controlled by Modded Mode; all behaviors above revert to game defaults.\n\n⚠ Restart the game for this change to take effect.",
+  "settings.verboseLogging.label": "Verbose Logging",
+  "settings.verboseLogging.desc": "On: Output extra detailed logs in addition to the standard messages (useful for troubleshooting).\nOff: Only output standard Info / Warn / Error logs.\n\n⚠ Only affects this mod. Takes effect immediately.",
+  "settings.resetDefaults.label": "Reset to Defaults",
+  "settings.resetDefaults.button": "Restore Defaults",
+  "settings.resetDefaults.desc": "Restore all settings to their default values.\n⚠ Some changes require a restart to take effect.",
+
+  "toast.mislabeled.title": "[RespectAffectsGameplay] ⚠ {Count} mod(s) mislabeled",
+  "toast.mislabeled.body": "These mods are marked as non-gameplay but contain game content:\n{ModList}\n\nThis may cause save corruption or multiplayer sync issues.\nPlease contact the mod authors to fix this. Consider disabling these mods for now."
 }

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace RespectAffectsGameplay;
 
 /// <summary><para>
-/// Linux 原生辅助类: 提供在 Linux 平台上确保 <c>libgcc_s.so.1</c> 全局加载的功能
+/// Linux 原生辅助类: 提供在 Linux 平台上确保 <see cref="LibGccFileName"/> 全局加载的功能
 /// </para><para>
 /// 必须在 <see cref="HarmonyLib.Harmony.PatchAll(System.Reflection.Assembly)"/> 之前调用 <see cref="EnsureLibGccLoaded"/> 方法
 /// </para></summary>
@@ -20,12 +20,17 @@ internal static partial class LinuxNativeHelper
     private const int RTLD_GLOBAL = 0x00100;
 
     /// <summary>
+    /// 要加载的共享库文件名
+    /// </summary>
+    private const string LibGccFileName = "libgcc_s.so.1";
+
+    /// <summary>
     /// 标记是否已执行过加载操作
     /// </summary>
     private static bool _initialized;
 
     /// <summary>
-    /// 确保 <c>libgcc_s.so.1</c> 已以全局符号可见性加载
+    /// 确保 <see cref="LibGccFileName"/> 已以全局符号可见性加载
     /// </summary>
     internal static void EnsureLibGccLoaded()
     {
@@ -35,18 +40,18 @@ internal static partial class LinuxNativeHelper
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            ModLog.Debug("非 Linux 平台, 跳过 libgcc_s 加载");
+            ModLog.Verbose("非 Linux 平台, 跳过 libgcc_s 加载");
             return;
         }
 
-        var handle = dlopen("libgcc_s.so.1", RTLD_NOW | RTLD_GLOBAL);
+        var handle = dlopen(LibGccFileName, RTLD_NOW | RTLD_GLOBAL);
         if (handle == IntPtr.Zero)
         {
-            ModLog.Warn("Linux 上 dlopen(libgcc_s.so.1) 失败, Harmony 补丁可能无法生效");
+            ModLog.Warn($"Linux 上 dlopen({LibGccFileName}) 失败, Harmony 补丁可能无法生效");
         }
         else
         {
-            ModLog.Debug($"libgcc_s.so.1 已加载 (handle=0x{handle:X})");
+            ModLog.Verbose($"{LibGccFileName} 已加载 (handle=0x{handle:X})");
         }
     }
 

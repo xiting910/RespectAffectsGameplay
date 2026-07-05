@@ -9,11 +9,6 @@ namespace RespectAffectsGameplay;
 internal static class ModLog
 {
     /// <summary>
-    /// 日志前缀
-    /// </summary>
-    private static string Prefix => $"[{ModInfo.Id}]";
-
-    /// <summary>
     /// 日志记录器实例
     /// </summary>
     private static readonly Logger _instance = RitsuLibFramework.CreateLogger(ModInfo.Id);
@@ -24,12 +19,12 @@ internal static class ModLog
     private static bool IsVerboseEnabled => ModSettingsHelper.GetSettings().VerboseLogging;
 
     /// <summary>
-    /// 输出 Debug 级别日志 (仅在详细日志启用时输出)
+    /// 输出详细日志 (仅在详细日志启用时输出, 实际以 Info 级别输出到游戏日志以便可见)
     /// </summary>
     /// <param name="text">日志内容</param>
-    public static void Debug(string text)
+    public static void Verbose(string text)
     {
-        if (IsVerboseEnabled) { _instance.Debug($"{Prefix} {text}"); }
+        if (IsVerboseEnabled) { _instance.Info(text); }
     }
 
     /// <summary>
@@ -38,7 +33,7 @@ internal static class ModLog
     /// <param name="text">日志内容</param>
     public static void Info(string text)
     {
-        _instance.Info($"{Prefix} {text}");
+        _instance.Info(text);
     }
 
     /// <summary>
@@ -47,7 +42,7 @@ internal static class ModLog
     /// <param name="text">日志内容</param>
     public static void Warn(string text)
     {
-        _instance.Warn($"{Prefix} {text}");
+        _instance.Warn(text);
     }
 
     /// <summary>
@@ -56,6 +51,6 @@ internal static class ModLog
     /// <param name="text">日志内容</param>
     public static void Error(string text)
     {
-        _instance.Error($"{Prefix} {text}");
+        _instance.Error(text);
     }
 }

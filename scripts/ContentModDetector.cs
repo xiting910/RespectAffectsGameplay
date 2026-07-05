@@ -84,12 +84,19 @@ public static class ContentModDetector
                 // 检测 Mod 是否包含 AbstractModel 子类
                 if (mod.ContainsAbstractModel() == true)
                 {
+                    // 记录日志
+                    ModLog.Verbose($"检测到内容性 Mod: {modId}");
+
                     // 包含 AbstractModel 子类, 记录 Mod ID
                     _ = ModIdsWithContent.Add(modId);
 
                     // 如果 Mod 标记 affects_gameplay 为 false, 则认为是误标, 记录 Mod 名称
                     if (mod.manifest?.affectsGameplay == false)
                     {
+                        // 记录日志
+                        ModLog.Warn($"检测到误标的内容性 Mod: {modId} (affects_gameplay 实际应该标记为 true)");
+
+                        // 记录误标的 Mod ID
                         mislabeledMods.Add(modId);
                     }
                 }
@@ -146,7 +153,7 @@ public static class ContentModDetector
         }
         catch (Exception ex)
         {
-            ModLog.Warn($"无法注册 Toast 通知 (RitsuLib 版本可能不支持): {ex.Message}");
+            ModLog.Warn($"无法注册 Toast 通知: {ex.Message}");
         }
     }
 }

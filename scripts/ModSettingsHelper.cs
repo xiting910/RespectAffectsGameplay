@@ -4,11 +4,9 @@ using STS2RitsuLib.Utils.Persistence;
 
 namespace RespectAffectsGameplay;
 
-/// <summary><para>
-/// 辅助类: 初始化并提供对 mod 持久化设置的访问
-/// </para><para>
-/// 必须在 <see cref="RespectAffectsGameplayMod.Initialize"/> 中调用一次 <see cref="Initialize"/> 方法
-/// </para></summary>
+/// <summary>
+/// 辅助类: 提供对 mod 持久化设置的访问, 首次调用 <see cref="GetSettings"/> 时自动初始化
+/// </summary>
 public static class ModSettingsHelper
 {
     /// <summary>
@@ -27,21 +25,28 @@ public static class ModSettingsHelper
     public const SaveScope DataScope = SaveScope.Global;
 
     /// <summary>
-    /// mod 数据存储实例
+    /// 标记是否已完成初始化
     /// </summary>
-    private static ModDataStore? _store;
+    private static bool _initialized;
 
     /// <summary>
-    /// 初始化 mod 设置
+    /// 设置数据的缓存
     /// </summary>
-    public static void Initialize()
-    {
-        ModLog.Debug($"注册持久化数据 (Key={DataKey}, File={DataFileName}, Scope={DataScope})...");
+    private static ModDataStoreCache<ModSettingsData>? _settingsCache;
 
+    /// <summary>
+    /// 确保已完成初始化
+    /// </summary>
+    private static void EnsureInitialized()
+    {
+        if (_initialized) { return; }
+        _initialized = true;
+
+        ModDataStore store;
         using (RitsuLibFramework.BeginModDataRegistration(ModInfo.Id))
         {
-            _store = RitsuLibFramework.GetDataStore(ModInfo.Id);
-            _store.Register<ModSettingsData>(
+            store = RitsuLibFramework.GetDataStore(ModInfo.Id);
+            store.Register<ModSettingsData>(
                 key: DataKey,
                 fileName: DataFileName,
                 scope: DataScope,
@@ -49,32 +54,25 @@ public static class ModSettingsHelper
                 autoCreateIfMissing: true
             );
         }
+        _settingsCache = store.CreateCache<ModSettingsData>(DataKey);
 
-        var settings = GetSettings();
-        ModLog.Info($"设置已加载 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
+        ModLog.Verbose($"持久化数据已注册 (Key={DataKey}, File={DataFileName}, Scope={DataScope})");
     }
 
     /// <summary>
-    /// 获取当前设置
+    /// 获取当前设置, 首次调用时自动初始化持久化数据存储
     /// </summary>
     /// <returns>当前的 <see cref="ModSettingsData"/> 实例</returns>
     public static ModSettingsData GetSettings()
     {
-        // 如果数据存储未初始化, 返回默认设置
-        if (_store is null)
-        {
-            ModLog.Warn("数据存储未初始化, 返回默认设置");
-            return new();
-        }
+        EnsureInitialized();
 
         try
         {
-            // 尝试从存储中获取设置数据
-            return _store.Get<ModSettingsData>(DataKey);
+            return _settingsCache?.Value ?? throw new InvalidOperationException("设置缓存未初始化");
         }
         catch (Exception ex)
         {
-            // 如果获取设置数据失败, 返回默认设置
             ModLog.Error($"读取设置失败, 返回默认设置: {ex}");
             return new();
         }
@@ -85,17 +83,18 @@ public static class ModSettingsHelper
     /// </summary>
     public static void ResetToDefaults()
     {
-        if (_store is null)
+        if (_settingsCache is null)
         {
-            ModLog.Error("数据存储未初始化, 无法持久化重置操作。设置将在重启后恢复。");
+            ModLog.Error("设置缓存未初始化, 无法持久化重置操作。设置将在重启后恢复。");
             return;
         }
 
-        var settings = GetSettings();
-        settings.Mode = ModdedMode.Auto;
-        settings.PatchModManagerIsRunningModded = false;
-        settings.VerboseLogging = false;
-        SaveSettings();
+        _settingsCache.Modify(settings =>
+        {
+            settings.Mode = ModdedMode.Auto;
+            settings.PatchModManagerIsRunningModded = false;
+            settings.VerboseLogging = false;
+        });
         ModLog.Info("设置已重置为默认值并保存");
     }
 
@@ -104,12 +103,12 @@ public static class ModSettingsHelper
     /// </summary>
     public static void SaveSettings()
     {
-        if (_store is null)
+        if (_settingsCache is null)
         {
-            ModLog.Warn("SaveSettings() 被调用但 _store 为 null, 设置未持久化");
+            ModLog.Warn($"{nameof(SaveSettings)} 被调用但设置缓存未初始化, 设置未持久化");
             return;
         }
-        _store.Save(DataKey);
-        ModLog.Debug("设置已写入磁盘");
+        _settingsCache.Save();
+        ModLog.Verbose("设置已保存到本地存储");
     }
 }

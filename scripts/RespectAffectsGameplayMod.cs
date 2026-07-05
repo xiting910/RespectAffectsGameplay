@@ -55,27 +55,21 @@ public static class RespectAffectsGameplayMod
         ModLoc.Initialize();
         ModLog.Info($"开始初始化 (ID: {ModInfo.Id}, Version: {ModInfo.Version})");
 
-        // 1. 注册持久化设置数据存储
-        ModLog.Debug("步骤 1: 注册持久化设置...");
-        ModSettingsHelper.Initialize();
-
-        // 读取设置
+        // 1. 加载设置
+        ModLog.Verbose("步骤 1: 加载设置...");
         var settings = ModSettingsHelper.GetSettings();
-        if (settings.VerboseLogging)
-        {
-            ModLog.Info("详细日志已启用");
-        }
+        ModLog.Info($"设置已加载 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
 
         // 2. 注册游戏内设置页面
-        ModLog.Debug("步骤 2: 注册游戏内设置页面...");
+        ModLog.Verbose("步骤 2: 注册游戏内设置页面...");
         RegisterSettingsPage();
 
         // 3. 在 Linux 上确保 libgcc_s 已全局加载
-        ModLog.Debug("步骤 3: 检查 Linux 原生库...");
+        ModLog.Verbose("步骤 3: 检查 Linux 原生库...");
         LinuxNativeHelper.EnsureLibGccLoaded();
 
         // 4. 应用 Harmony 补丁
-        ModLog.Debug("步骤 4: 应用 Harmony 补丁...");
+        ModLog.Verbose("步骤 4: 应用 Harmony 补丁...");
         var harmony = new Harmony(ModInfo.HarmonyId);
         harmony.PatchAll(typeof(RespectAffectsGameplayMod).Assembly);
         var patchedMethods = harmony.GetPatchedMethods();
@@ -95,7 +89,7 @@ public static class RespectAffectsGameplayMod
         }
 
         // 6. 订阅主菜单就绪事件, 补触发存档复制检查
-        ModLog.Debug("步骤 6: 订阅主菜单就绪事件补触发存档复制检查...");
+        ModLog.Verbose("步骤 6: 订阅主菜单就绪事件补触发存档复制检查...");
         _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>((evt, sub) =>
         {
             sub.Dispose();
@@ -151,8 +145,8 @@ public static class RespectAffectsGameplayMod
                 _cachedIsEffectivelyModded = result;
             }
 
-            // 输出调试日志并返回结果
-            ModLog.Debug($"IsEffectivelyModded(isForSaveDir={isForSaveDir}) => {result} (Mode={settings.Mode})");
+            // 输出日志并返回结果
+            ModLog.Verbose($"{nameof(IsEffectivelyModded)}({nameof(isForSaveDir)}={isForSaveDir}) => {result} ({nameof(settings.Mode)}={settings.Mode})");
             return result;
         }
         catch (Exception ex)
@@ -183,7 +177,7 @@ public static class RespectAffectsGameplayMod
         // 如果没有已加载的 Mod, 则视为 vanilla
         if (loadedMods.Count == 0)
         {
-            ModLog.Debug("Auto 模式: 没有已加载的 Mod, 视为 vanilla");
+            ModLog.Verbose("Auto 模式: 没有已加载的 Mod, 视为 vanilla");
             return false;
         }
 
@@ -193,7 +187,7 @@ public static class RespectAffectsGameplayMod
         // 如果没有已加载的 Mod 有 manifest, 则视为 vanilla
         if (modsWithManifest.Count == 0)
         {
-            ModLog.Debug("Auto 模式: 没有已加载的 Mod 有 manifest, 视为 vanilla");
+            ModLog.Verbose("Auto 模式: 没有已加载的 Mod 有 manifest, 视为 vanilla");
             return false;
         }
 
@@ -218,7 +212,7 @@ public static class RespectAffectsGameplayMod
         }
 
         // 输出日志: Auto 模式下的检测结果
-        ModLog.Debug($"Auto 模式: 共检测 {ModManager.Mods.Count} 个 mod, 已加载 {loadedMods.Count} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
+        ModLog.Verbose($"Auto 模式: 共检测 {ModManager.Mods.Count} 个 mod, 已加载 {loadedMods.Count} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
 
         // 是否应该被视为 modded 模式
         var isModded = gameplayMods.Count > 0;
@@ -236,7 +230,7 @@ public static class RespectAffectsGameplayMod
     private static bool EvaluateDefaultMode()
     {
         var count = ModManager.Mods.Count(m => m.IsLoaded());
-        ModLog.Debug($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, Loaded/Failed: {count}");
+        ModLog.Verbose($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, Loaded/Failed: {count}");
         return count > 0;
     }
 
@@ -250,14 +244,14 @@ public static class RespectAffectsGameplayMod
             // 如果按照当前设置判断, 不是 gameplay modded 状态, 则无需补触发存档复制
             if (!IsEffectivelyModded(true))
             {
-                ModLog.Debug("当前不是 gameplay modded 状态, 无需补触发存档复制");
+                ModLog.Verbose("当前不是 gameplay modded 状态, 无需补触发存档复制");
                 return;
             }
 
             // 如果游戏已完成首次存档复制, 则无需补触发存档复制
             if (ModManager.UnmoddedSavesWereCopied)
             {
-                ModLog.Debug("游戏已完成首次存档复制, 无需补触发");
+                ModLog.Verbose("游戏已完成首次存档复制, 无需补触发");
                 return;
             }
 
@@ -278,8 +272,6 @@ public static class RespectAffectsGameplayMod
     /// </summary>
     private static void RegisterSettingsPage()
     {
-        ModLog.Debug("注册 RitsuLib 设置页面...");
-
         RitsuLibFramework.RegisterModSettings(ModInfo.Id, page => page
             .WithTitle(ModSettingsText.Literal(ModInfo.Name))
             .WithModDisplayName(ModSettingsText.Literal(ModInfo.Name))
@@ -335,6 +327,6 @@ public static class RespectAffectsGameplayMod
                     ModSettingsHelper.ResetToDefaults,
                     description: ModSettingsText.I18N(ModLoc.Instance, "settings.resetDefaults.desc", string.Empty))));
 
-        ModLog.Debug("设置页面注册完成");
+        ModLog.Verbose("设置页面注册完成");
     }
 }

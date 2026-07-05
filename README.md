@@ -6,7 +6,7 @@
 [![CodeQL](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/codeql-analysis.yml)
 [![Dependency Review](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/xiting910/RespectAffectsGameplay/actions/workflows/dependency-review.yml)
 
-**Respect Affects Gameplay** 是一个 [Slay the Spire 2](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/)（STS2）的 Mod，它让游戏真正尊重每个 Mod 的 `affects_gameplay` 元数据标记。
+**Respect Affects Gameplay** 是 Slay the Spire 2 的 Mod，通过程序集扫描智能管理游戏的 modded 状态。它阻止游戏盲目地将所有 Mod 都视为影响游戏性，而是分别判定：存档路径仅对真正的游戏内容 Mod（卡片、遗物、角色等）隔离；整体 modded 状态则综合 `affects_gameplay` 标记与内容检测结果。同时自动检测并警告标记不准确的 Mod。
 
 ---
 
@@ -20,11 +20,12 @@
   - [项目结构](#项目结构)
   - [解决的问题](#解决的问题)
     - [存档路径被强行分离](#存档路径被强行分离)
-    - [联机哈希污染（已在 STS2 v0.108.0 由官方修复）](#联机哈希污染已在-sts2-v01080-由官方修复)
+    - [联机匹配被任意 Mod 阻塞（已在 STS2 v0.108.0 由官方修复）](#联机匹配被任意-mod-阻塞已在-sts2-v01080-由官方修复)
+    - [首次存档复制的副作用（v0.108.0 新增）](#首次存档复制的副作用v01080-新增)
   - [工作原理](#工作原理)
     - [Harmony 补丁](#harmony-补丁)
-    - [Mod 标记验证与 Toast 警告](#mod-标记验证与-toast-警告)
-  - [模式说明](#模式说明)
+    - [内容 Mod 检测与误标警告](#内容-mod-检测与误标警告)
+  - [设置说明](#设置说明)
   - [构建](#构建)
     - [环境要求](#环境要求)
     - [构建步骤](#构建步骤)
@@ -118,13 +119,13 @@ RespectAffectsGameplay/
 
 ## 解决的问题
 
-默认情况下，STS2 只要检测到**任意** Mod 被加载，就会将整个游戏标记为 "modded（已修改）" 状态。这会导致以下问题：
+默认情况下，STS2 只要检测到**任意** Mod 被加载，就会将整个游戏标记为 "modded" 状态，而不区分 Mod 的类型和实际影响。这导致了以下问题：
 
 ### 存档路径被强行分离
 
 `UserDataPathProvider.GetProfileDir()` 根据 `IsRunningModded` 属性决定存档目录是否带有 `modded/` 前缀。任何 Mod（包括外观、基础库、辅助类等 `affects_gameplay: false` 的 Mod）加载后，`IsRunningModded` 被设为 `true`，存档即被隔离到 `modded/profileX/`。卸载这些 Mod 后存档看似"丢失"，因为它还在 `modded/` 子目录中。
 
-### 联机哈希污染（已在 STS2 v0.108.0 由官方修复）
+### 联机匹配被任意 Mod 阻塞（已在 STS2 v0.108.0 由官方修复）
 
 早期版本中 `ModelIdSerializationCache.Init()` 在计算联机 XXH32 哈希时，不区分 Mod 的 `affects_gameplay` 标记，导致纯外观 Mod 也会阻塞联机匹配。
 **此问题已在 STS2 v0.108.0 中由官方修复**：`Init()` 重写后使用 `ContentSorter<T>` 排序，并在哈希计算中加入 `affectsGameplay` 条件过滤，且 `JoinFlow` 在联机握手阶段通过 `GetGameplayRelevantModNameList()` / `GetNonGameplayRelevantModNameList()` 正确区分 gameplay 与非 gameplay Mod。
@@ -169,11 +170,11 @@ flowchart TD
 
 本 Mod 使用 3 个 Harmony 补丁，其中 2 个始终启用，1 个由用户可选开关控制：
 
-| 补丁                                   | 目标方法                                        | 默认   | 作用                                                                                     |
-| -------------------------------------- | ----------------------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
-| `PatchGetAccountDir`                   | `UserDataPathProvider.GetAccountDir`            | ✅ 始终 | `forceModState` 为 null 时根据 `IsEffectivelyModded(true)` 返回 `"modded"` 或 `""`，否则透传原始逻辑 |
-| `PatchCopyUnmoddedSaveFilesIfNeeded`   | `ModManager.CopyUnmoddedSaveFilesIfNeeded`      | ✅ 始终 | 仅 gameplay modded 状态才执行首次存档复制，避免纯外观 Mod 产生无用存档副本               |
-| `PatchModManagerIsRunningModded`       | `ModManager.IsRunningModded`                    | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                       |
+| 补丁                                 | 目标方法                                   | 默认   | 作用                                                                                                 |
+| ------------------------------------ | ------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------- |
+| `PatchGetAccountDir`                 | `UserDataPathProvider.GetAccountDir`       | ✅ 始终 | `forceModState` 为 null 时根据 `IsEffectivelyModded(true)` 返回 `"modded"` 或 `""`，否则透传原始逻辑 |
+| `PatchCopyUnmoddedSaveFilesIfNeeded` | `ModManager.CopyUnmoddedSaveFilesIfNeeded` | ✅ 始终 | 仅 gameplay modded 状态才执行首次存档复制，避免纯外观 Mod 产生无用存档副本                           |
+| `PatchModManagerIsRunningModded`     | `ModManager.IsRunningModded`               | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                                   |
 
 > **设计决策**:
 > - v0.108.0 重构了路径系统：`GetAccountDir(bool? forceModState)` 成为所有路径构造的唯一决策点，
@@ -197,7 +198,7 @@ flowchart TD
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 
-### Mod 标记验证与 Toast 警告
+### 内容 Mod 检测与误标警告
 
 `ContentModDetector` 采用懒加载扫描机制：首次调用 `HasContentModsLoaded()` 或 `IsContentMod()` 时自动触发 `PerformScan()`，扫描所有已加载 Mod 的程序集，检测 `affects_gameplay` 标记是否准确：
 
@@ -231,24 +232,22 @@ flowchart TD
 
 ---
 
-## 模式说明
+## 设置说明
 
-本 Mod 依赖 [STS2-RitsuLib](https://github.com/BAKAOLC/STS2-RitsuLib) 框架，通过 `RitsuModManager.GetKnownMods()` 获取已加载 Mod 列表并逐个检查其 `affects_gameplay` 标记。
+在游戏内的 Mod 设置页面中，你可以更改本 Mod 的行为。以下是各设置项的说明：
 
-在游戏内的 Mod 设置页面中，你可以选择三种运行模式，以及一个可选高级开关：
-
-| 设置项                     | 选项                         | 行为                                                                                                   |
-| -------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 设置项                     | 选项                         | 行为                                                                                                                                                  |
+| -------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Modded Mode**            | `Auto`（自动）⭐              | 双重标准：存档路径隔离仅对程序集扫描检测到的内容 Mod（卡片/遗物/角色等）生效；非存档功能（UI/Sentry/遥测）对 `affects_gameplay: true` 或内容 Mod 生效 |
-|                            | `Always Vanilla`（强制原版） | 永不视为 modded（⚠ 可能导致存档损坏）                                                                  |
-|                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded                                        |
-| **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                                                                  |
-|                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制                                                   |
-| **详细日志**               | 关闭（默认）                 | 仅输出 Info / Warn / Error 日志                                                                        |
-|                            | 开启                         | 额外输出 Debug 日志 (仅影响本 mod, 即时生效)                                                           |
-| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）                                              |
+|                            | `Always Vanilla`（强制原版） | 永不视为 modded（⚠ 可能导致存档损坏）                                                                                                                 |
+|                            | `Default`（游戏默认）        | 使用游戏原版逻辑（ModManager.Mods），加载任意 Mod 即视为 modded                                                                                       |
+| **拦截 IsRunningModded()** | 关闭（默认）                 | 仅存档路径受控，UI / 联机列表不受影响                                                                                                                 |
+|                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制                                                                                                  |
+| **详细日志**               | 关闭（默认）                 | 仅输出标准 Info / Warn / Error 日志                                                                                                                  |
+|                            | 开启                         | 额外输出详细日志 (仅影响本 mod, 即时生效)                                                                                                          |
+| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）                                                                                             |
 
-> ⚠ 除「详细日志」外, 其余设置项修改后需**重启游戏**才能生效。点击按钮后设置立即持久化到 `settings.json`。
+> ⚠ 除「详细日志」外, 其余设置项修改后需**重启游戏**才能生效。
 
 ---
 
@@ -353,7 +352,7 @@ flowchart TD
 
 ## 致谢
 
-- 本项目灵感来源于 [luojiesi/SLS2Mods](https://github.com/luojiesi/SLS2Mods/tree/master/UnifiedSavePath) 中的 UnifiedSavePath Mod，它使用 Harmony 补丁拦截 `IsRunningModded` 来统一存档路径。本项目在此基础上扩展了 `affects_gameplay` 标记识别、多模式切换、游戏内设置页面等功能。
+- 本项目灵感来源于 [luojiesi/SLS2Mods](https://github.com/luojiesi/SLS2Mods/tree/master/UnifiedSavePath) 中的 UnifiedSavePath Mod，它使用 Harmony 补丁拦截 `IsRunningModded` 来统一存档路径。本项目在此基础上扩展了程序集级内容 Mod 检测、存档/非存档双重判定标准、存档迁移控制、误标 Mod 警告、多模式切换、游戏内设置页面等功能。
 - [BAKAOLC/STS2-RitsuLib](https://github.com/BAKAOLC/STS2-RitsuLib) — STS2 Mod 核心框架
 - [Harmony](https://github.com/pardeike/Harmony) — .NET 运行时方法补丁库
 - [Slay the Spire 2](https://store.steampowered.com/app/2868840/Slay_the_Spire_II/) — Mega Crit Games

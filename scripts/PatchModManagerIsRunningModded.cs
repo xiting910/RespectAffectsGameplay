@@ -21,8 +21,8 @@ public static class PatchModManagerIsRunningModded
         // 将返回值设为 RespectAffectsGameplayMod.IsEffectivelyModded(false) 的结果
         __result = RespectAffectsGameplayMod.IsEffectivelyModded(false);
 
-        // 输出调试日志
-        ModLog.Debug($"ModManager.IsRunningModded() (已拦截) → {__result}");
+        // 输出日志
+        ModLog.Verbose($"拦截 {nameof(ModManager.IsRunningModded)} 方法, 返回值: {__result}");
 
         // 跳过原始方法
         return false;

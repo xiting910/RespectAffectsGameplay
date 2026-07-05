@@ -40,7 +40,7 @@ public static class ModExtensions
         // 如果 mod 没有程序集, 则无法扫描 AbstractModel 子类
         if (mod.assemblies.Count == 0)
         {
-            ModLog.Debug($"[{mod.GetId()}] 没有程序集, 无法扫描 AbstractModel 子类");
+            ModLog.Verbose($"[{mod.GetId()}] 没有程序集, 无法扫描 {typeof(AbstractModel)} 子类");
             return null;
         }
 

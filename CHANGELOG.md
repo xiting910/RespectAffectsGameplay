@@ -30,6 +30,29 @@
 
 ---
 
+## [0.3.0] - 2026-07-05
+
+### Note
+
+- 翻译文件智能更新：新增版本追踪机制，更新 Mod 后不再覆盖你自行修改的翻译文本，仅补充新增的翻译条目。详细日志开关现在输出 Info 级别（可在游戏日志中直接查看，无需特殊工具）
+
+### Changed
+
+- **日志系统重构 (`ModLog`)**: `Debug()` 重命名为 `Verbose()`, 内部改用 `Info()` 级别输出以便在游戏日志中可见。移除日志前缀 `[ModInfo.Id]`（游戏日志器已自动添加 Mod 上下文, 无需重复）。所有调用处（`ContentModDetector`、`ModExtensions`、`LinuxNativeHelper`、`RespectAffectsGameplayMod`、三个补丁文件）同步更新
+- **`nameof()` 消除硬编码字符串**: `ModInfo`、`ModSettingsHelper`、`PatchGetAccountDir`、`PatchCopyUnmoddedSaveFilesIfNeeded`、`PatchModManagerIsRunningModded`、`RespectAffectsGameplayMod` 中的字符串字面量统一替换为 `nameof()` 表达式, 确保类型/方法/参数重命名时自动更新, 消除重构死角
+- **翻译文件版本化增量更新 (`ModLoc`)**: 新增 `_version` 键（`"0.3.0"`）追踪翻译文件版本。导出逻辑从简单流复制改为 JSON 解析 + 智能合并——版本不同时全量覆盖, 版本相同时仅补充缺失键, 避免覆盖用户自行修改的翻译。通过内存流承接嵌入资源、`JsonDocument` 解析、`JsonSerializerOptions` 缓存等方式确保健壮性
+- **`ModSettingsHelper` 延迟初始化 + 缓存**: 移除显式 `Initialize()` 方法, 改为 `EnsureInitialized()` 懒加载——首次调用 `GetSettings()` 时自动触发。使用 `ModDataStoreCache<T>` 缓存设置数据, `ResetToDefaults()` 改用 `Modify()` 原子操作（消除 get-modify-save 模式中潜在的中间状态）, `SaveSettings()` 对应使用 `_settingsCache.Save()`
+- **`LinuxNativeHelper` 常量提取**: 硬编码的 `"libgcc_s.so.1"` 文件名提取为 `LibGccFileName` 常量; 日志消息中对文件名的引用改为插值常量, 保持一致性
+
+### Internal
+
+- **`RespectAffectsGameplay.json`**: 版本号从 `0.2.9` 提升至 `0.3.0`
+- **`eng.json` / `zhs.json`**: 缩进从 4 空格统一为 2 空格, 新增 `_version` 键; 更新详细日志描述文本, 移除 "Debug" 措辞
+- **`workshop/image.png`**: 更新工坊封面图
+- **README**: 更新顶部概述描述为更全面的功能介绍, 重组目录/章节结构（"模式说明" → "设置说明", "Mod 标记验证与 Toast 警告" → "内容 Mod 检测与误标警告"）, 改进表格格式对齐, 补充致谢中技术细节描述
+
+---
+
 ## [0.2.9] - 2026-07-05
 
 ### Note
@@ -514,7 +537,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.9...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.9...v0.3.0
 [0.2.9]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.7

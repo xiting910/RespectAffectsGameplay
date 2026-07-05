@@ -19,7 +19,7 @@ public static class PatchCopyUnmoddedSaveFilesIfNeeded
         // 如果当前不是 gameplay modded 状态, 则直接跳过原始方法, 避免首次存档复制
         if (!RespectAffectsGameplayMod.IsEffectivelyModded(true))
         {
-            ModLog.Info("非 gameplay modded 状态, 跳过首次存档复制");
+            ModLog.Verbose($"拦截 {nameof(ModManager.CopyUnmoddedSaveFilesIfNeeded)} 方法, 因为当前不是 gameplay modded 状态");
             return false;
         }
         return true;

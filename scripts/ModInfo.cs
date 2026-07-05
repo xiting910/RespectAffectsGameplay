@@ -28,14 +28,14 @@ public static class ModInfo
             {
                 try
                 {
-                    if (RitsuModManager.TryGetModInfo("RespectAffectsGameplay", out var info) && info is not null)
+                    if (RitsuModManager.TryGetModInfo(nameof(RespectAffectsGameplay), out var info))
                     {
                         _cached = info;
                     }
                 }
                 catch (Exception ex)
                 {
-                    ModLog.Warn($"无法从 RitsuModManager 获取自身 ModInfo, 使用 fallback: {ex.Message}");
+                    ModLog.Warn($"无法从 {nameof(RitsuModManager)} 获取 {nameof(ModInfo)}: {ex.Message}");
                 }
                 _resolved = true;
             }
