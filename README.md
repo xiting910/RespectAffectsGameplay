@@ -178,7 +178,12 @@ flowchart TD
 > - `PatchCopyUnmoddedSaveFilesIfNeeded` 解决 v0.108.0 首次存档复制的副作用。
 >   游戏在 `Initialize()` 末尾通过 `_settings.ModList.Count == 0` 判定「首次安装 Mod」，
 >   不区分 gameplay 与 非 gameplay，导致纯外观 Mod 也会触发存档迁移。补丁在
->   `IsEffectivelyModded()` 为 false 时直接跳过整个方法，避免在 `modded/` 目录产生永远不被读取的死文件。
+>   `IsEffectivelyModded()` 为 false 时直接跳过整个方法。
+>   但跳过复制后会留下一个缺口：`_settings.ModList` 已被填充，后续即使安装了 gameplay Mod，
+>   游戏也不会再触发复制（`ModList` 已非空）。
+>   为此，`Initialize()` 步骤 7 会在 `IsEffectivelyModded()` 为 true 且
+>   `ModManager.UnmoddedSavesWereCopied` 为 false 时补调用一次 `CopyUnmoddedSaveFilesIfNeeded`，
+>   确保 gameplay Mod 首次出现时存档一定会被迁移。
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 

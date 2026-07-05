@@ -77,6 +77,9 @@ namespace MegaCrit.Sts2.Core.Modding
             return false;
         }
 
+        /// <summary>是否已完成首次存档复制 (桩)</summary>
+        public static bool UnmoddedSavesWereCopied { get; private set; }
+
         /// <summary>首次安装 mod 时复制原版存档到 modded 目录 (桩)</summary>
         public static void CopyUnmoddedSaveFilesIfNeeded() { }
     }

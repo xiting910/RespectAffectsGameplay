@@ -93,6 +93,10 @@ public static class RespectAffectsGameplayMod
         ModLog.Debug("步骤 6: 验证所有 mods 的 affects_gameplay 标记...");
         ModAffectsGameplayValidator.ValidateAll();
 
+        // 7. 检查是否需要补触发存档复制
+        ModLog.Debug("步骤 7: 检查是否需要补触发存档复制...");
+        EnsureSaveFilesCopiedIfNeeded();
+
         // 输出初始化完成日志
         ModLog.Info($"初始化完成 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
     }
@@ -201,6 +205,40 @@ public static class RespectAffectsGameplayMod
         var count = ModManager.Mods.Count(m => m.state is ModLoadState.Loaded or ModLoadState.Failed);
         ModLog.Debug($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, Loaded/Failed: {count}");
         return count > 0;
+    }
+
+    /// <summary>
+    /// 检查是否需要补触发存档复制
+    /// </summary>
+    private static void EnsureSaveFilesCopiedIfNeeded()
+    {
+        try
+        {
+            // 如果当前不是 gameplay modded 状态, 则无需补触发存档复制
+            if (!IsEffectivelyModded())
+            {
+                ModLog.Debug("当前不是 gameplay modded 状态, 无需补触发存档复制");
+                return;
+            }
+
+            // 如果游戏已完成首次存档复制, 则无需补触发存档复制
+            if (ModManager.UnmoddedSavesWereCopied)
+            {
+                ModLog.Debug("游戏已完成首次存档复制, 无需补触发");
+                return;
+            }
+
+            // 如果当前是 gameplay modded 状态, 且游戏尚未完成首次存档复制, 则记录日志并补触发存档复制
+            ModLog.Info("检测到 gameplay mod 但存档尚未迁移, 补触发 CopyUnmoddedSaveFilesIfNeeded");
+            ModManager.CopyUnmoddedSaveFilesIfNeeded();
+
+            // 输出日志: 补触发存档复制完成
+            ModLog.Info("补触发 CopyUnmoddedSaveFilesIfNeeded 完成");
+        }
+        catch (Exception ex)
+        {
+            ModLog.Warn($"补触发存档复制时发生异常 (不影响 mod 核心功能): {ex}");
+        }
     }
 
     /// <summary>

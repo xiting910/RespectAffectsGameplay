@@ -30,6 +30,27 @@
 
 -
 
+## [0.2.7] - 2026-07-05
+
+### Note
+
+- 修复首次存档复制逻辑缺口：当非 gameplay Mod 跳过复制后、后续安装 gameplay Mod 时，补触发存档迁移，避免原版进度"丢失"
+
+### Added
+
+- **`EnsureSaveFilesCopiedIfNeeded`**: `Initialize()` 步骤 7 新增存档复制补触发检查。原版逻辑仅在 `_settings.ModList` 首次非空时触发 `CopyUnmoddedSaveFilesIfNeeded`，但 `PatchCopyUnmoddedSaveFilesIfNeeded` 会在非 gameplay 状态跳过复制，导致 `ModList` 被填充后即使后续安装 gameplay Mod 也不会再触发复制。本方法在 `IsEffectivelyModded()` 为 true 且 `ModManager.UnmoddedSavesWereCopied` 为 false 时补调用 `CopyUnmoddedSaveFilesIfNeeded`，确保 gameplay Mod 首次出现时存档一定会被迁移
+
+### Changed
+
+- **Manifest 描述更新**: `RespectAffectsGameplay.json` 中 `description` 移除"阻止原版联机"措辞（已在 v0.108.0 官方修复），聚焦存档路径保护
+
+### Internal
+
+- **`stubs/sts2/Stubs.cs`**: `ModManager` 新增 `UnmoddedSavesWereCopied` 属性桩
+- **README**: 设计决策补充 `PatchCopyUnmoddedSaveFilesIfNeeded` 与 `EnsureSaveFilesCopiedIfNeeded` 的协同说明
+
+---
+
 ## [0.2.6] - 2026-07-03
 
 ### Note
@@ -435,7 +456,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.7
 [0.2.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.6
 [0.2.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.5
 [0.2.4]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.4
