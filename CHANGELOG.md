@@ -28,6 +28,10 @@
 
 ## [Unreleased]
 
+---
+
+## [0.2.8] - 2026-07-05
+
 ### Note
 
 - 重构内容 Mod 检测系统：存档路径隔离改为基于程序集扫描（仅检测到 AbstractModel 子类的内容 Mod 才触发），非存档功能继续基于 affects_gameplay 标记 + 内容检测，实现存档/非存档双重判定标准
@@ -58,6 +62,8 @@
 - **`stubs/sts2/Stubs.cs`**: 移除不再使用的 `ModManager._mods` 私有字段桩和 `UserDataPathProvider.IsRunningModded` 属性桩；移除未使用的 `IDE0052` pragma
 - **`stubs/0Harmony/Stubs.cs`**: 移除不再使用的 `Harmony.PatchAll(Type)` 重载桩方法
 - **README**: 更新项目结构（新增/移除文件）、补丁表格（5→3 补丁）、设计决策（双重判定标准说明）、工作原理流程图、Mod 标记验证章节（`ModAffectsGameplayValidator` → `ContentModDetector`）、模式说明表格
+- **`RespectAffectsGameplay.json`**: 版本号从 `0.2.7` 提升至 `0.2.8`
+- **`workshop/image.png`**: 更新工坊封面图
 
 ## [0.2.7] - 2026-07-05
 
@@ -485,7 +491,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.8...HEAD
+[0.2.8]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.7
 [0.2.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.6
 [0.2.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.5
