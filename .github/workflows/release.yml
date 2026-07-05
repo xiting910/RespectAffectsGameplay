@@ -55,10 +55,10 @@ jobs:
       - name: Update version in mod JSON
         run: |
           jq --arg v "${{ steps.version.outputs.version }}" '.version = $v' \
-          Scripts/${{ env.MOD_ID }}.json > Scripts/${{ env.MOD_ID }}.json.tmp
-          mv Scripts/${{ env.MOD_ID }}.json.tmp Scripts/${{ env.MOD_ID }}.json
+          scripts/${{ env.MOD_ID }}.json > scripts/${{ env.MOD_ID }}.json.tmp
+          mv scripts/${{ env.MOD_ID }}.json.tmp scripts/${{ env.MOD_ID }}.json
           echo "✅ JSON updated:"
-          cat Scripts/${{ env.MOD_ID }}.json
+          cat scripts/${{ env.MOD_ID }}.json
 
       - name: Restore & Build
         run: |

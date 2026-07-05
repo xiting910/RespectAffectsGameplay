@@ -82,7 +82,7 @@ RespectAffectsGameplay/
 │   └── 0Harmony/
 │       ├── 0Harmony.csproj               # 模拟 HarmonyLib 程序集
 │       └── Stubs.cs                      # 桩类型: Harmony, HarmonyPatch 等
-├── Scripts/
+├── scripts/
 │   ├── RespectAffectsGameplay.csproj     # 主项目文件 (.NET 9.0)
 │   ├── RespectAffectsGameplay.json       # Mod 元数据清单
 │   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化 / 补丁 / IsEffectivelyModded(isForSaveDir)
@@ -267,7 +267,7 @@ flowchart TD
    git clone https://github.com/xiting910/RespectAffectsGameplay.git
    ```
 
-2. 在 `Scripts/` 目录下创建 `Directory.Build.props`（**本地开发必需**，CI 不需要）：
+2. 在 `scripts/` 目录下创建 `Directory.Build.props`（**本地开发必需**，CI 不需要）：
    ```xml
    <Project>
      <PropertyGroup>
@@ -301,7 +301,7 @@ flowchart TD
 
 ## 本地化
 
-本 Mod 的界面文本通过 [STS2-RitsuLib](https://github.com/BAKAOLC/STS2-RitsuLib) 的 I18N 框架实现多语言支持。翻译文件以 JSON 格式存放于 `Scripts/localization/` 目录，作为嵌入资源（`EmbeddedResource`）编译到程序集中。
+本 Mod 的界面文本通过 [STS2-RitsuLib](https://github.com/BAKAOLC/STS2-RitsuLib) 的 I18N 框架实现多语言支持。翻译文件以 JSON 格式存放于 `scripts/localization/` 目录，作为嵌入资源（`EmbeddedResource`）编译到程序集中。
 
 ### 翻译文件格式
 
@@ -320,7 +320,7 @@ flowchart TD
 
 **方式一：从源码构建（开发者推荐）**
 
-1. 在 `Scripts/localization/` 下创建新的 JSON 文件，命名为 `{语言代码}.json`（例如 `jpn.json`、`kor.json`）
+1. 在 `scripts/localization/` 下创建新的 JSON 文件，命名为 `{语言代码}.json`（例如 `jpn.json`、`kor.json`）
    > 语言代码参考 STS2 规范：`eng`（英语）、`zhs`（简体中文）、`zht`（繁体中文）、`jpn`（日语）、`kor`（韩语）等
 2. 复制 `eng.json` 的全部键，将值翻译为目标语言
 3. 构建项目，新文件会被 `.csproj` 的通配符 `<EmbeddedResource Include="localization\*.*" />` 自动收录为嵌入资源
