@@ -60,7 +60,7 @@ public static class RespectAffectsGameplayMod
 
 
         // 3. 注册并应用 Harmony 补丁 (RitsuLib 已处理 Linux 原生库预加载)
-        ModLog.Verbose("步骤 3: 注册并应用 Harmony 补丁...");
+        ModLog.Verbose("步骤 3: 注册并应用补丁...");
 
         // 创建补丁器
         var patcher = RitsuLibFramework.CreatePatcher(ModInfo.Id, ModInfo.Version);

@@ -26,6 +26,10 @@
 
 ## [Unreleased]
 
+---
+
+## [0.3.1] - 2026-07-06
+
 ### Note
 
 - 补丁架构迁移至 RitsuLib ModPatcher + IPatchMethod 体系，手动 Harmony 管理改为框架统一注册与诊断
@@ -40,7 +44,10 @@
 ### Internal
 
 - **创意工坊标题**: 添加中文翻译 `智能识别并尊重不影响游戏的模组`（`Respect Affects Gameplay / 智能识别并尊重不影响游戏的模组`）
-- **README**: 更新项目结构（+GameplayStateHelper, -LinuxNativeHelper），重写 Harmony 补丁章节为 ModPatcher + IPatchMethod 描述，更新设计决策说明（条件注册、Critical/Optional、Linux 预加载）
+- **release.yml**: Steam changenote 移除了不存在实际限制的 200 字符截断，改为提取 Note 分类的全部内容拼接为单行纯文本
+- **README**: 更新项目结构（+GameplayStateHelper, -LinuxNativeHelper），重写 Harmony 补丁章节为 ModPatcher + IPatchMethod 描述，更新设计决策说明（条件注册、Critical/Optional、Linux 预加载），项目结构树 # 注解全部对齐
+- **`RespectAffectsGameplay.json`**: 版本号从 `0.3.0` 提升至 `0.3.1`
+- **`RespectAffectsGameplayMod.cs`**: 初始化步骤 3 日志文本移除 "Harmony" 措辞（补丁现由 RitsuLib 管理）
 
 ---
 
@@ -551,7 +558,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.9...v0.3.0
 [0.2.9]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...v0.2.8
