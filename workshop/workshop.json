@@ -1,5 +1,5 @@
 ﻿{
-  "title": "Respect Affects Gameplay",
+  "title": "Respect Affects Gameplay / 智能识别并尊重不影响游戏的模组",
   "description": "GitHub: https://github.com/xiting910/RespectAffectsGameplay \n\nStops STS2 from blindly marking the game as modded just because any mod is loaded. Instead of treating all mods equally, it intelligently evaluates each one:\n\n- Assembly-level content detection: scans mod DLLs for cards, relics, heroes, powers, and other persistent game content (AbstractModel subclasses)\n- Save file isolation: only separates save directories when actual content mods are present — code-only and UI mods no longer force your saves into the modded/ folder\n- Modded state control: respects each mod's affects_gameplay flag for overall game behavior (UI labels, Sentry, telemetry, debug features)\n- Mislabeled mod warnings: detects mods that claim to be non-gameplay but actually contain game content, and shows a Toast alert at the main menu\n- Smart save migration: only copies vanilla saves to the modded directory when content mods first appear, not for pure utility mods\n\n阻止 STS2 盲目地将所有已加载 Mod 都视为影响游戏性。自动扫描 Mod 程序集检测哪些 Mod 真正添加了游戏内容（卡片、遗物、角色、能力等），并据此做出智能判定。尊重每个 Mod 的 affects_gameplay 标记控制整体 modded 状态，仅在检测到内容 Mod 时才隔离存档路径，同时检测并警告标记不准确的 Mod。纯工具/界面类 Mod 不再触发不必要的 modded 行为。",
   "visibility": "public",
   "tags": ["Utility"],

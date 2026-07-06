@@ -6,16 +6,14 @@
   本文件被 release.yml 两次读取：
 
   1. GitHub Release 正文 — 提取整个 ## [版本] 区块全部内容
-  2. Steam 工坊 changenote — 只取第一个非 ### 分类标题的列表项（最多 200 字符）
+  2. Steam 工坊 changenote — 提取 Note 分类的全部内容 (无字符数限制), 拼接为单行纯文本
 
     ✅ 正确做法：
-       - 把面向玩家的一句话摘要放在第一个 ### 分类的第一行
+       - 面向玩家的摘要放在 Note 分类中, 可包含多条列表项
        - 内部/CI/文档变更放在后面的 ### Internal 等分类
-       - 第一个分类名建议用 ### Note 作为标题，便于区分 changenote 与其他分类
 
     ❌ 避免：
-       - 把内部细节（构建/CI/格式化）放在第一个分类的第一行
-       - changenote 超过 200 字符会触发 release.yml 的截断
+       - 把内部细节 (构建/CI/格式化) 放在 Note 分类中
        - Note 部分不要使用反引号 `, 会导致 changenote 解析异常
 -->
 
@@ -27,6 +25,22 @@
 ---
 
 ## [Unreleased]
+
+### Note
+
+- 补丁架构迁移至 RitsuLib ModPatcher + IPatchMethod 体系，手动 Harmony 管理改为框架统一注册与诊断
+
+### Changed
+
+- **补丁架构重构: ModPatcher + IPatchMethod**: 三个补丁类 (`PatchGetAccountDir`, `PatchCopyUnmoddedSaveFilesIfNeeded`, `PatchModManagerIsRunningModded`) 实现 `IPatchMethod` 接口——通过 `GetTargets()` 声明补丁目标，替代旧的 `[HarmonyPatch]` 和 `[HarmonyPrefix]` 属性。入口改用 `RitsuLibFramework.CreatePatcher()` + `patcher.RegisterPatch<T>()` 显式注册补丁，替代 `new Harmony(…).PatchAll(assembly)` 全程序集扫描。`PatchModManagerIsRunningModded` 的条件启用从"先应用再 Unpatch"改为注册前根据设置判断是否注册，消除补丁短暂存在的时间窗口。新增 Critical/Optional 区分——`PatchGetAccountDir` 标记为 Critical（核心功能，失败回滚所有补丁），其余两个为 Optional（失败不影响模组加载）
+- **核心逻辑独立: `GameplayStateHelper`**: `IsEffectivelyModded` 及其缓存字段、`EvaluateAutoMode()`、`EvaluateDefaultMode()` 从 `RespectAffectsGameplayMod` 入口类提取到独立的 `GameplayStateHelper` 静态类。入口类职责收缩为初始化流程（设置 → 补丁 → 事件订阅）和设置页面注册
+- **删除 `LinuxNativeHelper`**: 其功能（Linux 平台 Harmony 兼容所需的 libgcc_s 预加载）已由 RitsuLib 框架在初始化时通过 `LinuxHarmonyNativePreloader` 自动处理，且覆盖更多库（libgcc_s + libunwind）
+- **补丁类优化**: 三个补丁类标记为 `sealed`，`IPatchMethod` 接口成员添加 `<inheritdoc/>` 文档注释
+
+### Internal
+
+- **创意工坊标题**: 添加中文翻译 `智能识别并尊重不影响游戏的模组`（`Respect Affects Gameplay / 智能识别并尊重不影响游戏的模组`）
+- **README**: 更新项目结构（+GameplayStateHelper, -LinuxNativeHelper），重写 Harmony 补丁章节为 ModPatcher + IPatchMethod 描述，更新设计决策说明（条件注册、Critical/Optional、Linux 预加载）
 
 ---
 

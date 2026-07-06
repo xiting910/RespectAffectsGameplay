@@ -63,56 +63,56 @@
 ```
 RespectAffectsGameplay/
 ├── .github/
-│   ├── workflows/                        # GitHub Actions 工作流
-│   │   ├── ci.yml                        #   → push/PR 自动编译验证
-│   │   ├── release.yml                   #   → 推送 v* 标签自动构建、发布 Release + Steam 创意工坊
-│   │   ├── codeql-analysis.yml           #   → CodeQL 代码安全分析（C#）
-│   │   ├── dependency-submission.yml     #   → 提交依赖快照供 Dependency Review 使用
-│   │   ├── dependency-review.yml         #   → PR 中依赖变更时扫描已知漏洞
-│   │   └── dependabot-auto-merge.yml     #   → Dependabot PR CI 通过后自动审批并 squash 合并
-│   ├── ISSUE_TEMPLATE/                   # Issue 模板
-│   │   ├── config.yml                    #   → 模板配置（启用空白 Issue、联系链接）
-│   │   ├── bug_report.md                 #   → Bug 报告模板
-│   │   └── feature_request.md            #   → 功能建议模板
-│   ├── PULL_REQUEST_TEMPLATE.md          # PR 模板
-│   └── dependabot.yml                    # Dependabot 自动依赖更新配置（NuGet + GitHub Actions）
-├── stubs/                                # 桩项目（仅 CI 使用，本地开发不需要）
+│   ├── workflows/                                         # GitHub Actions 工作流
+│   │   ├── ci.yml                                         #   → push/PR 自动编译验证
+│   │   ├── release.yml                                    #   → 推送 v* 标签自动构建、发布 Release + Steam 创意工坊
+│   │   ├── codeql-analysis.yml                            #   → CodeQL 代码安全分析（C#）
+│   │   ├── dependency-submission.yml                      #   → 提交依赖快照供 Dependency Review 使用
+│   │   ├── dependency-review.yml                          #   → PR 中依赖变更时扫描已知漏洞
+│   │   └── dependabot-auto-merge.yml                      #   → Dependabot PR CI 通过后自动审批并 squash 合并
+│   ├── ISSUE_TEMPLATE/                                    # Issue 模板
+│   │   ├── config.yml                                     #   → 模板配置（启用空白 Issue、联系链接）
+│   │   ├── bug_report.md                                  #   → Bug 报告模板
+│   │   └── feature_request.md                             #   → 功能建议模板
+│   ├── PULL_REQUEST_TEMPLATE.md                           # PR 模板
+│   └── dependabot.yml                                     # Dependabot 自动依赖更新配置（NuGet + GitHub Actions）
+├── stubs/                                                 # 桩项目（仅 CI 使用，本地开发不需要）
 │   ├── sts2/
-│   │   ├── sts2.csproj                   # 模拟 STS2 游戏程序集
-│   │   └── Stubs.cs                      # 桩类型: ModManager, UserDataPathProvider 等
+│   │   ├── sts2.csproj                                    # 模拟 STS2 游戏程序集
+│   │   └── Stubs.cs                                       # 桩类型: ModManager, UserDataPathProvider 等
 │   └── 0Harmony/
-│       ├── 0Harmony.csproj               # 模拟 HarmonyLib 程序集
-│       └── Stubs.cs                      # 桩类型: Harmony, HarmonyPatch 等
+│       ├── 0Harmony.csproj                                # 模拟 HarmonyLib 程序集
+│       └── Stubs.cs                                       # 桩类型: Harmony, HarmonyPatch 等
 ├── scripts/
-│   ├── RespectAffectsGameplay.csproj     # 主项目文件 (.NET 9.0)
-│   ├── RespectAffectsGameplay.json       # Mod 元数据清单
-│   ├── RespectAffectsGameplayMod.cs      # Mod 入口: 初始化 / 补丁 / IsEffectivelyModded(isForSaveDir)
-│   ├── ModdedMode.cs                     # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
-│   ├── ModInfo.cs                        # Mod 元数据信息 (ID / 名称 / 版本 / 作者 / HarmonyId)
-│   ├── ModLoc.cs                         # 本地化系统 (基于 RitsuLib I18N 框架，翻译文件作为嵌入资源分发)
-│   ├── ModLog.cs                         # 统一日志系统 (自动前缀 + 详细日志开关)
-│   ├── ModSettingsData.cs                # 持久化设置数据模型
-│   ├── ModSettingsHelper.cs              # 设置初始化 / 持久化 / 重置为默认值
-│   ├── LinuxNativeHelper.cs              # Linux libgcc_s 原生库加载辅助
-│   ├── ContentModDetector.cs             # 内容 Mod 检测: 程序集扫描 + Toast 警告
-│   ├── ModExtensions.cs                  # Mod 扩展方法: IsLoaded() / GetId() / ContainsAbstractModel()
-│   ├── PatchGetAccountDir.cs             # 拦截存档路径决策方法 GetAccountDir
-│   ├── PatchCopyUnmoddedSaveFilesIfNeeded.cs # 仅 gameplay modded 时才复制存档
-│   ├── PatchModManagerIsRunningModded.cs # 可选拦截 ModManager.IsRunningModded()
-│   ├── localization/                     # 本地化语言文件
-│   │   ├── eng.json                      #   英语
-│   │   └── zhs.json                      #   简体中文
-│   └── Directory.Build.props             # 开发环境路径配置 (gitignore, CI 不需要)
-├── workshop/                             # Steam 创意工坊上传工作区
-│   ├── workshop.json                     #   工坊元数据（标题、描述、可见性、标签）
-│   ├── mod_id.txt                        #   工坊物品 ID
-│   └── image.png                         #   工坊封面图
-├── RespectAffectsGameplay.slnx           # 解决方案文件
-├── .editorconfig                         # 代码风格配置
-├── .gitignore                            # Git 忽略规则
-├── LICENSE                               # MIT 许可证
-├── CHANGELOG.md                          # 变更日志
-└── README.md                             # 本文档
+│   ├── RespectAffectsGameplay.csproj                      # 主项目文件 (.NET 9.0)
+│   ├── RespectAffectsGameplay.json                        # Mod 元数据清单
+│   ├── RespectAffectsGameplayMod.cs                       # Mod 入口: 初始化 / 设置页面 / 补触发存档复制
+│   ├── GameplayStateHelper.cs                             # 核心判定: IsEffectivelyModded + 缓存 + mode 评估
+│   ├── ModdedMode.cs                                      # Modded 模式枚举 (Auto / AlwaysVanilla / Default)
+│   ├── ModInfo.cs                                         # Mod 元数据信息 (ID / 名称 / 版本 / 作者 / HarmonyId)
+│   ├── ModLoc.cs                                          # 本地化系统 (基于 RitsuLib I18N 框架，翻译文件作为嵌入资源分发)
+│   ├── ModLog.cs                                          # 统一日志系统 (自动前缀 + 详细日志开关)
+│   ├── ModSettingsData.cs                                 # 持久化设置数据模型
+│   ├── ModSettingsHelper.cs                               # 设置初始化 / 持久化 / 重置为默认值
+│   ├── ContentModDetector.cs                              # 内容 Mod 检测: 程序集扫描 + Toast 警告
+│   ├── ModExtensions.cs                                   # Mod 扩展方法: IsLoaded() / GetId() / ContainsAbstractModel()
+│   ├── PatchGetAccountDir.cs                              # 补丁: 存档路径决策 (Critical, IPatchMethod)
+│   ├── PatchCopyUnmoddedSaveFilesIfNeeded.cs              # 补丁: 存档复制拦截 (Optional, IPatchMethod)
+│   ├── PatchModManagerIsRunningModded.cs                  # 补丁: IsRunningModded 拦截 (Optional, IPatchMethod)
+│   ├── localization/                                      # 本地化语言文件
+│   │   ├── eng.json                                       #   英语
+│   │   └── zhs.json                                       #   简体中文
+│   └── Directory.Build.props                              # 开发环境路径配置 (gitignore, CI 不需要)
+├── workshop/                                              # Steam 创意工坊上传工作区
+│   ├── workshop.json                                      #   工坊元数据（标题、描述、可见性、标签）
+│   ├── mod_id.txt                                         #   工坊物品 ID
+│   └── image.png                                          #   工坊封面图
+├── RespectAffectsGameplay.slnx                            # 解决方案文件
+├── .editorconfig                                          # 代码风格配置
+├── .gitignore                                             # Git 忽略规则
+├── LICENSE                                                # MIT 许可证
+├── CHANGELOG.md                                           # 变更日志
+└── README.md                                              # 本文档
 ```
 
 ---
@@ -168,20 +168,24 @@ flowchart TD
 
 ### Harmony 补丁
 
-本 Mod 使用 3 个 Harmony 补丁，其中 2 个始终启用，1 个由用户可选开关控制：
+本 Mod 使用 RitsuLib 框架的 `ModPatcher` + `IPatchMethod` 体系管理 Harmony 补丁，替代手动管理 `Harmony` 实例和基于 `[HarmonyPatch]` 属性的程序集扫描。三个补丁类各自实现 `IPatchMethod` 接口声明目标信息，由 `ModPatcher` 统一注册、应用和诊断。
 
-| 补丁                                 | 目标方法                                   | 默认   | 作用                                                                                                 |
-| ------------------------------------ | ------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------- |
-| `PatchGetAccountDir`                 | `UserDataPathProvider.GetAccountDir`       | ✅ 始终 | `forceModState` 为 null 时根据 `IsEffectivelyModded(true)` 返回 `"modded"` 或 `""`，否则透传原始逻辑 |
-| `PatchCopyUnmoddedSaveFilesIfNeeded` | `ModManager.CopyUnmoddedSaveFilesIfNeeded` | ✅ 始终 | 仅 gameplay modded 状态才执行首次存档复制，避免纯外观 Mod 产生无用存档副本                           |
-| `PatchModManagerIsRunningModded`     | `ModManager.IsRunningModded`               | ⚙ 可选 | 开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                                   |
+| 补丁                                 | 目标方法                                   | 重要性   | 作用                                                                                                 |
+| ------------------------------------ | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
+| `PatchGetAccountDir`                 | `UserDataPathProvider.GetAccountDir`       | Critical | `forceModState` 为 null 时根据 `IsEffectivelyModded(true)` 返回 `"modded"` 或 `""`，否则透传原始逻辑 |
+| `PatchCopyUnmoddedSaveFilesIfNeeded` | `ModManager.CopyUnmoddedSaveFilesIfNeeded` | Optional | 仅 gameplay modded 状态才执行首次存档复制，避免纯外观 Mod 产生无用存档副本                           |
+| `PatchModManagerIsRunningModded`     | `ModManager.IsRunningModded`               | Optional | 用户可选的补丁，开启后连 UI、Sentry、联机列表也受 Modded Mode 控制                                   |
 
 > **设计决策**:
-> - v0.108.0 重构了路径系统：`GetAccountDir(bool? forceModState)` 成为所有路径构造的唯一决策点，
->   因此移除了旧版中拦截 `IsRunningModded` getter/setter 的两个补丁（已不再需要）。
->   `forceModState` 非 null 时表示调用者显式指定了路径类型（如 `CopyUnmoddedSaveFilesIfNeeded` 的存档迁移），
->   补丁尊重这一意图、直接透传；仅当 `forceModState` 为 null 时接管决策。
-> - `IsEffectivelyModded(bool isForSaveDir)` 采用双重判定标准：
+> - **ModPatcher + IPatchMethod 体系**: 使用 `RitsuLibFramework.CreatePatcher()` 创建补丁器，
+>   通过 `patcher.RegisterPatch<T>()` 显式注册（T 实现 `IPatchMethod`），再调用 `patcher.PatchAll()` 统一应用。
+>   相比旧的 `new Harmony(…).PatchAll(assembly)` 全程序集扫描，显式注册避免了 `[HarmonyPatch]` 属性引用
+>   无法加载类型时的崩溃风险，并提供 Critical/Optional 区分——Critical 补丁失败时自动回滚所有补丁。
+> - **条件注册替代先应用再撤销**: `PatchModManagerIsRunningModded` 不再通过 `PatchAll` 后 `Unpatch` 实现可选，
+>   而是在 `PatchAll()` 之前根据用户设置决定是否注册，消除补丁短暂存在的时间窗口。
+> - **Linux 原生库预加载**: 删除自定义 `LinuxNativeHelper.cs`，RitsuLib 在框架初始化时已通过
+>   `LinuxHarmonyNativePreloader` 自动处理（支持 `libgcc_s.so.1` + `libunwind.so.8/so`）。
+> - **`IsEffectivelyModded(bool isForSaveDir)`** 采用双重判定标准：
 >   - **存档路径** (`isForSaveDir: true`)：基于 `ContentModDetector` 程序集扫描结果，
 >     仅当存在包含 `AbstractModel` 子类的内容 Mod 时视为 modded。
 >   - **非存档功能** (`isForSaveDir: false`)：基于 `affects_gameplay` 标记 + 内容 Mod 检测结果，
@@ -192,7 +196,7 @@ flowchart TD
 >   `IsEffectivelyModded(true)` 为 false 时直接跳过整个方法。
 >   但跳过复制后会留下一个缺口：`_settings.ModList` 已被填充，后续即使安装了 gameplay Mod，
 >   游戏也不会再触发复制（`ModList` 已非空）。
->   为此，`Initialize()` 步骤 6 通过订阅 `MainMenuReadyEvent`，在主菜单就绪后检查
+>   为此，`Initialize()` 步骤 4 通过订阅 `MainMenuReadyEvent`，在主菜单就绪后检查
 >   `IsEffectivelyModded(true)` 为 true 且 `ModManager.UnmoddedSavesWereCopied` 为 false 时
 >   补调用一次 `CopyUnmoddedSaveFilesIfNeeded`，确保 gameplay Mod 首次出现时存档一定会被迁移。
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、

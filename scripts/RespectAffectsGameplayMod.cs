@@ -1,6 +1,6 @@
-using HarmonyLib;
 using MegaCrit.Sts2.Core.Modding;
 using STS2RitsuLib;
+using STS2RitsuLib.Patching.Core;
 using STS2RitsuLib.Settings;
 
 namespace RespectAffectsGameplay;
@@ -37,201 +37,71 @@ public static class RespectAffectsGameplayMod
     private const string ButtonResetDefaults = "resetDefaults";
 
     /// <summary>
-    /// 缓存 <see cref="IsEffectivelyModded"/> 的结果
-    /// </summary>
-    private static bool? _cachedIsEffectivelyModded;
-
-    /// <summary>
-    /// 缓存 <see cref="IsEffectivelyModdedForSaveDir"/> 的结果
-    /// </summary>
-    private static bool? _cachedIsEffectivelyModdedForSaveDir;
-
-    /// <summary>
     /// mod 初始化入口: 依次注册持久化设置、注册游戏内设置页面、应用 Harmony 补丁
     /// </summary>
     public static void Initialize()
     {
         // 0. 初始化本地化
         ModLoc.Initialize();
-        ModLog.Info($"开始初始化 (ID: {ModInfo.Id}, Version: {ModInfo.Version})");
+        ModLog.Info($"开始初始化 ({nameof(ModInfo.Id)}: {ModInfo.Id}, {nameof(ModInfo.Version)}: {ModInfo.Version})");
+
 
         // 1. 加载设置
         ModLog.Verbose("步骤 1: 加载设置...");
+
+        // 获取设置
         var settings = ModSettingsHelper.GetSettings();
-        ModLog.Info($"设置已加载 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
+        ModLog.Info($"设置已加载 ({nameof(settings.Mode)}={settings.Mode}, {nameof(settings.PatchModManagerIsRunningModded)}={settings.PatchModManagerIsRunningModded}, {nameof(settings.VerboseLogging)}={settings.VerboseLogging})");
+
 
         // 2. 注册游戏内设置页面
         ModLog.Verbose("步骤 2: 注册游戏内设置页面...");
         RegisterSettingsPage();
 
-        // 3. 在 Linux 上确保 libgcc_s 已全局加载
-        ModLog.Verbose("步骤 3: 检查 Linux 原生库...");
-        LinuxNativeHelper.EnsureLibGccLoaded();
 
-        // 4. 应用 Harmony 补丁
-        ModLog.Verbose("步骤 4: 应用 Harmony 补丁...");
-        var harmony = new Harmony(ModInfo.HarmonyId);
-        harmony.PatchAll(typeof(RespectAffectsGameplayMod).Assembly);
-        var patchedMethods = harmony.GetPatchedMethods();
-        ModLog.Info($"Harmony 补丁已应用, 本 mod 共 {patchedMethods.Count()} 个补丁方法:" +
-            string.Concat(patchedMethods.Select(m => $"\n  - {m.DeclaringType?.FullName}.{m.Name}")));
+        // 3. 注册并应用 Harmony 补丁 (RitsuLib 已处理 Linux 原生库预加载)
+        ModLog.Verbose("步骤 3: 注册并应用 Harmony 补丁...");
 
-        // 5. 条件补丁: 根据用户设置决定是否启用 PatchModManagerIsRunningModded
-        if (!settings.PatchModManagerIsRunningModded)
+        // 创建补丁器
+        var patcher = RitsuLibFramework.CreatePatcher(ModInfo.Id, ModInfo.Version);
+
+        // 注册补丁
+        patcher.RegisterPatch<PatchGetAccountDir>();
+        patcher.RegisterPatch<PatchCopyUnmoddedSaveFilesIfNeeded>();
+
+        // 根据设置决定是否注册 PatchModManagerIsRunningModded 补丁
+        if (settings.PatchModManagerIsRunningModded)
         {
-            ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已禁用");
-            harmony.Unpatch(typeof(ModManager).GetMethod(nameof(ModManager.IsRunningModded)),
-                typeof(PatchModManagerIsRunningModded).GetMethod(nameof(PatchModManagerIsRunningModded.Prefix)));
+            patcher.RegisterPatch<PatchModManagerIsRunningModded>();
+            ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已启用, 将拦截所有 {nameof(ModManager.IsRunningModded)} 调用");
         }
         else
         {
-            ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已启用, 将拦截所有 {nameof(ModManager.IsRunningModded)} 调用");
+            ModLog.Info($"{nameof(PatchModManagerIsRunningModded)} 已禁用");
         }
 
-        // 6. 订阅主菜单就绪事件, 补触发存档复制检查
-        ModLog.Verbose("步骤 6: 订阅主菜单就绪事件补触发存档复制检查...");
+        // 应用补丁并输出日志
+        if (patcher.PatchAll())
+        {
+            ModLog.Info("所有 Harmony 补丁已成功应用");
+        }
+        else
+        {
+            ModLog.Warn("部分 Harmony 补丁应用失败, 请检查日志以获取详细信息");
+        }
+
+
+        // 4. 订阅主菜单就绪事件, 补触发存档复制检查
+        ModLog.Verbose("步骤 4: 订阅主菜单就绪事件补触发存档复制检查...");
         _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>((evt, sub) =>
         {
             sub.Dispose();
             EnsureSaveFilesCopiedIfNeeded();
         });
 
+
         // 输出初始化完成日志
-        ModLog.Info($"初始化完成 (Mode={settings.Mode}, PatchModManager={settings.PatchModManagerIsRunningModded})");
-    }
-
-    /// <summary>
-    /// 判断当前是否应视为 "modded" 状态
-    /// </summary>
-    /// <param name="isForSaveDir">是否为用于存档目录判断</param>
-    /// <returns><see langword="true"/> 表示应视为 modded 状态;
-    /// <see langword="false"/> 表示应视为 vanilla 状态</returns>
-    /// <exception cref="InvalidOperationException">当 ModdedMode 设置为未知值时抛出</exception>
-    internal static bool IsEffectivelyModded(bool isForSaveDir)
-    {
-        // 如果是用于存档目录判断, 且缓存值存在, 则直接返回缓存值
-        if (isForSaveDir && _cachedIsEffectivelyModdedForSaveDir.HasValue)
-        {
-            return _cachedIsEffectivelyModdedForSaveDir.Value;
-        }
-
-        // 如果不是用于存档目录判断, 且缓存值存在, 则直接返回缓存值
-        if (!isForSaveDir && _cachedIsEffectivelyModded.HasValue)
-        {
-            return _cachedIsEffectivelyModded.Value;
-        }
-
-        try
-        {
-            // 获取当前 mod 设置
-            var settings = ModSettingsHelper.GetSettings();
-
-            // 根据设置的 ModdedMode 决定是否应视为 modded 状态
-            var result = settings.Mode switch
-            {
-                ModdedMode.Auto => isForSaveDir ? ContentModDetector.HasContentModsLoaded() : EvaluateAutoMode(),
-                ModdedMode.AlwaysVanilla => false,
-                ModdedMode.Default => EvaluateDefaultMode(),
-                _ => throw new InvalidOperationException($"Unknown ModdedMode value: {settings.Mode}"),
-            };
-
-            // 缓存结果
-            if (isForSaveDir)
-            {
-                _cachedIsEffectivelyModdedForSaveDir = result;
-            }
-            else
-            {
-                _cachedIsEffectivelyModded = result;
-            }
-
-            // 输出日志并返回结果
-            ModLog.Verbose($"{nameof(IsEffectivelyModded)}({nameof(isForSaveDir)}={isForSaveDir}) => {result} ({nameof(settings.Mode)}={settings.Mode})");
-            return result;
-        }
-        catch (Exception ex)
-        {
-            // 如果发生异常, 则视为 modded 状态, 缓存结果并输出警告日志
-            if (isForSaveDir)
-            {
-                _cachedIsEffectivelyModdedForSaveDir = true;
-            }
-            else
-            {
-                _cachedIsEffectivelyModded = true;
-            }
-            ModLog.Warn($"判断 IsEffectivelyModded 时发生异常, 将视为 modded 状态: {ex}");
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// Auto 模式: 遍历所有已加载 mod, 检测是否有 gameplay mod
-    /// </summary>
-    /// <returns><see langword="true"/> 表示检测到 gameplay mod; <see langword="false"/> 表示未检测到 gameplay mod</returns>
-    private static bool EvaluateAutoMode()
-    {
-        // 获取所有已加载的 mod (Loaded 或 Failed)
-        var loadedMods = ModManager.Mods.Where(m => m.IsLoaded()).ToList();
-
-        // 如果没有已加载的 Mod, 则视为 vanilla
-        if (loadedMods.Count == 0)
-        {
-            ModLog.Verbose("Auto 模式: 没有已加载的 Mod, 视为 vanilla");
-            return false;
-        }
-
-        // 筛选出所有已加载且有 manifest 的 Mod
-        var modsWithManifest = loadedMods.Where(m => m.manifest is not null).ToList();
-
-        // 如果没有已加载的 Mod 有 manifest, 则视为 vanilla
-        if (modsWithManifest.Count == 0)
-        {
-            ModLog.Verbose("Auto 模式: 没有已加载的 Mod 有 manifest, 视为 vanilla");
-            return false;
-        }
-
-        // 将所有已加载且有 manifest 的 Mod 分为 gameplay mod 和 non-gameplay mod
-        List<Mod> gameplayMods = [], nonGameplayMods = [];
-
-        // 遍历所有已加载且有 manifest 的 Mod 进行分类
-        foreach (var mod in modsWithManifest)
-        {
-            // 获取 Mod 的 manifest
-            var manifest = mod.manifest!;
-
-            // 如果 affects_gameplay 标记为 true, 或者是 ContentModDetector 检测到的内容 mod, 则视为 gameplay mod
-            if (manifest.affectsGameplay || ContentModDetector.IsContentMod(mod.GetId()))
-            {
-                gameplayMods.Add(mod);
-            }
-            else
-            {
-                nonGameplayMods.Add(mod);
-            }
-        }
-
-        // 输出日志: Auto 模式下的检测结果
-        ModLog.Verbose($"Auto 模式: 共检测 {ModManager.Mods.Count} 个 mod, 已加载 {loadedMods.Count} 个 (gameplay: {gameplayMods.Count}, 非 gameplay: {nonGameplayMods.Count})");
-
-        // 是否应该被视为 modded 模式
-        var isModded = gameplayMods.Count > 0;
-        if (isModded)
-        {
-            ModLog.Info($"检测到 gameplay mod: [{string.Join(", ", gameplayMods.Select(m => m.GetId()))}]");
-        }
-        return isModded;
-    }
-
-    /// <summary>
-    /// Default 模式: 使用游戏原版逻辑
-    /// </summary>
-    /// <returns><see langword="true"/> 表示游戏原版逻辑认为 modded; <see langword="false"/> 表示游戏原版逻辑认为 vanilla</returns>
-    private static bool EvaluateDefaultMode()
-    {
-        var count = ModManager.Mods.Count(m => m.IsLoaded());
-        ModLog.Verbose($"Default 模式: ModManager.Mods 共 {ModManager.Mods.Count} 个, Loaded/Failed: {count}");
-        return count > 0;
+        ModLog.Info($"初始化完成");
     }
 
     /// <summary>
@@ -242,7 +112,7 @@ public static class RespectAffectsGameplayMod
         try
         {
             // 如果按照当前设置判断, 不是 gameplay modded 状态, 则无需补触发存档复制
-            if (!IsEffectivelyModded(true))
+            if (!GameplayStateHelper.IsEffectivelyModded(true))
             {
                 ModLog.Verbose("当前不是 gameplay modded 状态, 无需补触发存档复制");
                 return;

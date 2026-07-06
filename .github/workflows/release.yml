@@ -269,14 +269,16 @@ jobs:
         run: |
           VERSION="${{ needs.build.outputs.version }}"
           RAW=$(awk -v ver="$VERSION" '
-            BEGIN { found=0 }
+            BEGIN { found=0; note=0 }
             $0 ~ "^## \\[" ver "\\]" { found=1; next }
             found && $0 ~ "^## \\["   { exit }
-            found && $0 !~ "^$" && $0 !~ "^### " {
+            found && $0 ~ "^### Note" { note=1; next }
+            found && note && $0 ~ "^### " { exit }
+            found && note && $0 !~ "^$" {
               gsub(/^[[:space:]]*[-*][[:space:]]*/, "", $0)
-              print; exit
+              print
             }
-          ' CHANGELOG.md | tr -d '\n' | sed 's/  */ /g' | cut -c1-200)
+          ' CHANGELOG.md | tr -d '\n' | sed 's/  */ /g')
 
           if [ -n "$RAW" ]; then
             CHANGENOTE="v${VERSION}: ${RAW}"
