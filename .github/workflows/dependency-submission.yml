@@ -33,6 +33,6 @@ jobs:
 
       # 3. 扫描 NuGet 依赖并提交快照到 GitHub 依赖图
       - name: Submit dependency snapshot
-        uses: advanced-security/component-detection-dependency-submission-action@v0.1.1
+        uses: advanced-security/component-detection-dependency-submission-action@v0.1.4
         with:
           detectorsCategories: NuGet
