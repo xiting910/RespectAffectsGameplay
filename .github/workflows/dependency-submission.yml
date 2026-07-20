@@ -27,7 +27,7 @@ jobs:
 
       # 2. 安装 .NET 9 SDK
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 9.0.x
 
