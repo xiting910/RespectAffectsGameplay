@@ -20,11 +20,6 @@
       <HintPath>$(Sts2DataDir)\sts2.dll</HintPath>
       <Private>false</Private>
     </Reference>
-
-    <Reference Include="0Harmony">
-      <HintPath>$(Sts2DataDir)\0Harmony.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

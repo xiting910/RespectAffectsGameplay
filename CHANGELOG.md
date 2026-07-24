@@ -26,6 +26,27 @@
 
 ## [Unreleased]
 
+### Note
+
+- 项目配置规范化：统一行尾和文件类型处理、移除冗余程序集引用、清理 BOM
+
+### Added
+
+- **`.gitattributes`**: 新增 Git 属性文件，定义统一的文本/二进制分类和行尾规范化（默认 LF，`.bat` → CRLF），确保跨平台一致性
+
+### Changed
+
+- **`.editorconfig` 重构**: 全局规则（`tab_width`、`indent_size`、`end_of_line`、`trim_trailing_whitespace`）从 `[*.{cs,vb}]` 节区提升至 `[*]` 顶层；文件类型节区按类型重组（`.bat` → CRLF、项目文件和 JSON/YAML → 2 空格缩进、C#/VB 保留 4 空格缩进）；新增 `trim_trailing_whitespace = true` 规则
+
+### Removed
+
+- **`.csproj` 直接引用 `0Harmony.dll`**: 移除显式 `<Reference Include="0Harmony">` 程序集引用。RitsuLib 已传递包含 Harmony 依赖，无需项目直接引用
+
+### Internal
+
+- **`workshop.json`**: 移除文件开头的 UTF-8 BOM 字节
+- **README**: 项目结构新增 `.gitattributes` 条目
+
 ---
 
 ## [0.3.1] - 2026-07-06

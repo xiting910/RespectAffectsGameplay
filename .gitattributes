@@ -1,0 +1,33 @@
+# 默认规则
+* text=auto eol=lf
+
+# 源代码
+*.cs        text    diff=csharp
+
+# 项目文件和解决方案文件
+*.csproj    text    merge=union
+*.props     text
+*.slnx      text    merge=union
+
+# Markdown 文件
+*.md        text    diff=markdown
+
+# 标记与数据文件
+*.json      text
+*.yaml      text
+*.yml       text
+
+# 脚本
+*.bat       text    eol=crlf
+*.sh        text    eol=lf
+
+# 二进制
+*.dll       binary
+*.exe       binary
+*.pdb       binary
+*.png       binary
+*.jpg       binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary

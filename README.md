@@ -109,6 +109,7 @@ RespectAffectsGameplay/
 │   └── image.png                                          #   工坊封面图
 ├── RespectAffectsGameplay.slnx                            # 解决方案文件
 ├── .editorconfig                                          # 代码风格配置
+├── .gitattributes                                         # Git 行尾与文件类型规范化
 ├── .gitignore                                             # Git 忽略规则
 ├── LICENSE                                                # MIT 许可证
 ├── CHANGELOG.md                                           # 变更日志
