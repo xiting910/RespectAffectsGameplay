@@ -28,7 +28,7 @@
 
 ### Note
 
-- 项目配置规范化：统一行尾和文件类型处理、移除冗余程序集引用、清理 BOM
+- 项目配置规范化：统一行尾和文件类型处理、移除冗余程序集引用、清理 BOM、移除 GitHub 模板文件
 
 ### Added
 
@@ -41,11 +41,14 @@
 ### Removed
 
 - **`.csproj` 直接引用 `0Harmony.dll`**: 移除显式 `<Reference Include="0Harmony">` 程序集引用。RitsuLib 已传递包含 Harmony 依赖，无需项目直接引用
+- **`.github/ISSUE_TEMPLATE/bug_report.md`**: 移除 Bug 报告模板
+- **`.github/ISSUE_TEMPLATE/feature_request.md`**: 移除功能建议模板
+- **`.github/PULL_REQUEST_TEMPLATE.md`**: 移除 PR 模板
 
 ### Internal
 
 - **`workshop.json`**: 移除文件开头的 UTF-8 BOM 字节
-- **README**: 项目结构新增 `.gitattributes` 条目
+- **README**: 项目结构新增 `.gitattributes` 条目，移除已删除的 Issue/PR 模板文件引用
 
 ---
 

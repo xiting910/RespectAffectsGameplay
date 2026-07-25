@@ -70,11 +70,8 @@ RespectAffectsGameplay/
 │   │   ├── dependency-submission.yml                      #   → 提交依赖快照供 Dependency Review 使用
 │   │   ├── dependency-review.yml                          #   → PR 中依赖变更时扫描已知漏洞
 │   │   └── dependabot-auto-merge.yml                      #   → Dependabot PR CI 通过后自动审批并 squash 合并
-│   ├── ISSUE_TEMPLATE/                                    # Issue 模板
-│   │   ├── config.yml                                     #   → 模板配置（启用空白 Issue、联系链接）
-│   │   ├── bug_report.md                                  #   → Bug 报告模板
-│   │   └── feature_request.md                             #   → 功能建议模板
-│   ├── PULL_REQUEST_TEMPLATE.md                           # PR 模板
+│   ├── ISSUE_TEMPLATE/
+│   │   └── config.yml                                     #   → 模板配置（启用空白 Issue、联系链接）
 │   └── dependabot.yml                                     # Dependabot 自动依赖更新配置（NuGet + GitHub Actions）
 ├── stubs/                                                 # 桩项目（仅 CI 使用，本地开发不需要）
 │   ├── sts2/
