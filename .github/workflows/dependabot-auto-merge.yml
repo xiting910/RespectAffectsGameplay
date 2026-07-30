@@ -4,9 +4,6 @@
 name: Dependabot Auto-Merge
 
 # 触发条件: 仅在 Dependabot PR 被打开或新提交推送时执行
-# opened   → PR 首次创建
-# synchronize → PR 分支有新的 push
-# reopened → PR 被重新打开
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -21,11 +18,15 @@ env:
   PR_URL: ${{ github.event.pull_request.html_url }}
   GH_TOKEN: ${{ github.token }}
 
-# 作业定义: 仅当 PR 的作者是 dependabot[bot] 时执行自动合并流程
+# 作业定义: 执行自动合并流程
 jobs:
   dependabot:
     runs-on: ubuntu-latest
+
+    # 仅当 PR 的作者是 dependabot[bot] 时执行
     if: github.event.pull_request.user.login == 'dependabot[bot]'
+
+    # 步骤定义: 使用 GitHub CLI 执行 approve、更新分支和启用自动合并
     steps:
       - name: Approve PR
         run: gh pr review --approve "$PR_URL"

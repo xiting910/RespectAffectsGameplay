@@ -77,12 +77,8 @@ RespectAffectsGameplay/
 │   ├── PULL_REQUEST_TEMPLATE.md                           # PR 模板
 │   └── dependabot.yml                                     # Dependabot 自动依赖更新配置（NuGet + GitHub Actions）
 ├── stubs/                                                 # 桩项目（仅 CI 使用，本地开发不需要）
-│   ├── sts2/
-│   │   ├── sts2.csproj                                    # 模拟 STS2 游戏程序集
-│   │   └── Stubs.cs                                       # 桩类型: ModManager, UserDataPathProvider 等
-│   └── 0Harmony/
-│       ├── 0Harmony.csproj                                # 模拟 HarmonyLib 程序集
-│       └── Stubs.cs                                       # 桩类型: Harmony, HarmonyPatch 等
+│   ├── sts2.csproj                                        # 模拟 STS2 游戏程序集
+│   └── Stubs.cs                                           # 桩类型: ModManager, UserDataPathProvider 等
 ├── scripts/
 │   ├── RespectAffectsGameplay.csproj                      # 主项目文件 (.NET 9.0)
 │   ├── RespectAffectsGameplay.json                        # Mod 元数据清单
@@ -296,8 +292,7 @@ flowchart TD
 > 如果你在代码中使用了新的游戏 API（新的类、方法、属性等），**必须同步更新 `stubs/` 中对应的桩代码**，
 > 否则 CI 编译会失败，PR 无法合并。
 >
-> - `stubs/sts2/Stubs.cs` — 模拟 STS2 游戏程序集中的类型（`ModManager`、`UserDataPathProvider`、`AbstractModel` 等）
-> - `stubs/0Harmony/Stubs.cs` — 模拟 HarmonyLib 中的类型（`Harmony`、`HarmonyPatch`、`HarmonyPrefix` 等）
+> - `stubs/Stubs.cs` — 模拟 STS2 游戏程序集中的类型（`ModManager`、`UserDataPathProvider`、`AbstractModel` 等）
 >
 > 桩方法体可以留空（`throw new NotImplementedException()`），但**方法签名必须与实际游戏库一致**。
 

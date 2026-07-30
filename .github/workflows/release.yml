@@ -3,18 +3,22 @@
 # =============================================================================
 name: Release
 
+# 触发条件: 当推送 v* 标签时执行
 on:
   push:
     tags: ["v*"]
 
+# 权限设置: 需要写入代码内容和读取 Actions 内容的权限
 permissions:
   contents: write
   actions: read
 
+# 环境变量: 定义 Mod ID 和 Steam App ID
 env:
   MOD_ID: "RespectAffectsGameplay"
   STS2_APP_ID: "2868840"
 
+# 作业定义: 构建、发布和上传到 Steam 创意工坊
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -46,11 +50,9 @@ jobs:
 
       - name: Build stubs
         run: |
-          dotnet build stubs/sts2/sts2.csproj --configuration Release
-          dotnet build stubs/0Harmony/0Harmony.csproj --configuration Release
+          dotnet build stubs/sts2.csproj --configuration Release
           mkdir -p stubs/data_sts2_linuxbsd_x86_64
-          cp stubs/sts2/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
-          cp stubs/0Harmony/bin/Release/net9.0/0Harmony.dll stubs/data_sts2_linuxbsd_x86_64/
+          cp stubs/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
 
       - name: Update version in mod JSON
         run: |

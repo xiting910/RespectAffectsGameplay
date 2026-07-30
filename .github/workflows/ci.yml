@@ -1,9 +1,9 @@
 # =============================================================================
-# CI 工作流: 每次 push / PR 时自动还原依赖并编译（Mod 项目，无测试）
+# CI 工作流: 每次 push / PR 时自动还原依赖并编译
 # =============================================================================
 name: CI
 
-# 触发条件: 当向 main 分支 push 或发起 PR 时执行 (标签推送由 release.yml 单独处理)
+# 触发条件: 当向 main 分支 push 或发起 PR 时执行
 on:
   push:
     branches: [main]
@@ -35,19 +35,15 @@ jobs:
             **/*.csproj
             **/*.slnx
 
-      # 3. 编译桩项目以生成游戏引用的 DLL
+      # 3. 编译 sts2 桩项目
       - name: Build sts2 stub
-        run: dotnet build stubs/sts2/sts2.csproj --configuration Release
-
-      - name: Build 0Harmony stub
-        run: dotnet build stubs/0Harmony/0Harmony.csproj --configuration Release
+        run: dotnet build stubs/sts2.csproj --configuration Release
 
       # 4. 将桩 DLL 复制到游戏引用期望的路径
       - name: Copy stub DLLs to expected location
         run: |
           mkdir -p stubs/data_sts2_linuxbsd_x86_64
-          cp stubs/sts2/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
-          cp stubs/0Harmony/bin/Release/net9.0/0Harmony.dll stubs/data_sts2_linuxbsd_x86_64/
+          cp stubs/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
 
       # 5. 还原 NuGet 依赖包
       - name: Restore NuGet packages

@@ -3,7 +3,7 @@
 # =============================================================================
 name: CodeQL Analysis
 
-# 触发时机：push 到 main、PR 到 main、每周一 0:00 UTC (即北京时间周一 8:00)
+# 触发时机：push 到 main、PR 到 main、每周一 0:00 UTC
 on:
   push:
     branches: [main]
@@ -29,17 +29,17 @@ jobs:
         language: ["csharp"]
 
     steps:
-      # 检出代码库内容
+      # 1. 检出代码库内容
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      # 初始化 CodeQL 引擎, 指定分析 C# 语言
+      # 2. 初始化 CodeQL 引擎, 指定分析 C# 语言
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
-      # 安装 .NET 9 SDK
+      # 3. 安装 .NET 9 SDK
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6
         with:
@@ -49,25 +49,21 @@ jobs:
             **/*.csproj
             **/*.slnx
 
-      # 编译桩项目以生成游戏引用的 DLL
+      # 4. 编译桩项目以生成游戏引用的 DLL
       - name: Build sts2 stub
-        run: dotnet build stubs/sts2/sts2.csproj --configuration Release
+        run: dotnet build stubs/sts2.csproj --configuration Release
 
-      - name: Build 0Harmony stub
-        run: dotnet build stubs/0Harmony/0Harmony.csproj --configuration Release
-
-      # 将桩 DLL 复制到游戏引用期望的路径
+      # 5. 将桩 DLL 复制到游戏引用期望的路径
       - name: Copy stub DLLs to expected location
         run: |
           mkdir -p stubs/data_sts2_linuxbsd_x86_64
-          cp stubs/sts2/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
-          cp stubs/0Harmony/bin/Release/net9.0/0Harmony.dll stubs/data_sts2_linuxbsd_x86_64/
+          cp stubs/bin/Release/net9.0/sts2.dll stubs/data_sts2_linuxbsd_x86_64/
 
-      # 使用 CodeQL autobuild 功能自动编译项目
+      # 6. 使用 CodeQL autobuild 功能自动编译项目
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
 
-      # 执行分析并将结果上传到 GitHub Security 面板
+      # 7. 执行分析并将结果上传到 GitHub Security 面板
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:

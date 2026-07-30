@@ -28,7 +28,7 @@
 
 ### Note
 
-- 项目配置规范化：统一行尾和文件类型处理、移除冗余程序集引用、清理 BOM
+- 项目配置规范化：桩项目合并、统一行尾和文件类型处理、移除冗余程序集引用、清理 BOM
 
 ### Added
 
@@ -37,15 +37,20 @@
 ### Changed
 
 - **`.editorconfig` 重构**: 全局规则（`tab_width`、`indent_size`、`end_of_line`、`trim_trailing_whitespace`）从 `[*.{cs,vb}]` 节区提升至 `[*]` 顶层；文件类型节区按类型重组（`.bat` → CRLF、项目文件和 JSON/YAML → 2 空格缩进、C#/VB 保留 4 空格缩进）；新增 `trim_trailing_whitespace = true` 规则
+- **桩项目合并**: 将 `stubs/sts2/` 和 `stubs/0Harmony/` 两个独立桩项目合并为单个 `stubs/sts2.csproj`，桩源文件统一到 `stubs/Stubs.cs`（扁平化目录结构），简化 CI 构建流程
 
 ### Removed
 
 - **`.csproj` 直接引用 `0Harmony.dll`**: 移除显式 `<Reference Include="0Harmony">` 程序集引用。RitsuLib 已传递包含 Harmony 依赖，无需项目直接引用
+- **HarmonyLib 桩项目**: 移除 `stubs/0Harmony/` 目录（`0Harmony.csproj` + `Stubs.cs`）。RitsuLib 传递包含 Harmony 依赖，不再需要独立的 HarmonyLib 桩项目
 
 ### Internal
 
 - **`workshop.json`**: 移除文件开头的 UTF-8 BOM 字节
-- **README**: 项目结构新增 `.gitattributes` 条目
+- **CI 工作流**: `ci.yml`、`codeql-analysis.yml`、`release.yml` 桩构建步骤从两个项目简化为单个 `stubs/sts2.csproj`，DLL 复制步骤同步简化；注释编号统一优化
+- **解决方案文件**: 更新项目引用以匹配合并后的桩结构，新增 `.gitattributes` 文件引用
+- **README**: 项目结构新增 `.gitattributes` 条目；更新 stubs 目录结构描述和桩代码维护说明，移除 0Harmony 桩相关条目
+- **`.github` 模板和工作流**: `bug_report.md` 简化运行环境模板；`dependabot-auto-merge.yml` 重构注释结构和条件语句位置
 
 ---
 
