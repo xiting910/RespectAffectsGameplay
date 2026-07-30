@@ -585,10 +585,10 @@
 ---
 
 [Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.1...HEAD
-[0.3.1]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.9...v0.3.0
-[0.2.9]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.8...v0.2.9
-[0.2.8]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.2.7...v0.2.8
+[0.3.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.1
+[0.3.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.0
+[0.2.9]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.9
+[0.2.8]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.8
 [0.2.7]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.7
 [0.2.6]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.6
 [0.2.5]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.5
