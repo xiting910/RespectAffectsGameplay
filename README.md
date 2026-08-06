@@ -194,8 +194,8 @@ flowchart TD
 >   但跳过复制后会留下一个缺口：`_settings.ModList` 已被填充，后续即使安装了 gameplay Mod，
 >   游戏也不会再触发复制（`ModList` 已非空）。
 >   为此，`Initialize()` 步骤 4 通过订阅 `MainMenuReadyEvent`，在主菜单就绪后检查
->   `IsEffectivelyModded(true)` 为 true 且 `ModManager.UnmoddedSavesWereCopied` 为 false 时
->   补调用一次 `CopyUnmoddedSaveFilesIfNeeded`，确保 gameplay Mod 首次出现时存档一定会被迁移。
+>   `IsEffectivelyModded(true)` 为 true 时补调用一次 `CopyUnmoddedSaveFilesIfNeeded`，
+>   确保 gameplay Mod 首次出现时存档一定会被迁移（具体复制/跳过结果由游戏方法自身处理）。
 > - `PatchModManagerIsRunningModded` 默认关闭。该方法被 UI（主界面 / 游戏内 mod 数量）、
 >   Sentry 错误上报、联机 Mod 列表等多处调用，统一替换会隐藏 UI 信息。用户可在设置中手动开启。
 

@@ -153,7 +153,7 @@ public static class ContentModDetector
                     i18n.Get("toast.mislabeled.title", string.Empty)
                         .Replace(PlaceholderCount, mislabeledMods.Count.ToString()),
                     level: RitsuToastLevel.Warning,
-                    durationSeconds: 5,
+                    durationSeconds: 8,
                     onClick: () =>
                     {
                         foreach (var modId in mislabeledMods)

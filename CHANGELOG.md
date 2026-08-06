@@ -28,6 +28,26 @@
 
 ---
 
+## [0.3.3] - 2026-08-06
+
+### Note
+
+- 存档复制检查逻辑简化：移除易误导的「未完成首次存档复制」日志, 复制/跳过结果由游戏自身准确输出
+- 误标提示 Toast 显示时间延长至 8 秒, 标题改为两行排版更清晰
+
+### Changed
+
+- **补触发存档复制检查**: 移除 `ModManager.UnmoddedSavesWereCopied` 检查 (该标志仅在实际执行复制时置位, 存档已存在时恒为 `false`, 检查无效且日志误导); 模组侧日志从 Info 降为 Verbose 并中性化措辞, 具体复制/跳过结果交由游戏方法自身输出
+- **误标 Toast**: 显示时长 5 秒 → 8 秒, 标题改为两行排版 (标题行 + 警告图标与计数行)
+
+### Internal
+
+- **`RespectAffectsGameplay.json`**: 版本号从 `0.3.2` 提升至 `0.3.3`
+- **本地化文件**: `_version` 更新至 `0.3.3`, `toast.mislabeled.title` 增加换行
+- **README**: 更新补触发存档复制说明, 移除 `UnmoddedSavesWereCopied` 检查相关描述
+
+---
+
 ## [0.3.2] - 2026-08-06
 
 ### Note
@@ -607,7 +627,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.3
 [0.3.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.2
 [0.3.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.1
 [0.3.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.0

@@ -1,5 +1,5 @@
 {
-  "_version": "0.3.2",
+  "_version": "0.3.3",
 
   "mod.description": "Stops STS2 from blindly marking the game as modded just because any mod is loaded. Scans mod assemblies to detect actual game content (cards, relics, heroes, etc.), respects each mod's affects_gameplay flag, isolates save files only for content mods, and warns when a mod is mislabeled.",
 
@@ -33,6 +33,6 @@
   "settings.whitelist.clear.button": "Clear",
   "settings.whitelist.clear.desc": "Remove all mods from the whitelist.",
 
-  "toast.mislabeled.title": "[RespectAffectsGameplay] ⚠ {Count} mod(s) flagged",
+  "toast.mislabeled.title": "[RespectAffectsGameplay]\n⚠ {Count} mod(s) flagged",
   "toast.mislabeled.body": "These mods are marked as non-gameplay but contain game content types:\n{ModList}\n\nThis may cause save corruption or multiplayer data sync issues.\nIf you are sure these mods don't affect gameplay, click this notification to add them all to the whitelist, or add them individually in the settings."
 }

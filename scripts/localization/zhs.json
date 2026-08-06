@@ -1,5 +1,5 @@
 {
-  "_version": "0.3.2",
+  "_version": "0.3.3",
 
   "mod.description": "阻止 STS2 盲目地将所有已加载 Mod 都视为影响游戏性。扫描 Mod 程序集检测真正的游戏内容（卡片、遗物、角色等），尊重每个 Mod 的 affects_gameplay 标记，仅在内容 Mod 存在时隔离存档路径，并警告标记不准确的 Mod。",
 
@@ -33,6 +33,6 @@
   "settings.whitelist.clear.button": "清空",
   "settings.whitelist.clear.desc": "移除白名单中的所有 Mod。",
 
-  "toast.mislabeled.title": "[RespectAffectsGameplay] ⚠ 检测到 {Count} 个 Mod 标记异常",
+  "toast.mislabeled.title": "[RespectAffectsGameplay]\n⚠ 检测到 {Count} 个 Mod 标记异常",
   "toast.mislabeled.body": "以下 Mod 标记为不影响游戏性，但包含游戏内容类型：\n{ModList}\n\n这可能导致存档损坏或联机数据同步问题。\n如果确认这些 Mod 不影响游戏，可点击此通知将全部加入白名单，或前往设置单独添加。"
 }

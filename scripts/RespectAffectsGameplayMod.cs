@@ -153,18 +153,11 @@ public static class RespectAffectsGameplayMod
                 return;
             }
 
-            // 如果游戏已完成首次存档复制, 则无需补触发存档复制
-            if (ModManager.UnmoddedSavesWereCopied)
-            {
-                ModLog.Verbose("游戏已完成首次存档复制, 无需补触发");
-                return;
-            }
+            // 记录日志: 补触发存档复制检查
+            ModLog.Verbose("当前为 gameplay modded 状态, 补触发存档复制检查");
 
             // 调用 ModManager.CopyUnmoddedSaveFilesIfNeeded() 方法, 补触发存档复制检查
             ModManager.CopyUnmoddedSaveFilesIfNeeded();
-
-            // 记录日志: 补触发存档复制检查
-            ModLog.Info("当前为 gameplay modded 状态, 且游戏未完成首次存档复制, 已补触发存档复制检查");
         }
         catch (Exception ex)
         {
