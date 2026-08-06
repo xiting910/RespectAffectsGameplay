@@ -26,6 +26,17 @@
 
 ## [Unreleased]
 
+---
+
+## [0.3.2] - 2026-08-06
+
+### Note
+
+- 新增白名单功能：设置页可管理白名单, 误标 Toast 可一键将误标 Mod 加入白名单, 白名单内 Mod 在自动模式下强制视为不影响游戏性
+- 本地化文件目录迁移至新位置, 旧目录首次运行时自动迁移, 无需手动处理
+- 内容检测容错性提升, 单个程序集类型加载失败不再导致整个 Mod 检测失败; 误标提示措辞调整为中性表述
+- 关键日志节点从 Verbose 提升为 Info 级别, 默认日志即可查看判定结果
+
 ### Added
 
 - **`.gitattributes`**: 新增 Git 属性文件，定义统一的文本/二进制分类和行尾规范化（默认 LF，`.bat` → CRLF），确保跨平台一致性
@@ -61,6 +72,8 @@
 - **README**: 项目结构新增 `.gitattributes` 条目；更新 stubs 目录结构描述和桩代码维护说明，移除 0Harmony 桩相关条目；更新设置说明（白名单项）、Toast 点击加入白名单说明、本地化目录路径与迁移说明
 - **`.github` 模板和工作流**: `bug_report.md` 简化运行环境模板；`dependabot-auto-merge.yml` 重构注释结构和条件语句位置
 - **static lambda**: 所有不捕获外部变量的 lambda 标记为 `static`, 减少闭包对象分配
+- **`RespectAffectsGameplay.json`**: 版本号从 `0.3.1` 提升至 `0.3.2`
+- **`workshop/image.png`**: 更新工坊封面图
 
 ---
 
@@ -594,7 +607,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.2
 [0.3.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.1
 [0.3.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.0
 [0.2.9]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.2.9
