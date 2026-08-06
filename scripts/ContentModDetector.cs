@@ -21,7 +21,7 @@ public static class ContentModDetector
     private const string PlaceholderCount = "{Count}";
 
     /// <summary>
-    /// 标记是否已完成扫描
+    /// 标记是否已尝试扫描
     /// </summary>
     private static bool _scanned;
 
@@ -31,74 +31,75 @@ public static class ContentModDetector
     private static bool _toastSubscribed;
 
     /// <summary>
-    /// 存储所有注册了 <see cref="AbstractModel"/> 子类的 Mod ID
+    /// 记录已加载的 Mod 是否包含 <see cref="AbstractModel"/> 子类的字典, 键为 Mod ID, 值为是否包含
     /// </summary>
-    private static readonly HashSet<string> ModIdsWithContent = [];
-
-    /// <summary>
-    /// 判断是否有实现了 <see cref="AbstractModel"/> 的 Mod 被加载
-    /// </summary>
-    /// <returns><see langword="true"/> 如果有实现了 <see cref="AbstractModel"/> 的 Mod 被加载,
-    /// <see langword="false"/> 否则</returns>
-    public static bool HasContentModsLoaded()
-    {
-        if (!_scanned)
-        {
-            PerformScan();
-            _scanned = true;
-        }
-        return ModIdsWithContent.Count > 0;
-    }
+    private static readonly Dictionary<string, bool> ModContentStatusById = [];
 
     /// <summary>
     /// 判断某个 Mod 是否是内容性 Mod (即是否包含 <see cref="AbstractModel"/> 子类)
     /// </summary>
     /// <param name="modId">要检测的 Mod 的 ID</param>
-    /// <returns><see langword="true"/> 如果该 Mod 是内容性 Mod, <see langword="false"/> 否则</returns>
-    public static bool IsContentMod(string modId)
+    /// <returns><see langword="true"/> 如果检测到该 Mod 是内容性 Mod, <see langword="false"/>
+    /// 如果检测到该 Mod 不是内容性 Mod, <see langword="null"/> 表示无法确定</returns>
+    public static bool? IsContentMod(string modId)
     {
-        if (!_scanned)
-        {
-            PerformScan();
-            _scanned = true;
-        }
-        return ModIdsWithContent.Contains(modId);
+        EnsureScanPerform();
+        return ModContentStatusById.TryGetValue(modId, out var isContent) ? isContent : null;
     }
 
     /// <summary>
-    /// 执行扫描: 遍历所有已加载的 Mod, 检测是否包含 <see cref="AbstractModel"/> 子类
+    /// 确认扫描已执行, 如果尚未扫描则执行扫描, 并在发现误标的 Mod 时显示 Toast 通知
     /// </summary>
-    private static void PerformScan()
+    private static void EnsureScanPerform()
     {
+        // 如果已经扫描过, 则直接返回, 避免重复扫描
+        if (_scanned) { return; }
+
+        // 设置扫描标记, 避免重复扫描
+        _scanned = true;
+
+        // 记录日志
+        ModLog.Info("开始扫描已加载的 Mod 是否为内容性 Mod (是否包含 AbstractModel 子类)");
+
         try
         {
             // 记录误标的 Mod 列表
             var mislabeledMods = new List<string>();
 
             // 遍历所有已加载的 Mod
-            foreach (var mod in ModManager.Mods.Where(m => m.IsLoaded()))
+            foreach (var mod in ModManager.Mods.Where(static m => m.IsLoaded()))
             {
                 // 获取 Mod ID
                 var modId = mod.GetId();
 
-                // 检测 Mod 是否包含 AbstractModel 子类
-                if (mod.ContainsAbstractModel() == true)
+                // 白名单中的 Mod 跳过内容检测, 不参与误标警告
+                if (ModSettingsHelper.IsWhitelisted(modId))
+                {
+                    ModLog.Verbose($"{modId} 在白名单中, 跳过内容检测");
+                    continue;
+                }
+
+                // 获取该模组是否包含 AbstractModel 子类的检测结果
+                var result = mod.ContainsAbstractModel();
+                if (result is null) { continue; }
+
+                // 该模组是否包含 AbstractModel 子类
+                var isContentMod = result.Value;
+
+                // 记录该模组的内容性状态到字典中
+                ModContentStatusById[modId] = isContentMod;
+
+                // 记录日志
+                ModLog.Verbose($"检测到 {modId} 的内容性状态: {(isContentMod ? "内容 Mod" : "不是内容 Mod")}");
+
+                // 如果是内容性 Mod, 则记录日志并检查 affects_gameplay 标记
+                if (isContentMod && mod.manifest?.affectsGameplay == false)
                 {
                     // 记录日志
-                    ModLog.Verbose($"检测到内容性 Mod: {modId}");
+                    ModLog.Info($"检测到 affects_gameplay 标记可能不准确的内容性 Mod: {modId} (可能应为 true)");
 
-                    // 包含 AbstractModel 子类, 记录 Mod ID
-                    _ = ModIdsWithContent.Add(modId);
-
-                    // 如果 Mod 标记 affects_gameplay 为 false, 则认为是误标, 记录 Mod 名称
-                    if (mod.manifest?.affectsGameplay == false)
-                    {
-                        // 记录日志
-                        ModLog.Warn($"检测到误标的内容性 Mod: {modId} (affects_gameplay 实际应该标记为 true)");
-
-                        // 记录误标的 Mod ID
-                        mislabeledMods.Add(modId);
-                    }
+                    // 记录误标的 Mod ID
+                    mislabeledMods.Add(modId);
                 }
             }
 
@@ -106,16 +107,18 @@ public static class ContentModDetector
             if (mislabeledMods.Count > 0)
             {
                 // 构建误标的 Mod 列表字符串
-                var modList = string.Join("\n", mislabeledMods.Select(id => $"  • {id}"));
+                var modList = string.Join("\n", mislabeledMods.Select(static id => $"  • {id}"));
 
                 // 显示 Toast 通知
-                ScheduleMislabeledToast(modList, mislabeledMods.Count);
+                ScheduleMislabeledToast(modList, mislabeledMods);
             }
+
+            // 记录日志: 扫描完成
+            ModLog.Info("已完成扫描已加载的 Mod 是否为内容性 Mod (是否包含 AbstractModel 子类)");
         }
         catch (Exception ex)
         {
-            ModLog.Error($"扫描 Mod 内容时发生异常 (不影响 mod 核心功能, 但存档可能被错误隔离): {ex}");
-            ModIdsWithContent.Clear();
+            ModLog.Error($"扫描 Mod 内容时发生异常: {ex}");
         }
     }
 
@@ -123,8 +126,8 @@ public static class ContentModDetector
     /// 订阅 <see cref="MainMenuReadyEvent"/> 事件, 在主菜单就绪后显示 Toast 通知
     /// </summary>
     /// <param name="modList">误标的 Mod 列表字符串</param>
-    /// <param name="count">误标的 Mod 数量</param>
-    private static void ScheduleMislabeledToast(string modList, int count)
+    /// <param name="mislabeledMods">误标的 Mod ID 列表, 用于点击 Toast 时一键加入白名单</param>
+    private static void ScheduleMislabeledToast(string modList, IReadOnlyList<string> mislabeledMods)
     {
         // 如果已经订阅过, 则直接返回, 避免重复订阅
         if (_toastSubscribed) { return; }
@@ -138,17 +141,28 @@ public static class ContentModDetector
             var i18n = ModLoc.Instance;
 
             // 订阅主菜单就绪事件
-            _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>((evt, sub) =>
+            _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>((e, sub) =>
             {
                 // 取消订阅, 避免重复显示 Toast
                 sub.Dispose();
 
-                // 显示 Toast 通知
+                // 显示 Toast 通知, 点击后一键将全部误标 Mod 加入白名单
                 RitsuToastService.Show(new(
-                    i18n.Get("toast.mislabeled.body", string.Empty).Replace(PlaceholderModList, modList),
-                    i18n.Get("toast.mislabeled.title", string.Empty).Replace(PlaceholderCount, count.ToString()),
+                    i18n.Get("toast.mislabeled.body", string.Empty)
+                        .Replace(PlaceholderModList, modList),
+                    i18n.Get("toast.mislabeled.title", string.Empty)
+                        .Replace(PlaceholderCount, mislabeledMods.Count.ToString()),
                     level: RitsuToastLevel.Warning,
-                    durationSeconds: 5));
+                    durationSeconds: 5,
+                    onClick: () =>
+                    {
+                        foreach (var modId in mislabeledMods)
+                        {
+                            _ = ModSettingsHelper.AddToWhitelist(modId);
+                        }
+                        ModLog.Info("已将全部误标 Mod 加入白名单");
+                    }
+                ));
             });
         }
         catch (Exception ex)

@@ -50,7 +50,7 @@ public static class ModSettingsHelper
                 key: DataKey,
                 fileName: DataFileName,
                 scope: DataScope,
-                defaultFactory: () => new(),
+                defaultFactory: static () => new(),
                 autoCreateIfMissing: true
             );
         }
@@ -85,13 +85,14 @@ public static class ModSettingsHelper
     {
         if (_settingsCache is null)
         {
-            ModLog.Error("设置缓存未初始化, 无法持久化重置操作。设置将在重启后恢复。");
+            ModLog.Warn("设置缓存未初始化, 无法持久化重置操作。设置将在重启后恢复。");
             return;
         }
 
-        _settingsCache.Modify(settings =>
+        _settingsCache.Modify(static settings =>
         {
             settings.Mode = ModdedMode.Auto;
+            settings.WhitelistedModIds.Clear();
             settings.PatchModManagerIsRunningModded = false;
             settings.VerboseLogging = false;
         });
@@ -110,5 +111,61 @@ public static class ModSettingsHelper
         }
         _settingsCache.Save();
         ModLog.Verbose("设置已保存到本地存储");
+    }
+
+    /// <summary>
+    /// 判断指定 Mod ID 是否在白名单中
+    /// </summary>
+    /// <param name="modId">要判断的 Mod ID</param>
+    /// <returns><see langword="true"/> 表示在白名单中, <see langword="false"/> 否则</returns>
+    public static bool IsWhitelisted(string modId)
+    {
+        return GetSettings().WhitelistedModIds.Contains(modId);
+    }
+
+    /// <summary>
+    /// 将指定 Mod ID 加入白名单并持久化
+    /// </summary>
+    /// <param name="modId">要加入的 Mod ID</param>
+    /// <returns><see langword="true"/> 表示新增成功, <see langword="false"/> 表示已存在或输入无效</returns>
+    public static bool AddToWhitelist(string modId)
+    {
+        if (modId.Length == 0) { return false; }
+
+        if (!GetSettings().WhitelistedModIds.Add(modId)) { return false; }
+
+        SaveSettings();
+        ModLog.Info($"已将 {modId} 加入白名单");
+        return true;
+    }
+
+    /// <summary>
+    /// 将指定 Mod ID 从白名单移除并持久化
+    /// </summary>
+    /// <param name="modId">要移除的 Mod ID</param>
+    /// <returns><see langword="true"/> 表示移除成功, <see langword="false"/> 表示不在白名单中</returns>
+    public static bool RemoveFromWhitelist(string modId)
+    {
+        var settings = GetSettings();
+        if (!settings.WhitelistedModIds.Remove(modId)) { return false; }
+
+        SaveSettings();
+        ModLog.Info($"已将 {modId} 从白名单移除");
+        return true;
+    }
+
+    /// <summary>
+    /// 清空白名单并持久化
+    /// </summary>
+    /// <returns><see langword="true"/> 表示清空成功, <see langword="false"/> 表示白名单本来就是空的</returns>
+    public static bool ClearWhitelist()
+    {
+        var settings = GetSettings();
+        if (settings.WhitelistedModIds.Count == 0) { return false; }
+
+        settings.WhitelistedModIds.Clear();
+        SaveSettings();
+        ModLog.Info("已清空白名单");
+        return true;
     }
 }

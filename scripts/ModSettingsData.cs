@@ -11,6 +11,11 @@ public sealed class ModSettingsData
     public ModdedMode Mode { get; set; } = ModdedMode.Auto;
 
     /// <summary>
+    /// 白名单 Mod ID 集合, 白名单中的 Mod 将被强制视为不影响游戏性
+    /// </summary>
+    public HashSet<string> WhitelistedModIds { get; init; } = [];
+
+    /// <summary>
     /// 是否拦截 <c>ModManager.IsRunningModded()</c> 方法
     /// </summary>
     public bool PatchModManagerIsRunningModded { get; set; }

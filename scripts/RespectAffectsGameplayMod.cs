@@ -37,6 +37,41 @@ public static class RespectAffectsGameplayMod
     private const string ButtonResetDefaults = "resetDefaults";
 
     /// <summary>
+    /// 设置页面 Section 标识符: 白名单区域
+    /// </summary>
+    private const string WhitelistSection = "whitelist";
+
+    /// <summary>
+    /// 设置页面条目标识符: 白名单 Mod ID 列表 (多行文本)
+    /// </summary>
+    private const string WhitelistList = "whitelistList";
+
+    /// <summary>
+    /// 设置页面条目标识符: 从已加载 Mod 选择添加的下拉框
+    /// </summary>
+    private const string WhitelistAddSelect = "whitelistAddSelect";
+
+    /// <summary>
+    /// 设置页面条目标识符: 添加所选 Mod 按钮
+    /// </summary>
+    private const string WhitelistAddButton = "whitelistAddButton";
+
+    /// <summary>
+    /// 设置页面条目标识符: 从白名单选择移除的下拉框
+    /// </summary>
+    private const string WhitelistRemoveSelect = "whitelistRemoveSelect";
+
+    /// <summary>
+    /// 设置页面条目标识符: 移除所选 Mod 按钮
+    /// </summary>
+    private const string WhitelistRemoveButton = "whitelistRemoveButton";
+
+    /// <summary>
+    /// 设置页面条目标识符: 清空白名单按钮
+    /// </summary>
+    private const string WhitelistClearButton = "whitelistClearButton";
+
+    /// <summary>
     /// mod 初始化入口: 依次注册持久化设置、注册游戏内设置页面、应用 Harmony 补丁
     /// </summary>
     public static void Initialize()
@@ -51,7 +86,7 @@ public static class RespectAffectsGameplayMod
 
         // 获取设置
         var settings = ModSettingsHelper.GetSettings();
-        ModLog.Info($"设置已加载 ({nameof(settings.Mode)}={settings.Mode}, {nameof(settings.PatchModManagerIsRunningModded)}={settings.PatchModManagerIsRunningModded}, {nameof(settings.VerboseLogging)}={settings.VerboseLogging})");
+        ModLog.Info($"设置已加载 ({nameof(settings.Mode)}={settings.Mode}, {nameof(settings.WhitelistedModIds)}={settings.WhitelistedModIds.Count}, {nameof(settings.PatchModManagerIsRunningModded)}={settings.PatchModManagerIsRunningModded}, {nameof(settings.VerboseLogging)}={settings.VerboseLogging})");
 
 
         // 2. 注册游戏内设置页面
@@ -93,7 +128,7 @@ public static class RespectAffectsGameplayMod
 
         // 4. 订阅主菜单就绪事件, 补触发存档复制检查
         ModLog.Verbose("步骤 4: 订阅主菜单就绪事件补触发存档复制检查...");
-        _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>((evt, sub) =>
+        _ = RitsuLibFramework.SubscribeLifecycle<MainMenuReadyEvent>(static (evt, sub) =>
         {
             sub.Dispose();
             EnsureSaveFilesCopiedIfNeeded();
@@ -125,11 +160,11 @@ public static class RespectAffectsGameplayMod
                 return;
             }
 
-            // 调用 ModManager.CopyUnmoddedSaveFilesIfNeeded() 方法, 补触发存档复制
+            // 调用 ModManager.CopyUnmoddedSaveFilesIfNeeded() 方法, 补触发存档复制检查
             ModManager.CopyUnmoddedSaveFilesIfNeeded();
 
-            // 记录日志: 补触发存档复制
-            ModLog.Info("当前为 gameplay modded 状态, 且游戏未完成首次存档复制, 已补触发存档复制");
+            // 记录日志: 补触发存档复制检查
+            ModLog.Info("当前为 gameplay modded 状态, 且游戏未完成首次存档复制, 已补触发存档复制检查");
         }
         catch (Exception ex)
         {
@@ -142,11 +177,22 @@ public static class RespectAffectsGameplayMod
     /// </summary>
     private static void RegisterSettingsPage()
     {
+        var addSelectBinding = new InMemoryModSettingsValueBinding<string>(
+            ModInfo.Id,
+            ModSettingsHelper.DataKey,
+            string.Empty
+        );
+        var removeSelectBinding = new InMemoryModSettingsValueBinding<string>(
+            ModInfo.Id,
+            ModSettingsHelper.DataKey,
+            string.Empty
+        );
+
         RitsuLibFramework.RegisterModSettings(ModInfo.Id, page => page
             .WithTitle(ModSettingsText.Literal(ModInfo.Name))
             .WithModDisplayName(ModSettingsText.Literal(ModInfo.Name))
             .WithDescription(ModSettingsText.I18N(ModLoc.Instance, "mod.description", string.Empty))
-            .AddSection(SectionGeneral, section => section
+            .AddSection(SectionGeneral, static section => section
                 .WithTitle(ModSettingsText.I18N(ModLoc.Instance, "settings.section.general", "General"))
                 .AddEnumChoice(
                     ChoiceMode,
@@ -155,9 +201,9 @@ public static class RespectAffectsGameplayMod
                         ModInfo.Id,
                         ModSettingsHelper.DataKey,
                         ModSettingsHelper.DataScope,
-                        s => s.Mode,
-                        (s, v) => { s.Mode = v; ModSettingsHelper.SaveSettings(); }),
-                    value => value switch
+                        static s => s.Mode,
+                        static (s, v) => { s.Mode = v; ModSettingsHelper.SaveSettings(); }),
+                    static value => value switch
                     {
                         ModdedMode.Auto => ModSettingsText.I18N(ModLoc.Instance, "settings.mode.option.auto", "Auto"),
                         ModdedMode.AlwaysVanilla => ModSettingsText.I18N(ModLoc.Instance, "settings.mode.option.alwaysVanilla", "Always Vanilla"),
@@ -173,8 +219,8 @@ public static class RespectAffectsGameplayMod
                         ModInfo.Id,
                         ModSettingsHelper.DataKey,
                         ModSettingsHelper.DataScope,
-                        s => s.PatchModManagerIsRunningModded,
-                        (s, v) => { s.PatchModManagerIsRunningModded = v; ModSettingsHelper.SaveSettings(); }),
+                        static s => s.PatchModManagerIsRunningModded,
+                        static (s, v) => { s.PatchModManagerIsRunningModded = v; ModSettingsHelper.SaveSettings(); }),
                     ModSettingsText.I18N(ModLoc.Instance, "settings.patchModManager.desc", string.Empty))
                 .AddToggle(
                     ToggleVerboseLogging,
@@ -183,8 +229,8 @@ public static class RespectAffectsGameplayMod
                         ModInfo.Id,
                         ModSettingsHelper.DataKey,
                         ModSettingsHelper.DataScope,
-                        s => s.VerboseLogging,
-                        (s, v) =>
+                        static s => s.VerboseLogging,
+                        static (s, v) =>
                         {
                             s.VerboseLogging = v;
                             ModSettingsHelper.SaveSettings();
@@ -195,8 +241,97 @@ public static class RespectAffectsGameplayMod
                     ModSettingsText.I18N(ModLoc.Instance, "settings.resetDefaults.label", "Reset to Defaults"),
                     ModSettingsText.I18N(ModLoc.Instance, "settings.resetDefaults.button", "Restore Defaults"),
                     ModSettingsHelper.ResetToDefaults,
-                    description: ModSettingsText.I18N(ModLoc.Instance, "settings.resetDefaults.desc", string.Empty))));
+                    description: ModSettingsText.I18N(ModLoc.Instance, "settings.resetDefaults.desc", string.Empty)))
+            .AddSection(WhitelistSection, section => section
+                .WithTitle(ModSettingsText.I18N(ModLoc.Instance, "settings.section.whitelist", "Whitelist"))
+                .AddInfoCard(
+                    WhitelistList,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.list.label", "Current whitelist"),
+                    ModSettingsText.Dynamic(GetWhitelistDisplayText),
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.list.desc", string.Empty))
+                .AddChoice(
+                    WhitelistAddSelect,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.add.label", "Add from loaded mods"),
+                    addSelectBinding,
+                    GetLoadedModChoiceOptions(),
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.add.desc", string.Empty),
+                    ModSettingsChoicePresentation.Dropdown)
+                .AddButton(
+                    WhitelistAddButton,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.add.buttonLabel", "Add selected mod"),
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.add.button", "Add"),
+                    host =>
+                    {
+                        if (ModSettingsHelper.AddToWhitelist(addSelectBinding.Read()))
+                        {
+                            host.RequestRefresh();
+                        }
+                    })
+                .AddDynamicChoice(
+                    WhitelistRemoveSelect,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.remove.label", "Remove from whitelist"),
+                    removeSelectBinding,
+                    GetWhitelistChoiceOptions,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.remove.desc", string.Empty),
+                    ModSettingsChoicePresentation.Dropdown)
+                .AddButton(
+                    WhitelistRemoveButton,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.remove.buttonLabel", "Remove selected mod"),
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.remove.button", "Remove"),
+                    host =>
+                    {
+                        if (ModSettingsHelper.RemoveFromWhitelist(removeSelectBinding.Read()))
+                        {
+                            host.RequestRefresh();
+                        }
+                    })
+                .AddButton(
+                    WhitelistClearButton,
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.clear.label", "Clear whitelist"),
+                    ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.clear.button", "Clear"),
+                    host =>
+                    {
+                        if (ModSettingsHelper.ClearWhitelist())
+                        {
+                            host.RequestRefresh();
+                        }
+                    },
+                    description: ModSettingsText.I18N(ModLoc.Instance, "settings.whitelist.clear.desc", string.Empty))));
 
         ModLog.Verbose("设置页面注册完成");
+    }
+
+    /// <summary>
+    /// 生成白名单的实时显示文本
+    /// </summary>
+    /// <returns>白名单显示文本</returns>
+    private static string GetWhitelistDisplayText()
+    {
+        var ids = ModSettingsHelper.GetSettings().WhitelistedModIds;
+        return ids.Count == 0
+            ? ModLoc.Instance.Get("settings.whitelist.list.empty", "(Empty)")
+            : string.Join("\n", ids.Select(static id => $"• {id}"));
+    }
+
+    /// <summary>
+    /// 生成所有已加载 Mod 的选项列表, 用于添加白名单的下拉选择
+    /// </summary>
+    /// <returns>已加载 Mod 的选项列表</returns>
+    private static IEnumerable<ModSettingsChoiceOption<string>> GetLoadedModChoiceOptions()
+    {
+        return ModManager.Mods.Where(static m => m.IsLoaded())
+            .Select(static m =>
+                new ModSettingsChoiceOption<string>(m.GetId(), ModSettingsText.Literal(m.GetId()))
+            );
+    }
+
+    /// <summary>
+    /// 生成当前白名单中 Mod 的选项列表, 用于移除白名单的下拉选择
+    /// </summary>
+    /// <returns>白名单 Mod 的选项列表</returns>
+    private static IReadOnlyList<ModSettingsChoiceOption<string>> GetWhitelistChoiceOptions()
+    {
+        return [.. ModSettingsHelper.GetSettings().WhitelistedModIds
+            .Select(static id => new ModSettingsChoiceOption<string>(id, ModSettingsText.Literal(id)))];
     }
 }

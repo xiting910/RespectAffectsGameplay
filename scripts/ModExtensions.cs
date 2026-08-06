@@ -1,6 +1,6 @@
-using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Models;
+using System.Reflection;
 
 namespace RespectAffectsGameplay;
 
@@ -40,19 +40,48 @@ public static class ModExtensions
         // 如果 mod 没有程序集, 则无法扫描 AbstractModel 子类
         if (mod.assemblies.Count == 0)
         {
-            ModLog.Verbose($"[{mod.GetId()}] 没有程序集, 无法扫描 {typeof(AbstractModel)} 子类");
+            ModLog.Warn($"[{mod.GetId()}] 没有程序集, 无法扫描 {typeof(AbstractModel)} 子类");
             return null;
         }
 
         try
         {
-            return mod.assemblies.SelectMany(
-                assembly => ReflectionHelper.GetSubtypesFromAssembly(assembly, typeof(AbstractModel))).Any();
+            // 逐个程序集获取可加载类型, 并检查是否有 AbstractModel 子类
+            return mod.assemblies.SelectMany(GetLoadableTypes)
+                .Any(static type => type.IsSubclassOf(typeof(AbstractModel))
+                    && !type.IsInterface && !type.IsAbstract
+                );
         }
         catch (Exception ex)
         {
-            ModLog.Warn($"扫描 [{mod.GetId()}] 的 {typeof(AbstractModel)} 子类时发生异常: {ex.Message}");
+            // 如果扫描过程中发生异常, 则记录警告日志并返回 null (无法确定)
+            ModLog.Warn($"扫描 [{mod.GetId()}] 的 {typeof(AbstractModel)} 子类时发生异常: {ex}");
             return null;
+        }
+    }
+
+    /// <summary>
+    /// 获取程序集的所有可加载类型, 单个类型加载失败时跳过并记录警告, 避免整个程序集扫描失败
+    /// </summary>
+    /// <param name="assembly">要扫描的程序集</param>
+    /// <returns>可加载类型的枚举</returns>
+    private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            // 逐个记录加载失败的类型异常, 并返回成功加载的部分类型
+            foreach (var exception in ex.LoaderExceptions)
+            {
+                if (exception is not null)
+                {
+                    ModLog.Warn($"加载程序集 [{assembly.FullName}] 的类型时发生异常: {exception}");
+                }
+            }
+            return ex.Types.Where(static type => type is not null).Select(static type => type!);
         }
     }
 }

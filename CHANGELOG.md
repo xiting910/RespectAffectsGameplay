@@ -26,31 +26,41 @@
 
 ## [Unreleased]
 
-### Note
-
-- 项目配置规范化：桩项目合并、统一行尾和文件类型处理、移除冗余程序集引用、清理 BOM
-
 ### Added
 
 - **`.gitattributes`**: 新增 Git 属性文件，定义统一的文本/二进制分类和行尾规范化（默认 LF，`.bat` → CRLF），确保跨平台一致性
+- **白名单功能**: 设置页新增白名单区域——实时列表显示当前白名单, 通过「从已加载 Mod 添加」下拉选择添加、「从白名单移除」下拉选择移除、「清空」清空全部。白名单中的 Mod 在自动模式下强制视为不影响游戏性: `EnsureScanPerform` 跳过内容检测, `EvaluateAutoMode` 强制非 gameplay（不隔离存档、不参与 gameplay 判定）
+- **Toast 一键加入白名单**: 误标 Toast 点击后一键将全部误标 Mod 加入白名单, 文案提示可前往设置页单独添加
+- **`ModSettingsHelper` 白名单操作**: `IsWhitelisted` / `AddToWhitelist` / `RemoveFromWhitelist` / `ClearWhitelist`, 白名单以 `HashSet<string>` 持久化
+- **本地化目录迁移**: `ModLoc.Initialize` 自动将旧版本地化目录 (`user://{modId}/localization`) 递归迁移到新目录 (`mod_data/{modId}/localization`), 迁移完成后清理旧目录
 
 ### Changed
 
 - **`.editorconfig` 重构**: 全局规则（`tab_width`、`indent_size`、`end_of_line`、`trim_trailing_whitespace`）从 `[*.{cs,vb}]` 节区提升至 `[*]` 顶层；文件类型节区按类型重组（`.bat` → CRLF、项目文件和 JSON/YAML → 2 空格缩进、C#/VB 保留 4 空格缩进）；新增 `trim_trailing_whitespace = true` 规则
 - **桩项目合并**: 将 `stubs/sts2/` 和 `stubs/0Harmony/` 两个独立桩项目合并为单个 `stubs/sts2.csproj`，桩源文件统一到 `stubs/Stubs.cs`（扁平化目录结构），简化 CI 构建流程
+- **本地化目录位置**: 从 `user://{modId}/localization` 迁移到 `mod_data/{modId}/localization`（与设置文件同目录）, 路径通过 `ProfileManager.GetAccountBasePath` 解析, `fileSystemFolders` 使用带 `localization` 子目录的真实路径
+- **双标准判定统一**: `IsEffectivelyModded` 的 Auto 模式通过 `EvaluateAutoMode(isForSavingDir)` 统一判定存档路径与非存档场景——内容检测结果改为 `bool?`（无法确定时回退 `affects_gameplay` 标记）, 原 `HasContentModsLoaded` 查询接口移除
+- **内容检测容错**: `ContainsAbstractModel` 改用容错类型加载（`GetTypes` + `ReflectionTypeLoadException` 恢复部分类型）, 单个程序集类型加载失败不再导致整个 Mod 检测失败
+- **误标提示措辞**: 从「误标/联系修复」改为「标记可能不准确/联系确认」（Toast、日志、工坊描述同步）——检测基于 `AbstractModel` 子类, 存在框架驱动注册（如 RitsuLib `HookedSingletonModel`）导致的误报可能, 措辞保持中性
+- **设置页白名单展示**: 实时只读列表（`AddInfoCard` + `Dynamic` 文本）; 添加/移除按钮使用独立标签, 描述提示「下拉框内容变化不代表已选定」
+- **补触发存档复制日志**: 「已补触发存档复制」改为「已补触发存档复制检查」（modded 目录已存在时游戏会自行跳过）
+- **日志级别调整**: `IsEffectivelyModded` 判定结果、Auto 模式统计、内容扫描开始/完成等关键节点从 `Verbose` 提升为 `Info` 级别, 默认日志即可见
 
 ### Removed
 
 - **`.csproj` 直接引用 `0Harmony.dll`**: 移除显式 `<Reference Include="0Harmony">` 程序集引用。RitsuLib 已传递包含 Harmony 依赖，无需项目直接引用
 - **HarmonyLib 桩项目**: 移除 `stubs/0Harmony/` 目录（`0Harmony.csproj` + `Stubs.cs`）。RitsuLib 传递包含 Harmony 依赖，不再需要独立的 HarmonyLib 桩项目
+- **`.csproj` 冗余配置**: `AllowUnsafeBlocks`（无 unsafe 代码）
+- **`PatchGetAccountDir.IsCritical`**: 移除冗余声明（`IPatchMethod` 接口默认值即为 `true`）
 
 ### Internal
 
-- **`workshop.json`**: 移除文件开头的 UTF-8 BOM 字节
+- **`workshop.json`**: 移除文件开头的 UTF-8 BOM 字节；更新工坊描述——移除反馈系统不实表述（`isModded` 实际受 `HasHarmonyPatches` 影响）, 误标措辞中性化（`Mislabeled` → `Mod flag`）
 - **CI 工作流**: `ci.yml`、`codeql-analysis.yml`、`release.yml` 桩构建步骤从两个项目简化为单个 `stubs/sts2.csproj`，DLL 复制步骤同步简化；注释编号统一优化
 - **解决方案文件**: 更新项目引用以匹配合并后的桩结构，新增 `.gitattributes` 文件引用
-- **README**: 项目结构新增 `.gitattributes` 条目；更新 stubs 目录结构描述和桩代码维护说明，移除 0Harmony 桩相关条目
+- **README**: 项目结构新增 `.gitattributes` 条目；更新 stubs 目录结构描述和桩代码维护说明，移除 0Harmony 桩相关条目；更新设置说明（白名单项）、Toast 点击加入白名单说明、本地化目录路径与迁移说明
 - **`.github` 模板和工作流**: `bug_report.md` 简化运行环境模板；`dependabot-auto-merge.yml` 重构注释结构和条件语句位置
+- **static lambda**: 所有不捕获外部变量的 lambda 标记为 `static`, 减少闭包对象分配
 
 ---
 

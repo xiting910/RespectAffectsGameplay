@@ -225,7 +225,7 @@ flowchart TD
 
 **`HasContentModsLoaded()`**: 提供轻量级查询接口，用于存档路径判定（`IsEffectivelyModded(true)`）——仅当存在包含 `AbstractModel` 子类的内容 Mod 时才隔离存档。
 
-**Toast 提醒**: 主菜单就绪后通过 `RitsuToastService` 弹出 5 秒 `Warning` 级别通知，列出所有标记不准确的 Mod ID，提醒玩家联系 Mod 作者修复并建议暂时禁用。
+**Toast 提醒**: 主菜单就绪后通过 `RitsuToastService` 弹出 5 秒 `Warning` 级别通知，列出所有标记不准确的 Mod ID，提醒玩家联系 Mod 作者确认并建议暂时禁用。**点击通知可将全部误标 Mod 一键加入白名单**（或前往设置页单独添加）。
 
 **Auto 模式自动修正**: 验证结果不止用于报警。`EvaluateAutoMode()` 在分类 Mod 时会通过 `ContentModDetector.IsContentMod()` 将检测到的内容 Mod **强制视为 gameplay Mod**，等同于修正了 `affects_gameplay` 标记。这意味着即使 Mod 作者未正确设置元数据，本 Mod 也能在运行时主动保护存档路径不受误标 Mod 影响而导致出错。
 
@@ -246,7 +246,8 @@ flowchart TD
 |                            | 开启                         | `ModManager.IsRunningModded()` 也受 Modded Mode 控制                                                                                                  |
 | **详细日志**               | 关闭（默认）                 | 仅输出标准 Info / Warn / Error 日志                                                                                                                  |
 |                            | 开启                         | 额外输出详细日志 (仅影响本 mod, 即时生效)                                                                                                          |
-| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，其余开关 → 关闭）                                                                                             |
+| **白名单 Mod**             | 添加 / 移除 / 清空           | 白名单中的 Mod 在自动模式下强制视为不影响游戏性: 不参与内容检测和 gameplay 判定, 不隔离存档。实时列表显示当前白名单, 可通过「从已加载 Mod 添加」下拉选择添加、「从白名单移除」下拉选择移除、「清空」清空全部（⚠ 修改后需重启游戏才能完全生效） |
+| **重置为默认设置**         | 点击「恢复默认」按钮         | 所有设置恢复默认值（Modded Mode → 自动，白名单 → 清空，其余开关 → 关闭）                                                                             |
 
 > ⚠ 除「详细日志」外, 其余设置项修改后需**重启游戏**才能生效。
 
@@ -326,21 +327,23 @@ flowchart TD
 
 **方式二：运行时添加（最终用户方式）**
 
-1. 找到本 Mod 的用户数据目录：`Godot.OS.GetUserDataDir()/RespectAffectsGameplay/localization/`
-   - Windows 位于 `%AppData%/Roaming/SlayTheSpire2/RespectAffectsGameplay/localization/`
+1. 找到本 Mod 的用户本地化目录（与设置文件同目录下的 `localization/` 子目录）：`user://steam/{uid}/mod_data/RespectAffectsGameplay/localization/`
+   - Windows 位于 `%AppData%/Roaming/SlayTheSpire2/steam/{uid}/mod_data/RespectAffectsGameplay/localization/`
 2. 将 `{语言代码}.json` 文件放入该目录
 3. 重启游戏即可生效
 
 ### 翻译文件加载优先级
 
 ```
-用户数据目录下的文件（最高优先级）
+用户本地化目录下的文件（最高优先级）
          ↓
 内置嵌入资源（回退，随 Mod 分发）
 ```
 
-> 首次运行时，`ModLoc.Initialize()` 会自动将内置的翻译文件从嵌入资源导出到用户数据目录。
+> 首次运行时，`ModLoc.Initialize()` 会自动将内置的翻译文件从嵌入资源导出到用户本地化目录。
 > 用户可在此目录中直接修改或替换翻译，无需重新编译 Mod。
+>
+> 旧版本（`user://RespectAffectsGameplay/localization/`）的翻译文件会在首次运行时自动迁移到新目录。
 
 ---
 

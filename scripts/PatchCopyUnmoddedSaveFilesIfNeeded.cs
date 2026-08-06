@@ -20,7 +20,7 @@ public sealed class PatchCopyUnmoddedSaveFilesIfNeeded : IPatchMethod
     /// <inheritdoc/>
     public static ModPatchTarget[] GetTargets()
     {
-        return [new ModPatchTarget(typeof(ModManager), nameof(ModManager.CopyUnmoddedSaveFilesIfNeeded))];
+        return [new(typeof(ModManager), nameof(ModManager.CopyUnmoddedSaveFilesIfNeeded))];
     }
 
     /// <summary>

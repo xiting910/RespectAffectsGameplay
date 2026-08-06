@@ -20,7 +20,7 @@ public sealed class PatchModManagerIsRunningModded : IPatchMethod
     /// <inheritdoc/>
     public static ModPatchTarget[] GetTargets()
     {
-        return [new ModPatchTarget(typeof(ModManager), nameof(ModManager.IsRunningModded))];
+        return [new(typeof(ModManager), nameof(ModManager.IsRunningModded))];
     }
 
     /// <summary>

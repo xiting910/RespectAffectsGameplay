@@ -11,16 +11,13 @@ public sealed class PatchGetAccountDir : IPatchMethod
     /// <inheritdoc/>
     public static string PatchId => $"{ModInfo.HarmonyId}.{nameof(PatchGetAccountDir)}";
 
-    /// <inheritdoc/>
-    public static bool IsCritical => true;
-
     /// <inheritdoc />
     public static string Description => $"拦截 {nameof(UserDataPathProvider.GetAccountDir)} 方法, 根据 mod 状态返回正确的存档目录";
 
     /// <inheritdoc/>
     public static ModPatchTarget[] GetTargets()
     {
-        return [new ModPatchTarget(typeof(UserDataPathProvider), nameof(UserDataPathProvider.GetAccountDir))];
+        return [new(typeof(UserDataPathProvider), nameof(UserDataPathProvider.GetAccountDir))];
     }
 
     /// <summary>
@@ -33,10 +30,7 @@ public sealed class PatchGetAccountDir : IPatchMethod
     public static bool Prefix(bool? forceModState, ref string __result)
     {
         // 如果 forceModState 不为 null, 则不拦截原始方法, 让原始方法继续执行
-        if (forceModState.HasValue)
-        {
-            return true;
-        }
+        if (forceModState.HasValue) { return true; }
 
         // 否则, 根据 GameplayStateHelper.IsEffectivelyModded(true) 的结果返回 "modded" 或 "" 作为账号目录
         __result = GameplayStateHelper.IsEffectivelyModded(true) ? "modded" : "";

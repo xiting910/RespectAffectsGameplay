@@ -1,5 +1,5 @@
 {
-  "_version": "0.3.0",
+  "_version": "0.3.2",
 
   "mod.description": "阻止 STS2 盲目地将所有已加载 Mod 都视为影响游戏性。扫描 Mod 程序集检测真正的游戏内容（卡片、遗物、角色等），尊重每个 Mod 的 affects_gameplay 标记，仅在内容 Mod 存在时隔离存档路径，并警告标记不准确的 Mod。",
 
@@ -10,13 +10,29 @@
   "settings.mode.option.default": "游戏默认",
   "settings.mode.desc": "自动：使用双重标准分别判定：\n  - 存档路径隔离：仅当通过程序集扫描检测到内容 Mod（卡片、遗物、角色等）时触发\n  - 非存档功能：当存在 affects_gameplay: true 或被检测出内容 Mod 时触发\n强制原版：即使加载了内容 Mod 也永不标记为 modded（⚠ 可能导致存档损坏和联机问题）。\n游戏默认：使用游戏默认逻辑，只要加载了任意 mod 即标记为 modded 状态。\n\n⚠ 修改此选项后需重启游戏才能生效。",
   "settings.patchModManager.label": "拦截 IsRunningModded()",
-  "settings.patchModManager.desc": "开启后，ModManager.IsRunningModded() 的所有调用方均受当前 Modded Mode 控制。\n🖥 界面：\"MODDED\" 警告标签、mod 数量和哈希值不再显示\n🐛 Sentry 错误上报：GDExtension 与 .NET SDK 的 Sentry 上报不再自动禁用\n📊 遥测数据：游戏统计数据上传不再自动跳过\n📝 反馈系统：提交反馈时 isModded 标记不再自动设为 true\n🛠 调试功能：控制台不再自动启用完整命令，拖放 .run 文件加载回放不再自动允许\n\n关闭：仅存档路径受 Modded Mode 控制，以上所有行为恢复游戏默认。\n\n⚠ 修改此选项后需重启游戏才能生效。",
+  "settings.patchModManager.desc": "开启后，ModManager.IsRunningModded() 的所有调用方均受当前 Modded Mode 控制。\n🖥 界面：\"MODDED\" 警告标签、mod 数量和哈希值不再显示\n🐛 Sentry 错误上报：GDExtension 与 .NET SDK 的 Sentry 上报不再自动禁用\n📊 遥测数据：游戏统计数据上传不再自动跳过\n🛠 调试功能：控制台不再自动启用完整命令，拖放 .run 文件加载回放不再自动允许\n\n关闭：仅存档路径受 Modded Mode 控制，以上所有行为恢复游戏默认。\n\n⚠ 修改此选项后需重启游戏才能生效。",
   "settings.verboseLogging.label": "详细日志",
   "settings.verboseLogging.desc": "开启：额外输出详细日志, 方便排查问题。\n关闭：仅输出标准 Info / Warn / Error 日志。\n\n⚠ 仅影响本 mod, 不影响游戏或其他 mod 的日志输出。修改后即时生效。",
   "settings.resetDefaults.label": "重置为默认设置",
   "settings.resetDefaults.button": "恢复默认",
   "settings.resetDefaults.desc": "将所有设置恢复为默认值。\n⚠ 某些修改需重启游戏才能生效。",
 
+  "settings.section.whitelist": "白名单",
+  "settings.whitelist.list.label": "当前白名单",
+  "settings.whitelist.list.desc": "白名单中的 Mod 在自动模式下将被强制视为不影响游戏性: 不参与内容检测和 gameplay 判定, 不隔离存档。\n⚠ 修改后需重启游戏才能完全生效。",
+  "settings.whitelist.list.empty": "（暂无）",
+  "settings.whitelist.add.label": "从已加载 Mod 添加",
+  "settings.whitelist.add.desc": "从下拉列表选择已加载的 Mod, 点击「添加」将其加入白名单。\n注意: 下拉框内容变化不代表已选定, 如果按钮没有反应, 请先在下拉框中手动选择。",
+  "settings.whitelist.add.buttonLabel": "添加所选 Mod",
+  "settings.whitelist.add.button": "添加",
+  "settings.whitelist.remove.label": "从白名单移除",
+  "settings.whitelist.remove.desc": "从下拉列表选择白名单中的 Mod, 点击「移除」将其移出白名单。\n注意: 下拉框内容变化不代表已选定, 如果按钮没有反应, 请先在下拉框中手动选择。",
+  "settings.whitelist.remove.buttonLabel": "移除所选 Mod",
+  "settings.whitelist.remove.button": "移除",
+  "settings.whitelist.clear.label": "清空白名单",
+  "settings.whitelist.clear.button": "清空",
+  "settings.whitelist.clear.desc": "移除白名单中的所有 Mod。",
+
   "toast.mislabeled.title": "[RespectAffectsGameplay] ⚠ 检测到 {Count} 个 Mod 标记异常",
-  "toast.mislabeled.body": "以下 Mod 错误标记为不影响游戏性，但实际包含游戏内容：\n{ModList}\n\n这可能导致存档损坏或联机同步问题。\n请联系 Mod 开发者修复，在此之前建议禁用这些 Mod。"
+  "toast.mislabeled.body": "以下 Mod 标记为不影响游戏性，但包含游戏内容类型：\n{ModList}\n\n这可能导致存档损坏或联机数据同步问题。\n如果确认这些 Mod 不影响游戏，可点击此通知将全部加入白名单，或前往设置单独添加。"
 }
