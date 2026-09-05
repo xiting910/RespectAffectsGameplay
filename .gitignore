@@ -1,8 +1,16 @@
-**/.vs/
-**/.vscode/
-**/bin/
-**/obj/
-**/Directory.Build.props
-workshop/content/
+# Visual Studio
+.vs/
+
+# 构建产物
+bin/
+obj/
+
+# 创意工坊内容产物
+content/
+
+# 定义本机游戏目录的 props 文件
+Directory.Build.props
+
+# 脚本
 simulate-ci.bat
 tag-and-push.bat

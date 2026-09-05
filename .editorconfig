@@ -32,264 +32,366 @@ end_of_line = crlf
 [*.{csproj,props,slnx}]
 
 # 缩进大小为 2 个空格
+tab_width = 2
 indent_size = 2
 
 # Json 文件
 [*.json]
 
 # 缩进大小为 2 个空格
+tab_width = 2
 indent_size = 2
 
 # GitHub Actions workflows
-[*.{yml,yaml}]
+[*.yml]
 
 # 缩进大小为 2 个空格
+tab_width = 2
 indent_size = 2
 
-# C# 和 VB.NET 文件
-[*.{cs,vb}]
+# C#
+[*.cs]
 
+# ============================================================
+# 一、命名规则
+# ============================================================
+
+# 定义 PascalCase 命名风格, 供命名规则引用
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# ============================================================
+# 二、限定符规则
+# ============================================================
+
+# 不建议在字段、属性、方法、事件前显式添加 this. 限定符
 dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
+
+# 换行时运算符放置在行首
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
+
+# ============================================================
+# 三、可访问性修饰符规则
+# ============================================================
+
+# 非接口成员必须显式声明可访问性修饰符
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+
+# ============================================================
+# 四、代码质量规则
+# ============================================================
+
+# 对全部未使用的参数给出建议提示
 dotnet_code_quality_unused_parameters = all:suggestion
+
+# 建议将只读字段声明为 readonly
 dotnet_style_readonly_field = true:suggestion
+
+# ============================================================
+# 五、括号规则
+# ============================================================
+
+# 算术二元运算符两侧保留括号, 以增强可读性
 dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:suggestion
+# 其他二元运算符两侧保留括号, 以增强可读性
 dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:suggestion
+# 关系二元运算符两侧保留括号, 以增强可读性
 dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:suggestion
+# 其他运算符在无必要时不添加括号
 dotnet_style_parentheses_in_other_operators = never_if_unnecessary:suggestion
-dotnet_style_allow_multiple_blank_lines_experimental = true:silent
-dotnet_style_allow_statement_immediately_after_block_experimental = true:silent
+
+# ============================================================
+# 六、表达式风格规则
+# ============================================================
+
+# 优先使用 ?? 合并运算符
 dotnet_style_coalesce_expression = true:suggestion
+# 优先使用 ?. 空值传播运算符
 dotnet_style_null_propagation = true:suggestion
+# 优先使用 is null 判断, 而非引用相等性方法
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+# 优先使用自动实现的属性
 dotnet_style_prefer_auto_properties = true:suggestion
+# 优先使用对象初始化器
 dotnet_style_object_initializer = true:suggestion
+# 优先使用集合初始化器
 dotnet_style_collection_initializer = true:suggestion
+# 优先使用简化的布尔表达式
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
+# 优先使用条件表达式进行赋值
 dotnet_style_prefer_conditional_expression_over_assignment = true:suggestion
+# 优先使用条件表达式进行返回
 dotnet_style_prefer_conditional_expression_over_return = true:suggestion
+# 显式声明元组元素名称
 dotnet_style_explicit_tuple_names = true:suggestion
+# 优先推断元组元素名称
 dotnet_style_prefer_inferred_tuple_names = true:suggestion
+# 优先推断匿名类型的成员名称
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
+# 优先使用复合赋值运算符
 dotnet_style_prefer_compound_assignment = true:suggestion
+# 优先使用简化的字符串插值
 dotnet_style_prefer_simplified_interpolation = true:suggestion
+# 类型松散匹配时, 优先使用集合表达式
 dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
+# 命名空间声明应与文件夹结构保持一致
 dotnet_style_namespace_match_folder = true:suggestion
+# 局部变量、参数和成员优先使用内置类型关键字
 dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+# 成员访问时优先使用内置类型关键字
 dotnet_style_predefined_type_for_member_access = true:suggestion
-dotnet_diagnostic.CA1000.severity = suggestion
-dotnet_diagnostic.CA1001.severity = suggestion
-dotnet_diagnostic.CA1010.severity = suggestion
-dotnet_diagnostic.CA1036.severity = suggestion
-dotnet_diagnostic.CA1051.severity = suggestion
-dotnet_diagnostic.CA1707.severity = suggestion
-dotnet_diagnostic.CA1708.severity = suggestion
-dotnet_diagnostic.CA1710.severity = suggestion
-dotnet_diagnostic.CA1711.severity = suggestion
-dotnet_diagnostic.CA1712.severity = suggestion
-dotnet_diagnostic.CA1715.severity = suggestion
-dotnet_diagnostic.CA1716.severity = suggestion
-dotnet_diagnostic.CA1720.severity = suggestion
-dotnet_diagnostic.CA1725.severity = suggestion
-dotnet_diagnostic.CA1727.severity = suggestion
-dotnet_diagnostic.CA1838.severity = suggestion
-dotnet_diagnostic.CA1848.severity = suggestion
-dotnet_diagnostic.CA1852.severity = suggestion
-dotnet_diagnostic.CA1863.severity = suggestion
-dotnet_diagnostic.CA3061.severity = suggestion
-dotnet_diagnostic.CA3075.severity = suggestion
-dotnet_diagnostic.CA3076.severity = suggestion
-dotnet_diagnostic.CA3077.severity = suggestion
-dotnet_diagnostic.CA3147.severity = suggestion
-dotnet_diagnostic.CA5350.severity = suggestion
-dotnet_diagnostic.CA5351.severity = suggestion
-dotnet_diagnostic.CA5359.severity = suggestion
-dotnet_diagnostic.CA5360.severity = suggestion
-dotnet_diagnostic.CA5363.severity = suggestion
-dotnet_diagnostic.CA5364.severity = suggestion
-dotnet_diagnostic.CA5365.severity = suggestion
-dotnet_diagnostic.CA5366.severity = suggestion
-dotnet_diagnostic.CA5368.severity = suggestion
-dotnet_diagnostic.CA5369.severity = suggestion
-dotnet_diagnostic.CA5370.severity = suggestion
-dotnet_diagnostic.CA5371.severity = suggestion
-dotnet_diagnostic.CA5372.severity = suggestion
-dotnet_diagnostic.CA5373.severity = suggestion
-dotnet_diagnostic.CA5374.severity = suggestion
-dotnet_diagnostic.CA5379.severity = suggestion
-dotnet_diagnostic.CA5384.severity = suggestion
-dotnet_diagnostic.CA5385.severity = suggestion
-dotnet_diagnostic.CA5397.severity = suggestion
-dotnet_diagnostic.CA2201.severity = suggestion
-dotnet_diagnostic.CA2215.severity = suggestion
-dotnet_diagnostic.CA2251.severity = suggestion
 
-[*.cs]
-#### 命名样式 ####
+# ============================================================
+# 七、空白规则
+# ============================================================
 
-# 命名规则
+# 不允许出现多个连续空行
+dotnet_style_allow_multiple_blank_lines_experimental = false:silent
 
-dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion
-dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
-dotnet_naming_rule.interface_should_be_begins_with_i.style = begins_with_i
+# 允许语句紧跟在大括号块之后
+dotnet_style_allow_statement_immediately_after_block_experimental = true:silent
 
-dotnet_naming_rule.types_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.types_should_be_pascal_case.symbols = types
-dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+# ============================================================
+# 八、using 指令规则
+# ============================================================
 
-dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
-dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
-
-# 符号规范
-
-dotnet_naming_symbols.interface.applicable_kinds = interface
-dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.interface.required_modifiers =
-
-dotnet_naming_symbols.types.applicable_kinds = class, struct, interface, enum
-dotnet_naming_symbols.types.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.types.required_modifiers =
-
-dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, method
-dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.non_field_members.required_modifiers =
-
-# 命名样式
-
-dotnet_naming_style.begins_with_i.required_prefix = I
-dotnet_naming_style.begins_with_i.required_suffix =
-dotnet_naming_style.begins_with_i.word_separator =
-dotnet_naming_style.begins_with_i.capitalization = pascal_case
-
-dotnet_naming_style.pascal_case.required_prefix =
-dotnet_naming_style.pascal_case.required_suffix =
-dotnet_naming_style.pascal_case.word_separator =
-dotnet_naming_style.pascal_case.capitalization = pascal_case
-
-dotnet_naming_style.pascal_case.required_prefix =
-dotnet_naming_style.pascal_case.required_suffix =
-dotnet_naming_style.pascal_case.word_separator =
-dotnet_naming_style.pascal_case.capitalization = pascal_case
+# using 指令放置在命名空间外部
 csharp_using_directive_placement = outside_namespace:suggestion
+
+# ============================================================
+# 九、表达式规则
+# ============================================================
+
+# 方法、构造函数、运算符、局部函数不使用表达式主体
 csharp_style_expression_bodied_methods = false:suggestion
 csharp_style_expression_bodied_constructors = false:suggestion
 csharp_style_expression_bodied_operators = false:suggestion
+csharp_style_expression_bodied_local_functions = false:suggestion
+
+# 属性、索引器、访问器、lambda 使用表达式主体
 csharp_style_expression_bodied_properties = true:suggestion
 csharp_style_expression_bodied_indexers = true:suggestion
 csharp_style_expression_bodied_accessors = true:suggestion
 csharp_style_expression_bodied_lambdas = true:suggestion
-csharp_style_expression_bodied_local_functions = false:suggestion
+
+# 优先使用条件委托调用
 csharp_style_conditional_delegate_call = true:suggestion
+
+# ============================================================
+# 十、var 关键字使用规则
+# ============================================================
+
+# 内置类型、类型已显而易见及其他情况, 均优先使用 var
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = true:suggestion
+
+# ============================================================
+# 十一、语句与声明风格规则
+# ============================================================
+
+# 优先使用简单 using 语句
 csharp_prefer_simple_using_statement = true:suggestion
+# 即使代码块只有一行也强制使用大括号
 csharp_prefer_braces = true:suggestion
+# 使用文件范围的命名空间声明
 csharp_style_namespace_declarations = file_scoped:suggestion
+# 优先使用方法组转换
 csharp_style_prefer_method_group_conversion = true:suggestion
+# 优先使用顶级语句
 csharp_style_prefer_top_level_statements = true:suggestion
+# 优先使用主构造函数
 csharp_style_prefer_primary_constructors = true:suggestion
+# 优先使用 System.Threading.Lock
 csharp_prefer_system_threading_lock = true:suggestion
+# 优先使用简单属性访问器
 csharp_style_prefer_simple_property_accessors = true:suggestion
+# 局部函数优先声明为 static
 csharp_prefer_static_local_function = true:suggestion
+# 匿名函数优先声明为 static
 csharp_prefer_static_anonymous_function = true:suggestion
+# 优先将结构体声明为 readonly
 csharp_style_prefer_readonly_struct = true:suggestion
+# 优先将结构体成员声明为 readonly
 csharp_style_prefer_readonly_struct_member = true:suggestion
+
+# ============================================================
+# 十二、C# 语句风格规则
+# ============================================================
+
+# 允许同一行内嵌语句
 csharp_style_allow_embedded_statements_on_same_line_experimental = true:silent
+# 允许连续大括号之间有空行
 csharp_style_allow_blank_lines_between_consecutive_braces_experimental = true:silent
+# 允许构造函数初始化器中的冒号后有空行
 csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true:silent
+# 允许条件表达式中的运算符后有空行
 csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
+# 允许箭头表达式子句中的运算符后有空行
 csharp_style_allow_blank_line_after_token_in_arrow_expression_clause_experimental = true:silent
+
+# ============================================================
+# 十三、模式匹配规则
+# ============================================================
+
+# 优先使用 switch 表达式
 csharp_style_prefer_switch_expression = true:suggestion
+# 优先使用模式匹配
 csharp_style_prefer_pattern_matching = true:suggestion
+# 优先使用模式匹配, 而非 is 加类型转换检查
 csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+# 优先使用模式匹配, 而非 as 加空值检查
 csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+# 优先使用 not 模式
 csharp_style_prefer_not_pattern = true:suggestion
+# 优先使用扩展属性模式
 csharp_style_prefer_extended_property_pattern = true:suggestion
+
+# ============================================================
+# 十四、其他 C# 风格规则
+# ============================================================
+
+# 优先使用抛出表达式
 csharp_style_throw_expression = true:suggestion
+# 优先使用 is null 判断, 而非类型检查
 csharp_style_prefer_null_check_over_type_check = true:suggestion
+# 优先使用简单的 default 表达式
 csharp_prefer_simple_default_expression = true:suggestion
+# 优先使用局部函数, 而非匿名函数
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
+# 优先使用 ^ 索引运算符
 csharp_style_prefer_index_operator = true:suggestion
+# 优先使用 .. 范围运算符
 csharp_style_prefer_range_operator = true:suggestion
+# 类型已显而易见时, 优先使用隐式对象创建
 csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+# 优先使用隐式类型 lambda 表达式
 csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
+# 优先使用元组交换
 csharp_style_prefer_tuple_swap = true:suggestion
+# 在 nameof 中优先使用未绑定泛型类型
 csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
+# 优先使用 UTF-8 字符串字面量
 csharp_style_prefer_utf8_string_literals = true:suggestion
+# 优先使用内联变量声明
 csharp_style_inlined_variable_declaration = true:suggestion
+# 优先使用解构变量声明
 csharp_style_deconstructed_variable_declaration = true:suggestion
+# 未使用的赋值和表达式语句, 优先使用丢弃变量
 csharp_style_unused_value_assignment_preference = discard_variable:suggestion
 csharp_style_unused_value_expression_statement_preference = discard_variable:suggestion
+
+# ============================================================
+# 十五、代码分析(CA)诊断规则
+# ============================================================
+
+# --- 设计规则(Design) ---
+
+# 不要在泛型类型中声明静态成员
+dotnet_diagnostic.CA1000.severity = suggestion
+# 拥有可释放字段的类型应实现 IDisposable
+dotnet_diagnostic.CA1001.severity = suggestion
+# 集合应实现泛型接口
+dotnet_diagnostic.CA1010.severity = suggestion
+# 可比较类型应重写比较方法
 dotnet_diagnostic.CA1036.severity = suggestion
+# 不要声明可见实例字段
+dotnet_diagnostic.CA1051.severity = suggestion
+
+# --- 命名规则(Naming) ---
+
+# 标识符不应包含下划线
 dotnet_diagnostic.CA1707.severity = suggestion
+# 标识符不应仅因大小写不同而区分
+dotnet_diagnostic.CA1708.severity = suggestion
+# 标识符应具有正确后缀
 dotnet_diagnostic.CA1710.severity = suggestion
+# 标识符不应使用错误后缀
 dotnet_diagnostic.CA1711.severity = suggestion
+# 不要将类型名称作为枚举值前缀
+dotnet_diagnostic.CA1712.severity = suggestion
+# 标识符应具有正确前缀
 dotnet_diagnostic.CA1715.severity = suggestion
+# 标识符不应与关键字冲突
 dotnet_diagnostic.CA1716.severity = suggestion
+# 标识符不应包含类型名称
+dotnet_diagnostic.CA1720.severity = suggestion
+# 参数名称应与基类方法声明一致
+dotnet_diagnostic.CA1725.severity = suggestion
+# ILogger 命名占位符应使用 PascalCase
+dotnet_diagnostic.CA1727.severity = suggestion
+
+# --- 性能规则(Performance) ---
+
+# 不要进行不必要的初始化
 dotnet_diagnostic.CA1805.severity = suggestion
-dotnet_diagnostic.CA3075.severity = suggestion
-dotnet_diagnostic.CA3147.severity = suggestion
+# 避免在 P/Invoke 中使用 StringBuilder 参数
+dotnet_diagnostic.CA1838.severity = suggestion
+# 使用 LoggerMessage 委托, 而非 ILogger 扩展方法
+dotnet_diagnostic.CA1848.severity = suggestion
+# 密封内部类型
+dotnet_diagnostic.CA1852.severity = suggestion
+# 使用 CompositeFormat 缓存格式字符串
+dotnet_diagnostic.CA1863.severity = suggestion
+
+# --- 可靠性规则(Reliability) ---
+
+# 不要引发保留的异常类型
 dotnet_diagnostic.CA2201.severity = suggestion
+# Dispose 方法应调用基类的 Dispose
+dotnet_diagnostic.CA2215.severity = suggestion
+# 字符串比较应使用 String.Equals 重载
+dotnet_diagnostic.CA2251.severity = suggestion
 
-[*.vb]
-#### 命名样式 ####
+# --- 安全规则(Security) ---
 
-# 命名规则
-
-dotnet_naming_rule.interface_should_be_以_i_开始.severity = suggestion
-dotnet_naming_rule.interface_should_be_以_i_开始.symbols = interface
-dotnet_naming_rule.interface_should_be_以_i_开始.style = 以_i_开始
-
-dotnet_naming_rule.类型_should_be_帕斯卡拼写法.severity = suggestion
-dotnet_naming_rule.类型_should_be_帕斯卡拼写法.symbols = 类型
-dotnet_naming_rule.类型_should_be_帕斯卡拼写法.style = 帕斯卡拼写法
-
-dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.severity = suggestion
-dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.symbols = 非字段成员
-dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.style = 帕斯卡拼写法
-
-# 符号规范
-
-dotnet_naming_symbols.interface.applicable_kinds = interface
-dotnet_naming_symbols.interface.applicable_accessibilities = public, friend, private, protected, protected_friend, private_protected
-dotnet_naming_symbols.interface.required_modifiers =
-
-dotnet_naming_symbols.类型.applicable_kinds = class, struct, interface, enum
-dotnet_naming_symbols.类型.applicable_accessibilities = public, friend, private, protected, protected_friend, private_protected
-dotnet_naming_symbols.类型.required_modifiers =
-
-dotnet_naming_symbols.非字段成员.applicable_kinds = property, event, method
-dotnet_naming_symbols.非字段成员.applicable_accessibilities = public, friend, private, protected, protected_friend, private_protected
-dotnet_naming_symbols.非字段成员.required_modifiers =
-
-# 命名样式
-
-dotnet_naming_style.以_i_开始.required_prefix = I
-dotnet_naming_style.以_i_开始.required_suffix =
-dotnet_naming_style.以_i_开始.word_separator =
-dotnet_naming_style.以_i_开始.capitalization = pascal_case
-
-dotnet_naming_style.帕斯卡拼写法.required_prefix =
-dotnet_naming_style.帕斯卡拼写法.required_suffix =
-dotnet_naming_style.帕斯卡拼写法.word_separator =
-dotnet_naming_style.帕斯卡拼写法.capitalization = pascal_case
-
-dotnet_naming_style.帕斯卡拼写法.required_prefix =
-dotnet_naming_style.帕斯卡拼写法.required_suffix =
-dotnet_naming_style.帕斯卡拼写法.word_separator =
-dotnet_naming_style.帕斯卡拼写法.capitalization = pascal_case
-dotnet_diagnostic.CA1036.severity = suggestion
-dotnet_diagnostic.CA1707.severity = suggestion
-dotnet_diagnostic.CA1710.severity = suggestion
-dotnet_diagnostic.CA1711.severity = suggestion
-dotnet_diagnostic.CA1715.severity = suggestion
-dotnet_diagnostic.CA1716.severity = suggestion
+# 不要按 URL 添加 XML 架构
+dotnet_diagnostic.CA3061.severity = suggestion
+# 不安全的 DTD 处理
 dotnet_diagnostic.CA3075.severity = suggestion
+# 不安全的 XSLT 脚本处理
+dotnet_diagnostic.CA3076.severity = suggestion
+# API 设计中的不安全处理
+dotnet_diagnostic.CA3077.severity = suggestion
+# 使用 ValidateAntiForgeryToken 标记谓词处理程序
 dotnet_diagnostic.CA3147.severity = suggestion
-dotnet_diagnostic.CA2201.severity = suggestion
+# 不要使用弱加密算法(DES)
+dotnet_diagnostic.CA5350.severity = suggestion
+# 不要使用已损坏的加密算法(MD5)
+dotnet_diagnostic.CA5351.severity = suggestion
+# 不要禁用证书验证
+dotnet_diagnostic.CA5359.severity = suggestion
+# 反序列化时不要调用危险函数
+dotnet_diagnostic.CA5360.severity = suggestion
+# 不要禁用请求验证
+dotnet_diagnostic.CA5363.severity = suggestion
+# 不要使用已弃用的安全协议
+dotnet_diagnostic.CA5364.severity = suggestion
+# 不要禁用 HTTP 标头检查
+dotnet_diagnostic.CA5365.severity = suggestion
+# DataSet.ReadXml 应使用 XmlReader
+dotnet_diagnostic.CA5366.severity = suggestion
+# 派生自 Page 的类应设置 ViewStateUserKey
+dotnet_diagnostic.CA5368.severity = suggestion
+# 反序列化时使用 XmlReader
+dotnet_diagnostic.CA5369.severity = suggestion
+# 验证读取器时使用 XmlReader
+dotnet_diagnostic.CA5370.severity = suggestion
+# 读取架构时使用 XmlReader
+dotnet_diagnostic.CA5371.severity = suggestion
+# XPathDocument 应使用 XmlReader
+dotnet_diagnostic.CA5372.severity = suggestion
+# 不要使用过时的密钥派生函数
+dotnet_diagnostic.CA5373.severity = suggestion
+# 不要使用 XslTransform
+dotnet_diagnostic.CA5374.severity = suggestion
+# 不要使用弱密钥派生函数
+dotnet_diagnostic.CA5379.severity = suggestion
+# 不要使用 DSA 数字签名算法
+dotnet_diagnostic.CA5384.severity = suggestion
+# 使用具有足够密钥大小的 RSA 算法
+dotnet_diagnostic.CA5385.severity = suggestion
+# 不要使用已弃用的 SslProtocols 值
+dotnet_diagnostic.CA5397.severity = suggestion

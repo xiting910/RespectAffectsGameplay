@@ -26,6 +26,12 @@
 
 ## [Unreleased]
 
+### Internal
+
+- **`.editorconfig`**: C# 规则按主题分组并逐条补充中文注释; `[*.{cs,vb}]` 拆分为 `[*.cs]` 并删除 VB.NET 规则段; GitHub Actions 节改为仅匹配 `*.yml`; 各节补充 `tab_width = 2`; 清理重复的 CA 诊断条目与冗余命名规则; 连续空行规则调整为禁止
+- **`.gitattributes`**: 移除 `*.props` 与 JSON/YAML 文本声明, 移除 DLL/EXE/PDB/JPG/ICO/字体等二进制显式声明, 仅保留需要特殊处理的条目
+- **`.gitignore`**: 规则重写——去除 `**/` 前缀, 移除 `.vscode/`, `workshop/content/` 泛化为 `content/`, 按用途分组并补充中文注释
+
 ---
 
 ## [0.3.3] - 2026-08-06
