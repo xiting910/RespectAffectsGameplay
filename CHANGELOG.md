@@ -26,11 +26,30 @@
 
 ## [Unreleased]
 
+---
+
+## [0.4.0] - 2026-09-05
+
+### Note
+
+- 适配游戏 v0.111.0: 修复该版本下补触发存档复制检查失效的问题, 最低支持游戏版本提升至 v0.111.0
+
+### Fixed
+
+- **补触发存档复制检查失效 (游戏 v0.111.0)**: v0.111.0 将 `ModManager.CopyUnmoddedSaveFilesIfNeeded` 改为接收 `IModManagerFileIo` 参数 (无参重载已移除), 旧版无参调用在主菜单就绪时抛出 MissingMethodException, 导致后续安装 gameplay Mod 时的存档迁移补触发静默失效; 现改为传入 `new ModManagerFileIo()` 调用新签名
+
+### Changed
+
+- **`min_game_version`**: 从 `0.108.0` 提升至 `0.111.0`——带参调用依赖 v0.111.0 新增的签名, 在旧版游戏上同样无法运行
+- **`RespectAffectsGameplay.json`**: 版本号提升至 `0.4.0`, `dependencies` 数组展开为多行格式
+
 ### Internal
 
 - **`.editorconfig`**: C# 规则按主题分组并逐条补充中文注释; `[*.{cs,vb}]` 拆分为 `[*.cs]` 并删除 VB.NET 规则段; GitHub Actions 节改为仅匹配 `*.yml`; 各节补充 `tab_width = 2`; 清理重复的 CA 诊断条目与冗余命名规则; 连续空行规则调整为禁止
 - **`.gitattributes`**: 移除 `*.props` 与 JSON/YAML 文本声明, 移除 DLL/EXE/PDB/JPG/ICO/字体等二进制显式声明, 仅保留需要特殊处理的条目
 - **`.gitignore`**: 规则重写——去除 `**/` 前缀, 移除 `.vscode/`, `workshop/content/` 泛化为 `content/`, 按用途分组并补充中文注释
+- **`stubs/Stubs.cs`**: 新增 `IModManagerFileIo` / `ModManagerFileIo` 桩并同步 `CopyUnmoddedSaveFilesIfNeeded` 签名至 v0.111.0; 按模组实际引用面精简桩定义——移除 `UnmoddedSavesWereCopied` 属性、`ReflectionHelper` 类与 `Logger` 的构造器/`Context`/`Debug` 成员 (`LogType` 因 RitsuLib 框架元数据引用而保留)
+- **本地化文件**: `_version` 更新至 `0.4.0`, `settings.verboseLogging.desc` 补充"详细日志频繁输出会产生大量日志"的提醒文案
 
 ---
 
@@ -633,7 +652,8 @@
 
 ---
 
-[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/xiting910/RespectAffectsGameplay/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.4.0
 [0.3.3]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.3
 [0.3.2]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.2
 [0.3.1]: https://github.com/xiting910/RespectAffectsGameplay/releases/tag/v0.3.1

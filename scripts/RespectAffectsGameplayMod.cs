@@ -157,7 +157,7 @@ public static class RespectAffectsGameplayMod
             ModLog.Verbose("当前为 gameplay modded 状态, 补触发存档复制检查");
 
             // 调用 ModManager.CopyUnmoddedSaveFilesIfNeeded() 方法, 补触发存档复制检查
-            ModManager.CopyUnmoddedSaveFilesIfNeeded();
+            ModManager.CopyUnmoddedSaveFilesIfNeeded(new ModManagerFileIo());
         }
         catch (Exception ex)
         {

@@ -7,7 +7,6 @@
 #pragma warning disable CA1051
 #pragma warning disable CA1716
 #pragma warning disable CA1822
-#pragma warning disable CS9113
 
 using System.Reflection;
 
@@ -60,6 +59,16 @@ namespace MegaCrit.Sts2.Core.Modding
     }
 
     /// <summary>
+    /// 模组管理器文件 IO 抽象接口 (桩)
+    /// </summary>
+    public interface IModManagerFileIo;
+
+    /// <summary>
+    /// 默认的 <see cref="IModManagerFileIo"/> 实现 (桩)
+    /// </summary>
+    public class ModManagerFileIo : IModManagerFileIo;
+
+    /// <summary>
     /// 模组管理器 (桩)
     /// </summary>
     public static class ModManager
@@ -73,11 +82,9 @@ namespace MegaCrit.Sts2.Core.Modding
             return false;
         }
 
-        /// <summary>是否已完成首次存档复制 (桩)</summary>
-        public static bool UnmoddedSavesWereCopied { get; private set; }
-
         /// <summary>首次安装 mod 时复制原版存档到 modded 目录 (桩)</summary>
-        public static void CopyUnmoddedSaveFilesIfNeeded() { }
+        /// <param name="fileIo">文件 IO 抽象实例</param>
+        public static void CopyUnmoddedSaveFilesIfNeeded(IModManagerFileIo fileIo) { }
     }
 
     /// <summary>
@@ -131,14 +138,8 @@ namespace MegaCrit.Sts2.Core.Logging
     /// <summary>
     /// 日志记录器 (桩)
     /// </summary>
-    public class Logger(string? context, LogType logType)
+    public class Logger
     {
-        /// <summary>日志上下文</summary>
-        public string? Context { get; set; } = context;
-
-        /// <summary>输出 Debug 日志</summary>
-        public void Debug(string text, int skipFrames = 1) { }
-
         /// <summary>输出 Info 日志</summary>
         public void Info(string text, int skipFrames = 1) { }
 
@@ -147,26 +148,6 @@ namespace MegaCrit.Sts2.Core.Logging
 
         /// <summary>输出 Error 日志</summary>
         public void Error(string text, int skipFrames = 1) { }
-    }
-}
-
-namespace MegaCrit.Sts2.Core.Helpers
-{
-    /// <summary>
-    /// 反射辅助类 (桩): 提供程序集类型扫描功能
-    /// </summary>
-    public static class ReflectionHelper
-    {
-        /// <summary>
-        /// 从指定程序集中获取指定类型的所有子类型 (桩)
-        /// </summary>
-        /// <param name="assembly">要扫描的程序集</param>
-        /// <param name="baseType">基类或接口类型</param>
-        /// <returns>子类型枚举 (桩实现始终返回空)</returns>
-        public static IEnumerable<Type> GetSubtypesFromAssembly(Assembly assembly, Type baseType)
-        {
-            return [];
-        }
     }
 }
 

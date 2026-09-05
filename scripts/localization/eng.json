@@ -1,5 +1,5 @@
 {
-  "_version": "0.3.3",
+  "_version": "0.4.0",
 
   "mod.description": "Stops STS2 from blindly marking the game as modded just because any mod is loaded. Scans mod assemblies to detect actual game content (cards, relics, heroes, etc.), respects each mod's affects_gameplay flag, isolates save files only for content mods, and warns when a mod is mislabeled.",
 
@@ -12,7 +12,7 @@
   "settings.patchModManager.label": "Intercept IsRunningModded()",
   "settings.patchModManager.desc": "When enabled, all callers of ModManager.IsRunningModded() are controlled by the current Modded Mode.\n🖥 UI: \"MODDED\" warning label, mod count and hash no longer displayed\n🐛 Sentry: GDExtension and .NET SDK Sentry reporting are no longer auto-disabled\n📊 Telemetry: run statistics upload is no longer auto-skipped\n🛠 Debug: dev console full command set is no longer auto-enabled, .run file drag-and-drop is no longer auto-allowed\n\nOff: Only the save path is controlled by Modded Mode; all behaviors above revert to game defaults.\n\n⚠ Restart the game for this change to take effect.",
   "settings.verboseLogging.label": "Verbose Logging",
-  "settings.verboseLogging.desc": "On: Output extra detailed logs in addition to the standard messages (useful for troubleshooting).\nOff: Only output standard Info / Warn / Error logs.\n\n⚠ Only affects this mod. Takes effect immediately.",
+  "settings.verboseLogging.desc": "On: Output extra detailed logs in addition to the standard messages (useful for troubleshooting). Note: verbose logs are frequent (e.g. save path evaluation); keeping this on for long sessions produces a large amount of log output. Turn it off after troubleshooting.\nOff: Only output standard Info / Warn / Error logs.\n\n⚠ Only affects this mod. Takes effect immediately.",
   "settings.resetDefaults.label": "Reset to Defaults",
   "settings.resetDefaults.button": "Restore Defaults",
   "settings.resetDefaults.desc": "Restore all settings to their default values.\n⚠ Some changes require a restart to take effect.",
