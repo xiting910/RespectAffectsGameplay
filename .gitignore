@@ -1,6 +1,9 @@
 # Visual Studio
 .vs/
 
+# Visual Studio Code
+.vscode/
+
 # 构建产物
 bin/
 obj/
