@@ -32,21 +32,18 @@ end_of_line = crlf
 [*.{csproj,props,slnx}]
 
 # 缩进大小为 2 个空格
-tab_width = 2
 indent_size = 2
 
 # Json 文件
 [*.json]
 
 # 缩进大小为 2 个空格
-tab_width = 2
 indent_size = 2
 
 # GitHub Actions workflows
 [*.yml]
 
 # 缩进大小为 2 个空格
-tab_width = 2
 indent_size = 2
 
 # C#

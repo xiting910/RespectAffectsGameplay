@@ -30,6 +30,7 @@
 
 - **`.github/dependabot.yml`**: NuGet 依赖更新检查频率从每日改为每周一, 与 GitHub Actions 更新配置保持一致
 - **`.gitignore`**: 重新加入 `.vscode/` 忽略规则
+- **`.editorconfig`**: 移除 `.csproj`/`.props`/`.slnx`、`.json`、`.yml` 各节中的 `tab_width = 2`, 这些节仅保留 `indent_size = 2`
 
 ---
 
