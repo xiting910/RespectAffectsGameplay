@@ -26,6 +26,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **`min_game_version`**: 从 `0.111.0` 提升至 `0.113.0`——依赖的 RitsuLib 0.6.11 兼容目标已升至 v0.113.0, 在更旧版本的游戏上无法加载
+
 ### Internal
 
 - **`.github/dependabot.yml`**: NuGet 依赖更新检查频率从每日改为每周一, 与 GitHub Actions 更新配置保持一致
