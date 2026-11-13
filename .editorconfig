@@ -7,7 +7,6 @@ root = true
 indent_style = space
 
 # 缩进大小为 4 个空格
-tab_width = 4
 indent_size = 4
 
 # 使用 UTF-8 编码
